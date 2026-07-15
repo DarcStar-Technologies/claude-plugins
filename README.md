@@ -23,6 +23,12 @@ Every plugin here is independently versioned (SemVer), self-documenting
 > `plugins/_template` is the reference/scaffold plugin. It is intentionally not
 > published to the catalog.
 
+## Roadmap
+
+Planned plugins and larger work are tracked in [`ROADMAP.md`](./ROADMAP.md) and
+[GitHub Issues](https://github.com/DarcStar-Technologies/claude-plugins/issues) —
+e.g. an [AI-assisted plugin scaffolder](https://github.com/DarcStar-Technologies/claude-plugins/issues/2).
+
 ## Repository layout
 
 ```text
@@ -35,7 +41,8 @@ Every plugin here is independently versioned (SemVer), self-documenting
 ├─ scripts/                          mechanized validation & tooling (+ bats tests)
 ├─ .github/workflows/                CI gates and release automation
 ├─ CHANGELOG.md                      repo-level (tooling/structure) changelog
-└─ CONTRIBUTING.md                   conventions, commit format, release flow
+├─ CONTRIBUTING.md                   conventions, commit format, release flow
+└─ ROADMAP.md                        planned work (links to GitHub Issues)
 ```
 
 ## Design principles
