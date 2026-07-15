@@ -9,8 +9,6 @@ Entries below `[Unreleased]` are generated automatically from
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-07-15
-
 ### Added
 
 - `/forge` command and the `plugin-planner` agent: scaffold a new marketplace

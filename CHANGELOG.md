@@ -27,7 +27,9 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
   unlisted **major** template drift; `.scaffold-exceptions.json` records
   intentional exceptions as `plugin-name → reason`. Minor/patch drift stays
   informational.
-- release-please tracks public plugins only; the internal `_template` reference
-  is excluded from release automation (its version is bumped by hand to drive
-  drift detection). The release workflow skips cleanly when no plugins are
+- release-please versions every plugin, including the internal `_template`
+  reference (kept out of the public catalog by its `_` prefix, but release-tagged
+  so its version advances through the automated flow and drives drift detection).
+  Plugin changelogs hold only an `[Unreleased]` section; release-please writes the
+  versioned entries. The release workflow skips cleanly when no plugins are
   registered.

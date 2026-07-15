@@ -1,7 +1,7 @@
 ---
 description: Scaffold a new marketplace plugin from a natural-language description.
 argument-hint: "[what the plugin should do]"
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, AskUserQuestion
 ---
 
 Create a new plugin for this marketplace from the user's description. Delegate
@@ -33,9 +33,12 @@ Work through these steps in order.
 
 ## 3. Plan (delegate to the planner subagent)
 
-- Use the `plugin-planner` agent (via the Task tool), passing the description. It
-  returns a JSON plan: `name`, `description`, `keywords`, `components[]` (each with
-  `type`, `file`, `responsibility`, `model`, `tools`), and `questions[]`.
+- Use the `plugin-planner` agent (via the Task tool). Pass it **both** the repo
+  root `$ROOT` (so it can read files regardless of the working directory) and the
+  description. It returns a JSON plan: `name`, `description`, `keywords`,
+  `components[]` (each with `type`, `file`, `responsibility`, `model`, `tools`),
+  and `questions[]`. If it does not return a single valid JSON object, ask it to
+  try again rather than proceeding on a malformed plan.
 
 ## 4. Resolve unknowns — ask, don't guess
 
@@ -47,7 +50,10 @@ Work through these steps in order.
 
 ## 5. Scaffold deterministically
 
-- Run: `"$ROOT/scripts/new-plugin.sh" <name> --description "<one sentence>"`.
+- Run `"$ROOT/scripts/new-plugin.sh"` with the plan's name and description. Pass
+  the description as a single **single-quoted** argument so punctuation, quotes,
+  or `$` in it can't break the command or be interpreted by the shell:
+  `"$ROOT/scripts/new-plugin.sh" <name> --description 'One clear sentence.'`
 - If it fails because the plugin already exists, ask the user for a different name
   and retry.
 - This registers the plugin in the marketplace, release config, and provenance —

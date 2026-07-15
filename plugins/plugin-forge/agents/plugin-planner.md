@@ -14,15 +14,18 @@ that the `/forge` command executes.
 
 ## Inputs
 
-A free-text description of the plugin the user wants. You may also be given
-answers to earlier clarifying questions.
+A free-text description of the plugin the user wants, and usually the repository
+root path. You may also be given answers to earlier clarifying questions.
 
 ## What to do
 
-1. Ground yourself in the repo's conventions before planning:
-   - Read `plugins/_template/` (the reference plugin) to see the component layout
-     and how a command, agent, skill, and script are written.
-   - Read `CONTRIBUTING.md` for the model-selection principle and standards.
+1. Ground yourself in the repo's conventions before planning. If you were given
+   the repository root path, build absolute paths from it; otherwise locate the
+   files with Glob (e.g. `**/plugins/_template/**`, `**/CONTRIBUTING.md`) rather
+   than assuming the working directory:
+   - Read `<root>/plugins/_template/` (the reference plugin) to see the component
+     layout and how a command, agent, skill, and script are written.
+   - Read `<root>/CONTRIBUTING.md` for the model-selection principle and standards.
 2. Derive the plan:
    - **name**: a short, kebab-case plugin name matching `^[a-z][a-z0-9-]*$`. Never
      use a `_`-prefixed name (reserved for internal templates).

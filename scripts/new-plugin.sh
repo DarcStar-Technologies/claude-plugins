@@ -126,7 +126,10 @@ jq --arg path "plugins/$name" --arg comp "$name" \
 
 man="$root/.release-please-manifest.json"
 tmp="$(mktemp)"
-jq --arg path "plugins/$name" --arg ver "$version" '.[$path] = $ver' "$man" >"$tmp" && mv "$tmp" "$man"
+# Seed the last-released version at 0.0.0 (nothing released yet) so release-please
+# cuts a clean 0.1.0 as the plugin's first release. plugin.json keeps 0.1.0 as the
+# in-development version.
+jq --arg path "plugins/$name" '.[$path] = "0.0.0"' "$man" >"$tmp" && mv "$tmp" "$man"
 info "registered in release automation"
 
 info "done — next steps:"
