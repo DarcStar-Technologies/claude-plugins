@@ -52,3 +52,13 @@ teardown() { teardown_fixture; }
   [ "$status" -ne 0 ]
   [[ "$output" == *"scaffold.json"* ]]
 }
+
+@test "marketplace entries must not pin a version" {
+  add_plugin versioned 1.0.0
+  jq '(.plugins[] | select(.name == "versioned")) += {version: "1.0.0"}' \
+    "$FIX/.claude-plugin/marketplace.json" >"$FIX/t" \
+    && mv "$FIX/t" "$FIX/.claude-plugin/marketplace.json"
+  run "$FIX/scripts/validate-manifests.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must not pin a 'version'"* ]]
+}

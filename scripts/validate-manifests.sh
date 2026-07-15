@@ -42,6 +42,13 @@ while IFS= read -r src; do
     fail "marketplace source missing plugin.json: $src"
 done < <(jq -r '.plugins[]?.source // empty' "$marketplace")
 
+# Marketplace entries must not pin a version: plugin.json is the source of truth,
+# and release-please only updates plugin.json — a version here would go stale.
+while IFS= read -r pv; do
+  [[ -n "$pv" ]] || continue
+  fail "marketplace.json: plugin '$pv' must not pin a 'version' (plugin.json is the source of truth; it would drift)"
+done < <(jq -r '.plugins[]? | select(has("version")) | .name // "(unnamed)"' "$marketplace")
+
 # --- Per-plugin manifests --------------------------------------------------
 while IFS= read -r dir; do
   [[ -n "$dir" ]] || continue

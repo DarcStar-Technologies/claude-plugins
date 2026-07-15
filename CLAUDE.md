@@ -27,7 +27,8 @@ There is no build step; plugins are Markdown, JSON, and shell.
 ## Architecture
 
 - **`.claude-plugin/marketplace.json`** — the catalog. Every *public* plugin has
-  an entry (`name`, `source`, `description`, `version`). Kept in sync by
+  an entry (`name`, `source`, `description`) — no `version`, since `plugin.json`
+  is the source of truth and release-please only updates that. Kept in sync by
   `new-plugin.sh`.
 - **`plugins/<name>/`** — one plugin each. Required: `.claude-plugin/plugin.json`
   (name must equal the directory, version must be semver), `CONTEXT.md`,

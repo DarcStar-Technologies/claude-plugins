@@ -106,8 +106,10 @@ info "recorded provenance: template '$template' @ $template_version"
 # Register in the marketplace catalog.
 mp="$root/.claude-plugin/marketplace.json"
 tmp="$(mktemp)"
-jq --arg name "$name" --arg src "./plugins/$name" --arg desc "$description" --arg ver "$version" \
-  '.plugins += [{name: $name, source: $src, description: $desc, version: $ver}]' \
+# No version field here: plugin.json is the source of truth. release-please
+# updates plugin.json, not the catalog, so a version here would silently drift.
+jq --arg name "$name" --arg src "./plugins/$name" --arg desc "$description" \
+  '.plugins += [{name: $name, source: $src, description: $desc}]' \
   "$mp" >"$tmp" && mv "$tmp" "$mp"
 info "registered in marketplace.json"
 

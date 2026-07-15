@@ -14,10 +14,12 @@ Work through these steps in order.
 
 ## 1. Establish context
 
-- Confirm you are inside a checkout of the `claude-plugins` marketplace: run
-  `git rev-parse --show-toplevel` and treat that as `$ROOT`. If
-  `$ROOT/scripts/new-plugin.sh` does not exist, stop and tell the user this
-  command must be run from the marketplace repository.
+- Confirm you are inside a checkout of the `claude-plugins` marketplace. Each
+  Bash call runs in a **fresh shell**, so define the root at the start of every
+  command rather than relying on a variable persisting, e.g.
+  `ROOT="$(git rev-parse --show-toplevel)"`. If `"$ROOT/scripts/new-plugin.sh"`
+  does not exist, stop and tell the user this command must be run from the
+  marketplace repository.
 - Read the current template version:
   `jq -r '.version' "$ROOT/plugins/_template/.claude-plugin/plugin.json"`. This is
   the default template version.
@@ -62,8 +64,11 @@ Work through these steps in order.
 ## 6. Realize the plan
 
 - `new-plugin.sh` copies the `_template` example components. Reconcile them with
-  the plan: keep and rewrite the components that are in the plan, delete the ones
-  that aren't, and create any planned components that are missing.
+  the plan, operating **only inside the new plugin's own directory**
+  (`plugins/<name>/`): rewrite the components that are in the plan, remove the
+  example files that aren't (e.g. `plugins/<name>/commands/hello.md`), and create
+  any planned components that are missing. Never delete anything outside that
+  directory.
 - Write each component from the description and the plan:
   - Set the planned **minimum-capable `model:`** on every agent/command.
   - Give each agent/command a least-privilege `tools` / `allowed-tools` list.
