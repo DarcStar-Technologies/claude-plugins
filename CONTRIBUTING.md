@@ -100,6 +100,13 @@ You therefore **never** manually edit released version numbers or generated
 changelog sections. The repo-level [`CHANGELOG.md`](./CHANGELOG.md) tracks
 tooling/structure changes and is curated by maintainers.
 
+> **Maintainers — release token.** This org's enterprise policy blocks the
+> default `GITHUB_TOKEN` from opening pull requests, so `release.yml` runs
+> release-please with a fine-grained PAT stored as the `RELEASE_PLEASE_TOKEN`
+> secret (Contents: RW, Pull requests: RW, scoped to this repo). Until that
+> secret exists the release job skips cleanly. Rotate the token before it
+> expires.
+
 ## Model selection
 
 Use the **minimum capable model** for every subagent and command (`model:`
