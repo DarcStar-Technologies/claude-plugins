@@ -17,24 +17,31 @@ jobs:
     name: release-please
     runs-on: ubuntu-latest
     steps:
-      # This org's enterprise policy blocks the default GITHUB_TOKEN from
-      # creating pull requests, so release-please runs with a fine-grained PAT
-      # (Contents: RW, Pull requests: RW) stored as RELEASE_PLEASE_TOKEN. Until
-      # that secret exists, skip cleanly rather than failing the workflow.
-      - name: Check for release token
+      - uses: actions/checkout@v4
+
+      # Skip cleanly (rather than fail) unless both preconditions hold:
+      #  - RELEASE_PLEASE_TOKEN is set. This org's enterprise policy blocks the
+      #    default GITHUB_TOKEN from opening PRs, so a fine-grained PAT (Contents
+      #    RW, Pull requests RW) is required.
+      #  - At least one plugin is registered in release-please-config.json. The
+      #    internal _template is deliberately excluded, so a fresh repo has none.
+      - name: Check release preconditions
         id: guard
         env:
           TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
         run: |
-          if [ -n "$TOKEN" ]; then
-            echo "present=true" >>"$GITHUB_OUTPUT"
-          else
-            echo "present=false" >>"$GITHUB_OUTPUT"
+          if [ -z "$TOKEN" ]; then
+            echo "run=false" >>"$GITHUB_OUTPUT"
             echo "::notice::RELEASE_PLEASE_TOKEN not set — skipping release-please. Add a fine-grained PAT (Contents RW, Pull requests RW) as the RELEASE_PLEASE_TOKEN secret to enable release automation."
+          elif [ "$(jq '.packages | length' release-please-config.json)" -eq 0 ]; then
+            echo "run=false" >>"$GITHUB_OUTPUT"
+            echo "::notice::No plugins registered in release-please-config.json — skipping release-please."
+          else
+            echo "run=true" >>"$GITHUB_OUTPUT"
           fi
 
       - uses: googleapis/release-please-action@v4
-        if: steps.guard.outputs.present == 'true'
+        if: steps.guard.outputs.run == 'true'
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json

@@ -50,9 +50,12 @@ regardless of where the marketplace is installed.
 - **Naming:** the `_` prefix marks this plugin as internal. The validation
   scripts skip `_`-prefixed plugins when checking marketplace membership, so it
   is never published even though it is fully valid.
-- **Versioning:** do not hand-edit the version in `plugin.json` or the released
-  sections of `CHANGELOG.md`. release-please bumps them from Conventional
-  Commits. Only edit the `[Unreleased]` area if you must.
+- **Versioning:** for *scaffolded* plugins, release-please bumps `plugin.json`
+  and the released `CHANGELOG.md` sections from Conventional Commits — don't
+  hand-edit those. `_template` itself is **excluded** from release automation, so
+  bump its version by hand when you change template conventions; that bump is
+  what `scaffold-report.sh` compares against to flag drift in plugins built from
+  an older template.
 - **Copies:** `new-plugin.sh` copies the component directories and rewrites the
   string `_template` to the new plugin name, so avoid using that literal string
   for anything you want preserved.
