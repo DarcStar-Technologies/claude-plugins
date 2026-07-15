@@ -88,7 +88,7 @@ while IFS= read -r dir; do
 
   # shellcheck disable=SC2059
   printf "$fmt" "$name" "$tmpl" "$tver" "$current" "$status"
-done < <(list_plugin_dirs)
+done < <(list_plugin_dirs public)
 
 # Hygiene: warn about exception entries that reference plugins that don't exist.
 if [[ -f "$exceptions_file" ]]; then

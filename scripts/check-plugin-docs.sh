@@ -17,7 +17,7 @@ while IFS= read -r dir; do
       errors=$((errors + 1))
     fi
   done
-done < <(list_plugin_dirs --all)
+done < <(list_plugin_dirs all)
 
 [[ "$errors" -eq 0 ]] || die "$errors documentation problem(s) found"
 info "plugin docs OK"

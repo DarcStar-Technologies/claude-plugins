@@ -46,7 +46,7 @@ while IFS= read -r dir; do
     err "$name: CHANGELOG.md has no [Unreleased] or [$ver] section"
     errors=$((errors + 1))
   fi
-done < <(list_plugin_dirs --all)
+done < <(list_plugin_dirs all)
 
 [[ "$errors" -eq 0 ]] || die "$errors versioning problem(s) found"
 info "versions & changelogs OK"

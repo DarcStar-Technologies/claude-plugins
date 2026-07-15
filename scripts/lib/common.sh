@@ -40,18 +40,19 @@ repo_root() {
 
 plugins_dir() { printf '%s/plugins\n' "$(repo_root)"; }
 
-# Print each plugin directory, one per line. Internal directories (prefixed
-# with "_", e.g. _template) are skipped unless --all is given.
+# Print each plugin directory, one per line. Pass an explicit scope so callers
+# read clearly (and so shellcheck never treats a bare call as ambiguous):
+#   list_plugin_dirs all      include internal (_-prefixed) templates
+#   list_plugin_dirs public   only publishable plugins (the default)
 list_plugin_dirs() {
-  local include_internal=0
-  [[ "${1:-}" == "--all" ]] && include_internal=1
+  local scope="${1:-public}"
   local pdir base dir
   pdir="$(plugins_dir)"
   [[ -d "$pdir" ]] || return 0
   for dir in "$pdir"/*/; do
     [[ -d "$dir" ]] || continue
     base="$(basename "$dir")"
-    if [[ "$base" == _* && "$include_internal" -eq 0 ]]; then
+    if [[ "$base" == _* && "$scope" != "all" ]]; then
       continue
     fi
     printf '%s\n' "${dir%/}"

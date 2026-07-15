@@ -1,0 +1,3 @@
+# Follow `source`d files (e.g. scripts/lib/common.sh) so cross-file issues are
+# caught locally exactly as CI catches them.
+external-sources=true

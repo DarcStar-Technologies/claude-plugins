@@ -87,7 +87,7 @@ while IFS= read -r dir; do
       fail "$name: scaffold.json missing 'template' field"
     fi
   fi
-done < <(list_plugin_dirs --all)
+done < <(list_plugin_dirs all)
 
 [[ "$errors" -eq 0 ]] || die "$errors manifest problem(s) found"
 info "manifests OK"
