@@ -1,0 +1,29 @@
+{
+  "name": "@darcstar/claude-plugins",
+  "version": "0.0.0",
+  "private": true,
+  "description": "DarcStar Technologies Claude Code plugin marketplace.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DarcStar-Technologies/claude-plugins.git"
+  },
+  "scripts": {
+    "check": "bash scripts/check-all.sh",
+    "lint": "bash scripts/lint.sh",
+    "lint:md": "markdownlint-cli2",
+    "test": "bats scripts/tests",
+    "new-plugin": "bash scripts/new-plugin.sh",
+    "scaffold:report": "bash scripts/scaffold-report.sh",
+    "scaffold:check": "bash scripts/scaffold-report.sh --strict",
+    "commitlint": "commitlint"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "markdownlint-cli2": "^0.14.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

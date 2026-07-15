@@ -1,0 +1,21 @@
+{
+  // Rule configuration for markdownlint-cli2. Applied by `npm run lint:md`,
+  // the pre-commit hook, and CI.
+  "config": {
+    "default": true,
+    // Prose and tables routinely exceed a hard column limit.
+    "MD013": false,
+    // Inline HTML is occasionally needed in docs (e.g. <details>, <br>).
+    "MD033": false,
+    // Keep a Changelog repeats "### Added" etc. across versions; only forbid
+    // duplicate headings under the same parent.
+    "MD024": { "siblings_only": true },
+    // Templates and READMEs may open with badges/frontmatter, not an H1.
+    "MD041": false,
+    // Don't require hand-aligned table pipes; cells contain variable-width
+    // code spans that make perfect alignment busywork.
+    "MD060": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules", "**/node_modules"]
+}

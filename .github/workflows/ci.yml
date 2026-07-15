@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate & lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: shellcheck
+        run: shellcheck scripts/*.sh scripts/lib/*.sh
+
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v1.7.1/scripts/download-actionlint.bash") 1.7.1
+          ./actionlint -color
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install node tooling
+        run: npm install --no-audit --no-fund
+
+      - name: markdownlint
+        run: npx --no-install markdownlint-cli2
+
+      - name: Validate manifests, docs & versions
+        run: bash scripts/check-all.sh
+
+      - name: Enforce template drift policy (fail on unlisted major drift)
+        run: bash scripts/scaffold-report.sh --strict
+
+  test:
+    name: shell tests (bats)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bats & jq
+        run: sudo apt-get update && sudo apt-get install -y bats jq
+      - name: Run bats
+        run: bats scripts/tests
+
+  commitlint:
+    name: commitlint (PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install node tooling
+        run: npm install --no-audit --no-fund
+      - name: Lint PR commit messages
+        run: >-
+          npx --no-install commitlint
+          --from "${{ github.event.pull_request.base.sha }}"
+          --to "${{ github.event.pull_request.head.sha }}"
+          --verbose

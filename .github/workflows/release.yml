@@ -1,0 +1,27 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    steps:
+      # Maintains an aggregated release PR: bumps each changed plugin's
+      # version (plugin.json + manifest) and generates its CHANGELOG.md from
+      # Conventional Commits. Merging the PR tags releases per plugin.
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

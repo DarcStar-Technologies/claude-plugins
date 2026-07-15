@@ -1,0 +1,49 @@
+# {{PLUGIN_NAME}} — Context
+
+> Orientation for humans and AI assistants working on this plugin. It explains
+> the *why* and the non-obvious concepts, not just the *what*. Keep it current
+> as the plugin evolves — it is the first file a new contributor (or Claude)
+> should read.
+
+## Purpose
+
+{{PLUGIN_DESCRIPTION}}
+
+## Mental model
+
+_Describe the core idea in a few sentences. What problem does this plugin solve,
+and what is the one concept a newcomer must understand first?_
+
+## Components
+
+| Path         | Type           | Responsibility                              |
+| ------------ | -------------- | ------------------------------------------- |
+| `commands/`  | Slash commands | User-invoked entry points.                  |
+| `agents/`    | Subagents      | Delegated, task-scoped workers.             |
+| `skills/`    | Skills         | Model-invoked capabilities and knowledge.   |
+| `scripts/`   | Shell          | Deterministic, mechanized steps (no LLM).   |
+
+## Model selection
+
+Follow the repository principle of using the **minimum capable model** for each
+subagent or command (`model:` frontmatter):
+
+| Task character                          | Model    |
+| --------------------------------------- | -------- |
+| Deterministic / mechanical / lookups    | `haiku`  |
+| Moderate reasoning, editing, review      | `sonnet` |
+| Deep architecture, ambiguous problems    | `opus`   |
+
+Prefer moving anything fully deterministic into `scripts/` so no model is spent
+on it at all.
+
+## Challenging concepts & gotchas
+
+_Document anything surprising here: ordering constraints, external
+dependencies, environment assumptions, and known failure modes._
+
+## References
+
+- Manifest: `.claude-plugin/plugin.json`
+- Release history: `CHANGELOG.md`
+- Repository conventions: `../../CONTRIBUTING.md`

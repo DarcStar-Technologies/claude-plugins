@@ -1,0 +1,14 @@
+# Node tooling (commitlint, markdownlint)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Editor / OS cruft
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Local scratch
+*.log
+tmp/

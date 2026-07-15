@@ -1,0 +1,13 @@
+{
+  "name": "_template",
+  "version": "0.1.0",
+  "description": "Reference plugin and scaffolding source for the DarcStar marketplace. Not published to the public catalog.",
+  "author": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "homepage": "https://github.com/DarcStar-Technologies/claude-plugins/tree/main/plugins/_template",
+  "repository": "https://github.com/DarcStar-Technologies/claude-plugins",
+  "license": "MIT",
+  "keywords": ["template", "reference", "scaffold"]
+}

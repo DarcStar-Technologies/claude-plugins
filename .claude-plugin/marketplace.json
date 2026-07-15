@@ -1,0 +1,12 @@
+{
+  "name": "darcstar",
+  "owner": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "metadata": {
+    "description": "DarcStar Technologies Claude Code plugin marketplace — a public showcase of our automation and tooling craft.",
+    "version": "0.1.0"
+  },
+  "plugins": []
+}
