@@ -1,0 +1,19 @@
+# Changelog
+
+All notable changes to the `plugin-forge` plugin are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Entries below `[Unreleased]` are generated automatically from
+[Conventional Commits](https://www.conventionalcommits.org/) by release-please.
+
+## [Unreleased]
+
+## [0.1.0] - 2026-07-15
+
+### Added
+
+- `/forge` command and the `plugin-planner` agent: scaffold a new marketplace
+  plugin from a natural-language description, defaulting to the current template
+  version and prompting for anything that can't be inferred. Delegates the
+  deterministic work to `scripts/new-plugin.sh`.

@@ -6,12 +6,20 @@ this file is a curated, human-readable index of the larger items.
 
 ## Planned plugins
 
-- **AI-assisted plugin scaffolder** (`plugin-forge`, proposed) — generate a
-  plugin from a natural-language description, defaulting to the current template
-  version (or a version the user specifies) and prompting for any details it
-  can't confidently infer. Delegates the deterministic work to
-  `scripts/new-plugin.sh`.
+_Nothing open right now — propose ideas via
+[GitHub Issues](https://github.com/DarcStar-Technologies/claude-plugins/issues)._
+
+## Shipped
+
+- **plugin-forge** — generate a plugin from a natural-language description,
+  defaulting to the current template version and prompting for anything it can't
+  confidently infer. Delegates the deterministic work to `scripts/new-plugin.sh`.
   → [#2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2)
+
+### Follow-ups
+
+- Resolve a **specific** older template version (from git history of
+  `plugins/_template/`); plugin-forge supports only the current version today.
 
 ## Foundation (done)
 
