@@ -1,6 +1,6 @@
 {
   "name": "plugin-editor",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, updates its changelog and version, and flags a stale active install.",
   "author": {
     "name": "DarcStar Technologies",

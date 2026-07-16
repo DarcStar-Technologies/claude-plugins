@@ -5,6 +5,13 @@ All notable changes to the `plugin-editor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.4.0...plugin-editor-v0.5.0) (2026-07-16)
+
+
+### Features
+
+* **plugin-editor:** guided intake when the change isn't fully described ([#36](https://github.com/DarcStar-Technologies/claude-plugins/issues/36)) ([60973e1](https://github.com/DarcStar-Technologies/claude-plugins/commit/60973e1a7e97f1e0dd0038bd3da02b1c9bcf9f66))
+
 ## [0.4.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.3.0...plugin-editor-v0.4.0) (2026-07-16)
 
 
