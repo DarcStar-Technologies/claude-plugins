@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Entries below `[Unreleased]` are generated automatically from
 [Conventional Commits](https://www.conventionalcommits.org/) by release-please.
 
+## [0.4.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge-v0.3.0...plugin-forge-v0.4.0) (2026-07-16)
+
+
+### Features
+
+* **plugin-forge:** guided intake when /forge has no description ([#51](https://github.com/DarcStar-Technologies/claude-plugins/issues/51)) ([299ae7b](https://github.com/DarcStar-Technologies/claude-plugins/commit/299ae7ba9ae472101769f58d90ce06a24277d2be))
+
 ## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge-v0.2.0...plugin-forge-v0.3.0) (2026-07-16)
 
 
