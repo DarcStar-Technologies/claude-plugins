@@ -1,0 +1,20 @@
+{
+  "name": "plugin-editor",
+  "version": "0.1.0",
+  "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, updates its changelog and version, and flags a stale active install.",
+  "author": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "homepage": "https://github.com/DarcStar-Technologies/claude-plugins/tree/main/plugins/plugin-editor",
+  "repository": "https://github.com/DarcStar-Technologies/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "plugin",
+    "editing",
+    "maintenance",
+    "changelog",
+    "template",
+    "reload"
+  ]
+}

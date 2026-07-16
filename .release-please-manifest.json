@@ -3,5 +3,6 @@
   "templates/command-suite": "0.1.0",
   "plugins/plugin-forge": "0.3.0",
   "plugins/semver": "0.2.0",
-  "plugins/scaffold-upgrade": "0.1.0"
+  "plugins/scaffold-upgrade": "0.1.0",
+  "plugins/plugin-editor": "0.0.0"
 }
