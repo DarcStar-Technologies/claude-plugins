@@ -29,6 +29,28 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   [[ "$output" == *"setup()"* ]]
   [[ "$output" == *"@test"* ]]
   [[ "$output" == *"foo.sh"* ]]
+  # The stub is a skipped placeholder — it must NOT auto-invoke the script.
+  [[ "$output" == *"skip"* ]]
+}
+
+@test "the generated stub is a skipped placeholder that passes under bats" {
+  command -v bats >/dev/null 2>&1 || skip "bats not installed"
+  "$ST" "$PDIR" scripts/foo.sh >/dev/null
+  run bats "$PDIR/scripts/tests/foo.bats"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"# skip"* ]]
+}
+
+@test "scaffolds even when the plugin dir is basenamed like a component dir (scripts)" {
+  # norm_rel must not mis-strip a real top-level scripts/foo.sh when the plugin
+  # directory's own basename is 'scripts'.
+  local sdir="$FIX/scripts"
+  mkdir -p "$sdir/scripts"
+  printf '#!/usr/bin/env bash\ntrue\n' >"$sdir/scripts/foo.sh"
+  run "$ST" "$sdir" scripts/foo.sh
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"wrote"* ]]
+  [ -f "$sdir/scripts/tests/foo.bats" ]
 }
 
 @test "is idempotent: an existing (even hand-written) test is left untouched" {

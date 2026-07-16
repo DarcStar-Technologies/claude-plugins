@@ -60,8 +60,8 @@ the plan.
    - `sync-version.sh` — bumps the version (or, in a release-please repo, tells you
      the Conventional Commit to land),
    - `scaffold-test.sh` — for each newly created `scripts/*.sh`, scaffolds a bundled
-     `scripts/tests/<name>.bats` stub (idempotent — never overwrites an existing one),
-     so `verify-repo.sh`'s bundled-tests check covers it,
+     `scripts/tests/<name>.bats` stub — a skipped placeholder to flesh out with real
+     assertions (idempotent — never overwrites an existing one),
    - `verify-repo.sh` — advisory cross-checks: the marketplace's own `check-all.sh`
      (skipped cleanly outside a marketplace) and the plugin's `bats` tests; it blocks
      only on the plugin's own bundled tests, and surfaces repo-wide / centralized-test

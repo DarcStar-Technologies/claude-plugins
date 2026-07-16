@@ -53,8 +53,9 @@ never edits until the user approves.
 | `scripts/check-template.sh` | Shell | Structural validators + reuse of `scaffold-upgrade` for template drift. |
 | `scripts/update-changelog.sh` | Shell | Insert a bullet under `[Unreleased] > ### <category>`. |
 | `scripts/sync-version.sh` | Shell | Context-aware versioning (release-please vs. standalone). |
-| `scripts/scaffold-test.sh` | Shell | Scaffolds a bundled `scripts/tests/<name>.bats` stub for each newly created plugin script; idempotent — never overwrites an existing one. |
+| `scripts/scaffold-test.sh` | Shell | Scaffolds a bundled `scripts/tests/<name>.bats` stub (a skipped placeholder) for each newly created plugin script; idempotent — never overwrites an existing one. |
 | `scripts/verify-repo.sh` | Shell | Post-apply cross-checks — marketplace `check-all.sh` + plugin `bats` tests, scoped & advisory (hard only on the plugin's own bundled tests). |
+| `scripts/lib/plan-paths.sh` | Shell (sourced) | Shared `norm_rel` plan-path normalizer used by both `scaffold-test.sh` and `verify-repo.sh` so they classify a plan's paths identically. |
 | `scripts/check-install-status.sh` | Shell | Is the plugin installed/stale → reload hint. |
 
 ## Model selection
@@ -103,12 +104,18 @@ there is one source of truth for each.
   *creates* a new top-level `scripts/*.sh`, step 8 runs `scaffold-test.sh` to write a
   `scripts/tests/<name>.bats` stub for it — always inside the **target plugin's own**
   `scripts/tests/`, never the marketplace's centralized `scripts/tests/` (out of bounds
-  for this command). That keeps it in-bounds *and* means verify-repo.sh's **hard**
-  bundled-tests check — not just its advisory centralized-test check — then covers the
-  new script. It fires only for newly **created** top-level `scripts/*.sh` (not modified
-  scripts, and not a nested `scripts/lib/*` path), is **idempotent** (an existing or
-  hand-written stub is left untouched), and the generated stub is a placeholder smoke
-  test the author should still flesh out with real assertions.
+  for this command). That keeps it in-bounds *and* gives the new script a home in the
+  plugin's own (hard-checked) bundled suite that verify-repo.sh discovers. The generated
+  stub is a **skipped placeholder**: it does *not* invoke the script (an auto-generated
+  no-argument run could hang on a stdin read or fire a side effect) and makes **no** smoke
+  assertion (asserting output would wrongly hard-fail a legitimately-silent script under
+  verify-repo.sh's bundled-tests check) — so it passes as a skip and never blocks a
+  correct edit. The author replaces it with real assertions and removes the skip; until
+  then it is a scaffold, not actual coverage. It fires only for newly **created**
+  top-level `scripts/*.sh` (not modified scripts, not a nested `scripts/lib/*` path) and
+  is **idempotent** (an existing or hand-written stub is left untouched). Plan-path
+  normalization is shared with verify-repo.sh via `scripts/lib/plan-paths.sh`, so the two
+  classify the same path identically.
 - **Flags live in the "directive segment".** All three flags (`--dry-run`,
   `--plugin=<dir>`, `--type=add|change|fix|remove`) are recognized anywhere **before
   the `—` change-description separator**, alongside the plugin dir, in any order; when

@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Auto-scaffold a bundled `scripts/tests/<name>.bats` bats stub (via new `scripts/scaffold-test.sh`) for every new `scripts/*.sh` an approved plan creates, run before `verify-repo.sh` so its bundled-tests check exercises it.
+- Auto-scaffold a bundled `scripts/tests/<name>.bats` stub (via new `scripts/scaffold-test.sh`) for every new `scripts/*.sh` an approved plan creates — a skipped placeholder that gives the new script a bundled test to flesh out (it does not auto-run the script), discovered by `verify-repo.sh`. Idempotent; writes only inside the target plugin's own directory.
 - Add a post-apply cross-check pass (`verify-repo.sh`) to `/edit-plugin`: runs the marketplace's `check-all.sh` and the plugin's `bats` tests. Scoped and advisory — it hard-fails only on the plugin's own bundled tests (in-bounds to fix); repo-wide and centralized-test failures are surfaced as warnings rather than blocking a correct isolated edit (skips cleanly outside a marketplace repo).
 - /edit-plugin now runs guided intake when the change is not fully described up front — asking the change type, then plugin-specific suggestions (with a free-form option) — and adds `--plugin=<dir>` / `--type=add|change|fix|remove` flags so it resumes from whatever is already known instead of re-asking.
 - Added a `--dry-run` flag to `/edit-plugin` that previews the plan (files, changelog entry, version impact) without applying any edits or running the changelog/version/reload scripts.
