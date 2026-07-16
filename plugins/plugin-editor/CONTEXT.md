@@ -19,7 +19,7 @@ inserting a changelog bullet, deciding release-please vs. hand-bump, detecting a
 active install — is a tested shell script. The command is the conductor:
 
 ```text
-/edit-plugin [<dir>] — <change> [--dry-run]
+/edit-plugin [--dry-run] [<dir>] — <change>
    │
    ├─ no <dir>? list-plugins.sh         → user picks from the marketplace's plugins
    ├─ edit-planner (agent, read-only)   → a concrete plan + clarifying questions
@@ -69,10 +69,12 @@ one source of truth for each.
 
 - **Never edit outside the target plugin's directory.** The command is scoped to
   `<plugin-dir>`; the planner is read-only.
-- **`--dry-run` is parsed out of `$ARGUMENTS` up front** and causes the command to
-  stop immediately after presenting the plan — before any of check-template.sh /
-  update-changelog.sh / sync-version.sh / check-install-status.sh run — so the
-  plugin's directory and disk state are left untouched.
+- **`--dry-run` is the flag only as the leading token of `$ARGUMENTS`** (a
+  `--dry-run` inside the change description is literal — otherwise "add a `--dry-run`
+  flag to X" would misfire). When set, the command stops immediately after
+  presenting the plan — before any of check-template.sh / update-changelog.sh /
+  sync-version.sh / check-install-status.sh run — so the plugin's directory and disk
+  state are left untouched.
 - **Versioning is context-aware.** In this release-please repo you do **not**
   hand-bump `plugin.json` — `sync-version.sh` detects the config and tells you the
   Conventional Commit to land instead. Standalone plugins get a real bump.
