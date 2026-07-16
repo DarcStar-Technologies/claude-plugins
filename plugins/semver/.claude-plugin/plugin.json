@@ -3,5 +3,11 @@
   "version": "0.1.0",
   "description": "Deterministic semver operations: validate, compare, bump, and next-version from Conventional Commits.",
   "license": "MIT",
-  "keywords": ["semver", "versioning", "validate", "compare", "conventional-commits"]
+  "keywords": [
+    "semver",
+    "versioning",
+    "validate",
+    "compare",
+    "conventional-commits"
+  ]
 }
