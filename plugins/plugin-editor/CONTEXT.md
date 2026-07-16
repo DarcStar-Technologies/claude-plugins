@@ -19,11 +19,13 @@ inserting a changelog bullet, deciding release-please vs. hand-bump, detecting a
 active install — is a tested shell script. The command is the conductor:
 
 ```text
-/edit-plugin <dir> — <change>
+/edit-plugin [<dir>] — <change>
    │
+   ├─ no <dir>? list-plugins.sh         → user picks from the marketplace's plugins
    ├─ edit-planner (agent, read-only)   → a concrete plan + clarifying questions
    ├─ confirm with the user             → NOTHING is edited before this
    ├─ apply edits (only inside <dir>)
+   ├─ verify the edits landed           → re-read + semantic check each planned change
    ├─ check-template.sh                 → structure + template drift
    ├─ update-changelog.sh               → [Unreleased] entry
    ├─ sync-version.sh                   → bump / commit guidance
@@ -39,6 +41,7 @@ never edits until the user approves.
 | ---- | ---- | -------------- |
 | `commands/edit-plugin.md` | Slash command (`sonnet`) | Orchestrates the flow; applies edits; runs the scripts. |
 | `agents/edit-planner.md` | Subagent (`sonnet`, read-only) | Interprets the request; asks clarifying questions; returns the plan. |
+| `scripts/list-plugins.sh` | Shell | Discover the marketplace's plugins for the picker when no target is given. |
 | `scripts/check-template.sh` | Shell | Structural validators + reuse of `scaffold-upgrade` for template drift. |
 | `scripts/update-changelog.sh` | Shell | Insert a bullet under `[Unreleased] > ### <category>`. |
 | `scripts/sync-version.sh` | Shell | Context-aware versioning (release-please vs. standalone). |

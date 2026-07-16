@@ -8,8 +8,11 @@ and a reload hint if the plugin is active in your session.
 ## Usage
 
 ```text
-/edit-plugin <plugin-dir> — <what you want to change>
+/edit-plugin [<plugin-dir>] — <what you want to change>
 ```
+
+Omit `<plugin-dir>` (when the current directory isn't itself a plugin) and it
+lists the marketplace's plugins for you to pick from.
 
 Examples:
 
@@ -25,13 +28,16 @@ the plan.
    a concrete plan — files to touch, a changelog entry, the version impact, and a
    note if the change diverges from the plugin's template.
 2. You review and approve.
-3. It applies the edits, then runs:
+3. It applies the edits, then **re-reads every changed file to confirm each planned
+   change actually landed** (fixing or surfacing anything that didn't), and runs:
    - `check-template.sh` — structural validation **and** template-drift,
    - `update-changelog.sh` — records the change under `[Unreleased]`,
    - `sync-version.sh` — bumps the version (or, in a release-please repo, tells you
      the Conventional Commit to land),
    - `check-install-status.sh` — if the plugin is installed in this session,
      suggests `/plugin update` + `/reload-plugins`.
+4. It finishes with a **summary** of every file touched, what changed, and the
+   changelog/version outcome.
 
 ## How it works
 

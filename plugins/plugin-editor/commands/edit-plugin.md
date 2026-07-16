@@ -12,11 +12,16 @@ Modify an existing Claude Code plugin safely. Work through these steps in order 
 
 ## 1. Locate the plugin
 
-- Determine the target plugin directory from `$ARGUMENTS` (default to the current
-  directory if it contains `.claude-plugin/plugin.json`). If you can't tell which
-  plugin is meant, ask.
-- Confirm it is a plugin: `.claude-plugin/plugin.json` must exist. If not, stop and
-  say so.
+- If `$ARGUMENTS` names a directory, use it. Otherwise, if the current directory
+  contains `.claude-plugin/plugin.json`, use that.
+- If neither gives a target, **offer a picker** instead of guessing: run
+  `"$SCRIPTS/list-plugins.sh"` (recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"`
+  fresh). If it prints a non-empty JSON array, use `AskUserQuestion` to let the user
+  choose — one option per plugin (label = `name`, description = the manifest
+  `description`) — and use the chosen entry's `path`. Only if it exits non-zero or
+  returns `[]` (not in a marketplace / no plugins) fall back to asking in free text.
+- Confirm the resolved directory is a plugin: `.claude-plugin/plugin.json` must
+  exist. If not, stop and say so.
 
 ## 2. Plan (delegate to the planner)
 
@@ -41,7 +46,16 @@ Modify an existing Claude Code plugin safely. Work through these steps in order 
 - Make exactly the edits in the approved plan, operating **only inside the target
   plugin's own directory**. Use Edit/Write. Never touch anything outside it.
 
-## 6. Check, record, version — deterministic scripts
+## 6. Verify the edits landed
+
+- Re-read (Read) **every** file in the plan's `files[]` and confirm the specific
+  change it described is actually present — a semantic check, not just that the file
+  parses. For a deletion, confirm the file or capability is really gone.
+- If a change didn't land or landed wrong, fix it with Edit and re-check. If you
+  cannot resolve it, stop and tell the user exactly what is missing before going on.
+- Only continue once every planned change is confirmed.
+
+## 7. Check, record, version — deterministic scripts
 
 Run these with Bash and relay each script's output. Each Bash call is a fresh
 shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
@@ -55,17 +69,23 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
 
-## 7. Reload hint
+## 8. Reload hint
 
 - `"$SCRIPTS/check-install-status.sh" <plugin-dir>` — if the plugin is installed in
   this session, relay its suggestion to run `/plugin update <name>` and
   `/reload-plugins` so the edits take effect.
 
-## 8. Report
+## 9. Summary
 
-- Summarize what changed (files, the changelog entry, the version guidance) and the
-  next steps: in a release-please repo, the Conventional Commit to land; standalone,
-  the new version; plus the reload hint when the plugin is active.
+Give the user a clear summary of the change:
+
+- **Files** — each path touched and, in one line, what changed (as confirmed by the
+  verify step in 6).
+- **Changelog** — the `[Unreleased]` category and bullet that was recorded.
+- **Version** — the new version (standalone) or the Conventional Commit to land
+  (release-please-managed), from `sync-version.sh`.
+- **Reload** — the `/plugin update` + `/reload-plugins` hint when the plugin is
+  active in this session.
 
 Throughout: ask when unsure, keep deterministic work in the scripts, prefer the
 minimum-capable model for any new component, and never edit outside the target
