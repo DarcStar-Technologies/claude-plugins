@@ -6,30 +6,29 @@ this file is a curated, human-readable index of the larger items.
 
 ## Planned plugins
 
-_Nothing open right now — propose ideas via
-[GitHub Issues](https://github.com/DarcStar-Technologies/claude-plugins/issues)._
+- **semver** — deterministic semver operations (`/semver` validate / compare /
+  next-version) for any project; its comparator is reused by the repo's drift
+  tooling. → [#10](https://github.com/DarcStar-Technologies/claude-plugins/issues/10)
 
 ## Shipped
 
 - **plugin-forge** — generate a plugin from a natural-language description,
-  defaulting to the current template version and prompting for anything it can't
-  confidently infer. Delegates the deterministic work to its `forge-scaffold.sh`.
+  prompting for anything it can't confidently infer. Delegates the deterministic
+  work to its `forge-scaffold.sh`.
   → [#2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2)
+- **Portable mode + unified scaffolder** — `/forge` scaffolds a standalone plugin
+  in any project or registers into the marketplace (`--register`); one engine,
+  resolving the template from a `<template>-v*` version tag, a repo, a local
+  `_template/`, or the latest from this repo.
+  → [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
 
 ### Follow-ups
 
-- **Portable mode for plugin-forge** — scaffold a standalone plugin outside this
-  repo: resolve the template from a local `_template/`, a `_template-v*` version
-  tag, or a specified repo (no bundled copy that could drift), and make
-  marketplace/release registration optional (one scaffolder, `--register` toggles
-  marketplace mode).
-  → [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
 - **Multiple named templates** — rearchitect scaffolding so plugin families
   (MCP servers, command suites, agent packs) share common structure and can be
   selected with `--template <name>` (already a flag; only one template exists
-  today). → [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
-- Resolving a **specific** older template version folds into #5 — fetch the
-  `<template>-v*` version tag rather than reading git history.
+  today). Includes release-config hardening so a template doesn't version-bump on
+  incidental touches. → [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
 
 ## Foundation (done)
 
