@@ -61,6 +61,18 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "plugins/scaffold-upgrade": {
+      "release-type": "simple",
+      "component": "scaffold-upgrade",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }

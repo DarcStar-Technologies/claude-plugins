@@ -20,7 +20,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+        # Pin to match the pre-commit hook (koalaman/shellcheck-precommit) so a
+        # clean local run can't turn red on CI over a shellcheck version drift.
+        run: |
+          SC_VERSION=v0.11.0
+          curl -sSfL "https://github.com/koalaman/shellcheck/releases/download/${SC_VERSION}/shellcheck-${SC_VERSION}.linux.x86_64.tar.xz" | tar -xJ
+          sudo cp "shellcheck-${SC_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          shellcheck --version
 
       - name: shellcheck
         run: find scripts plugins templates -name '*.sh' -exec shellcheck {} +

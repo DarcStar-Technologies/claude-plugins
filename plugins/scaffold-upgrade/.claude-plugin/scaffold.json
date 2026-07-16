@@ -1,0 +1,8 @@
+{
+  "template": "command-suite",
+  "templateVersion": "0.1.0",
+  "source": "repo:.",
+  "mode": "marketplace",
+  "scaffoldedWith": "forge-scaffold.sh",
+  "scaffoldedAt": "2026-07-16"
+}
