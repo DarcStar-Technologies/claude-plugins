@@ -8,14 +8,14 @@
 # falsely block a correct edit — so those parts are advisory:
 #
 #   (1) REPO-WIDE (advisory) — in a marketplace, run scripts/check-all.sh and relay
-#       it. A repo-wide failure is either the plugin's own structure (already
-#       hard-checked by check-template.sh) or pre-existing breakage in ANOTHER
-#       plugin, so this WARNS rather than fails.
+#       it. A repo-wide failure is either the target's own structure (already
+#       hard-checked by check-structure.sh) or pre-existing breakage ELSEWHERE in
+#       the repo, so this WARNS rather than fails.
 #   (2) TESTS —
-#       (a) the plugin's OWN bundled scripts/tests/*.bats (in-bounds, fixable) —
+#       (a) the target's OWN bundled scripts/tests/*.bats (in-bounds, fixable) —
 #           a failure here IS a hard failure (exit non-zero).
 #       (b) the repo's centralized scripts/tests/<name>.bats for a touched script
-#           that still exists (these live OUTSIDE the plugin dir, which the flow may
+#           that still exists (these live OUTSIDE the target dir, which the flow may
 #           not edit) — advisory: warns on failure (e.g. a behavior change needs a
 #           follow-up test update), never blocks.
 #
@@ -76,7 +76,7 @@ else
   if bash "$mp_root/scripts/check-all.sh"; then
     printf 'check-all.sh OK\n'
   else
-    warn "repo-wide checks failed. /edit-plugin only edits inside the plugin dir, so this is either the plugin's own structure (already reported by check-template.sh) or PRE-EXISTING breakage in another plugin — review before merging. Not blocking this edit."
+    warn "repo-wide checks failed. The calling command only edits inside the target dir, so this is either the target's own structure (already reported by check-structure.sh) or PRE-EXISTING breakage elsewhere in the repo — review before merging. Not blocking this edit."
   fi
 fi
 
@@ -122,7 +122,7 @@ else
     if bats "${central[@]}"; then
       printf 'centralized bats OK\n'
     else
-      warn "a repo-root test for a touched script failed. These tests live outside the plugin dir (scripts/tests/), which /edit-plugin may not edit — if your change altered a script's behavior, update the matching test as a FOLLOW-UP. Not blocking this edit."
+      warn "a repo-root test for a touched script failed. These tests live outside the target dir (scripts/tests/), which the calling command may not edit — if your change altered a script's behavior, update the matching test as a FOLLOW-UP. Not blocking this edit."
     fi
   fi
 fi
