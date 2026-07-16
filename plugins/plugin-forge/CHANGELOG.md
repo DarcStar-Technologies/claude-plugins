@@ -30,6 +30,10 @@ Entries below `[Unreleased]` are generated automatically from
 
 ## [Unreleased]
 
+### Changed
+
+- `/forge` invoked with no description now runs a guided intake (an `AskUserQuestion` for the kind of plugin, grounded in the real reference templates, then 3-5 concrete component-set suggestions) instead of a bare free-text ask; the given-description flow is unchanged.
+
 ### Added
 
 - Named-template selection: `/forge` and the `plugin-planner` agent choose among

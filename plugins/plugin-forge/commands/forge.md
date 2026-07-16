@@ -30,8 +30,23 @@ whether it registers the plugin.
   (`--portable`): scaffold a standalone plugin in the current directory (no
   `--register`), registering nothing.
 
-Tell the user which mode you're in. If `$ARGUMENTS` has no description, ask what
-the plugin should do before continuing.
+Tell the user which mode you're in.
+
+**If `$ARGUMENTS` has no description, run a guided intake** instead of a bare
+free-text ask (mirroring `/forge-template` and `/edit-plugin`). Skip this entirely
+when a description was given — that flow is unchanged.
+
+- **What kind of plugin?** Ask one single-select `AskUserQuestion`, grounded in the
+  real reference templates: run `"$ROOT/scripts/list-templates.sh"` and skim each so
+  the archetype options are concrete — e.g. a command-only suite (`command-suite`), a
+  command + planner-agent + script mix (`default`), or a plan → confirm → apply
+  workflow (`plan-confirm-apply`). If that script isn't available (portable mode
+  without this repo checked out), describe those same archetypes from general
+  knowledge. Always keep the built-in **"Other"** free-form option.
+- **Which components?** Ask a second single-select `AskUserQuestion` offering 3–5
+  concrete component-set suggestions for the chosen kind (again keeping **"Other"**).
+- **Combine.** Fold both answers into one clear description, then continue with the
+  normal flow (template selection in step 2, the planner in step 3).
 
 ## 2. Template source
 
