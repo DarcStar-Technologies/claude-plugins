@@ -1,4 +1,4 @@
 {
-  "plugins/_template": "0.0.0",
-  "plugins/plugin-forge": "0.0.0"
+  "plugins/_template": "0.1.0",
+  "plugins/plugin-forge": "0.1.0"
 }
