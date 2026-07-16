@@ -44,7 +44,7 @@ Manage it with:
 
 > `plugins/_template` is the reference/scaffold plugin. It is intentionally not
 > published to the catalog.
-
+>
 > **Note on `plugin-forge`:** it authors new plugins *for this marketplace* by
 > calling the repo's own `scripts/new-plugin.sh`, so `/forge` must run from a
 > checkout of this repository. Clone it, launch Claude Code there, and add the
