@@ -45,10 +45,9 @@ Manage it with:
 > `plugins/_template` is the reference/scaffold plugin. It is intentionally not
 > published to the catalog.
 >
-> **Note on `plugin-forge`:** it authors new plugins *for this marketplace* by
-> calling the repo's own `scripts/new-plugin.sh`, so `/forge` must run from a
-> checkout of this repository. Clone it, launch Claude Code there, and add the
-> marketplace with `/plugin marketplace add ./`.
+> **Note on `plugin-forge`:** run inside a checkout of this repo it scaffolds and
+> registers a plugin here; run anywhere else it scaffolds a standalone plugin
+> (portable mode). See its [README](./plugins/plugin-forge/README.md).
 
 ## Roadmap
 
@@ -64,7 +63,6 @@ e.g. an [AI-assisted plugin scaffolder](https://github.com/DarcStar-Technologies
 ├─ plugins/
 │  ├─ _template/                     reference plugin & scaffold source
 │  └─ <name>/                        one directory per published plugin
-├─ templates/                        token files used by new-plugin.sh
 ├─ scripts/                          mechanized validation & tooling (+ bats tests)
 ├─ .github/workflows/                CI gates and release automation
 ├─ CHANGELOG.md                      repo-level (tooling/structure) changelog
@@ -87,7 +85,7 @@ e.g. an [AI-assisted plugin scaffolder](https://github.com/DarcStar-Technologies
 Start a new plugin from the template:
 
 ```text
-scripts/new-plugin.sh my-plugin --description "What it does"
+plugins/plugin-forge/scripts/forge-scaffold.sh my-plugin --description "What it does" --register .
 ```
 
 Then read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the commit format, release

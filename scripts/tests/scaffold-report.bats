@@ -13,15 +13,15 @@ bump_template() {
 }
 
 @test "strict mode fails on unlisted major template drift" {
-  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null # scaffolded at 0.1.0
-  bump_template 1.0.0                               # template -> major 1
+  fixture_scaffold acme-tool >/dev/null # scaffolded at 0.1.0
+  bump_template 1.0.0                   # template -> major 1
   run "$FIX/scripts/scaffold-report.sh" --strict
   [ "$status" -ne 0 ]
   [[ "$output" == *"MAJOR-DRIFT"* ]]
 }
 
 @test "default (non-strict) mode never fails, even on major drift" {
-  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null
+  fixture_scaffold acme-tool >/dev/null
   bump_template 1.0.0
   run "$FIX/scripts/scaffold-report.sh"
   [ "$status" -eq 0 ]
@@ -29,7 +29,7 @@ bump_template() {
 }
 
 @test "exception list lets a plugin lag a major version under --strict" {
-  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null
+  fixture_scaffold acme-tool >/dev/null
   bump_template 1.0.0
   printf '{ "exceptions": { "acme-tool": "pinned pending migration" } }\n' \
     >"$FIX/.scaffold-exceptions.json"
@@ -39,7 +39,7 @@ bump_template() {
 }
 
 @test "strict mode tolerates minor/patch drift" {
-  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null
+  fixture_scaffold acme-tool >/dev/null
   bump_template 0.2.0
   run "$FIX/scripts/scaffold-report.sh" --strict
   [ "$status" -eq 0 ]
@@ -48,7 +48,7 @@ bump_template() {
 }
 
 @test "strict mode passes when no plugin has drifted" {
-  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null
+  fixture_scaffold acme-tool >/dev/null
   run "$FIX/scripts/scaffold-report.sh" --strict
   [ "$status" -eq 0 ]
 }

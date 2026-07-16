@@ -1,36 +1,30 @@
 #!/usr/bin/env bash
-# forge-scaffold.sh — portable plugin scaffolder for plugin-forge.
+# forge-scaffold.sh — the single scaffolder for plugin-forge.
 #
-# Creates a standalone Claude Code plugin from a resolved template, WITHOUT
-# touching any marketplace or release configuration. Unlike the marketplace's
-# scripts/new-plugin.sh, this is self-contained: it has no dependency on this
-# repository's layout and works in any project.
+# Creates a new Claude Code plugin from a resolved template. The two modes differ
+# only in registration:
+#   - portable (default): write a standalone plugin into --out; register nothing.
+#   - marketplace (--register <repo-root>): write into <root>/plugins/<name> and
+#     register it in that repo's marketplace catalog + release automation.
 #
 # Usage:
-#   forge-scaffold.sh <name> [options]
-#
-# Options:
-#   --description <text>       one-line plugin description
-#   --out <dir>                parent directory for the new plugin (default: .)
-#   --author <name>            plugin author (default: none)
-#   --template-version <ver>   fetch the template at tag _template-v<ver> from
-#                              the default repo
-#   --template-repo <repo>     fetch the template from <owner/repo>, a git URL, or
-#                              a local path; append @<ref> to select a tag/branch
+#   forge-scaffold.sh <name> [--description T] [--author A] [--template NAME]
+#                     [--out DIR] [--register REPO_ROOT]
+#                     [--template-version VER | --template-repo REPO[@REF]]
 #
 # Template resolution (highest precedence first):
-#   1. --template-version <ver>       tag _template-v<ver> from the default repo
-#   2. --template-repo <repo>[@ref]   the given repo/path
-#   3. ./_template                    a local template in the current directory
-#   4. (default)                      latest template from the default repo
+#   0. --register <root>        -> <root>/plugins/<template> (marketplace)
+#   1. --template-version VER   -> tag <template>-vVER from the default repo
+#   2. --template-repo REPO     -> owner/repo, a git URL, or a local path (+@ref)
+#   3. ./<template>             -> a local template directory
+#   4. (default)                -> latest <template> from the default repo
 #
-# NOTE: docs/manifest are generated from the small inline scaffolds below, which
-# intentionally mirror the repo's templates/*.tmpl. Unifying the two template
-# sources is tracked in issue #6 (multiple named templates).
+# Only components (commands/agents/skills/scripts) are taken from the template;
+# docs and the manifest are generated from the inline scaffolds below. A custom
+# template therefore contributes components, not docs — see issue #6.
 set -euo pipefail
 
 DEFAULT_REPO="https://github.com/DarcStar-Technologies/claude-plugins.git"
-TEMPLATE_NAME="_template"
 
 die() {
   printf 'forge-scaffold: %s\n' "$*" >&2
@@ -48,14 +42,18 @@ shift
 
 description="A Claude Code plugin."
 author=""
+template="_template"
 out="."
+register_root=""
 tpl_version=""
 tpl_repo=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --description) description="${2:?--description needs a value}" && shift 2 ;;
     --author) author="${2:?--author needs a value}" && shift 2 ;;
+    --template) template="${2:?--template needs a value}" && shift 2 ;;
     --out) out="${2:?--out needs a value}" && shift 2 ;;
+    --register) register_root="${2:?--register needs a repo root}" && shift 2 ;;
     --template-version) tpl_version="${2:?--template-version needs a value}" && shift 2 ;;
     --template-repo) tpl_repo="${2:?--template-repo needs a value}" && shift 2 ;;
     *) die "unknown option: $1" ;;
@@ -64,7 +62,15 @@ done
 
 [[ "$name" =~ ^[a-z][a-z0-9-]*$ ]] ||
   die "plugin name must be lowercase alphanumeric with hyphens (got '$name')"
-dest="$out/$name"
+
+if [[ -n "$register_root" ]]; then
+  [[ -d "$register_root" ]] || die "register root not found: $register_root"
+  [[ -f "$register_root/.claude-plugin/marketplace.json" ]] ||
+    die "register root is not a marketplace (no .claude-plugin/marketplace.json): $register_root"
+  dest="$register_root/plugins/$name"
+else
+  dest="$out/$name"
+fi
 [[ ! -e "$dest" ]] || die "destination already exists: $dest"
 
 # --- resolve the template into $tpl_dir ------------------------------------
@@ -75,7 +81,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# clone_template <git-url-or-path> <ref-or-empty> -> echoes the template dir
 clone_template() {
   local url="$1" ref="$2"
   tmp_clone="$(mktemp -d)"
@@ -86,28 +91,36 @@ clone_template() {
     git clone --depth 1 -- "$url" "$tmp_clone" >/dev/null 2>&1 ||
       die "could not fetch '$url'"
   fi
-  printf '%s/plugins/%s' "$tmp_clone" "$TEMPLATE_NAME"
+  printf '%s/plugins/%s' "$tmp_clone" "$template"
 }
 
 tpl_source=""
 tpl_dir=""
-if [[ -n "$tpl_version" ]]; then
-  tpl_dir="$(clone_template "$DEFAULT_REPO" "${TEMPLATE_NAME}-v${tpl_version}")"
-  tpl_source="tag:${TEMPLATE_NAME}-v${tpl_version}"
+if [[ -n "$register_root" ]]; then
+  tpl_dir="$register_root/plugins/$template"
+  tpl_source="repo:$register_root"
+elif [[ -n "$tpl_version" ]]; then
+  tpl_dir="$(clone_template "$DEFAULT_REPO" "${template}-v${tpl_version}")"
+  tpl_source="tag:${template}-v${tpl_version}"
 elif [[ -n "$tpl_repo" ]]; then
   ref=""
   url="$tpl_repo"
-  [[ "$tpl_repo" == *@* ]] && {
+  # Split @ref only for non-URL / non-SSH forms (a URL or git@host:path has ://
+  # or a ':' host separator — don't mangle it).
+  if [[ "$tpl_repo" != *://* && "$tpl_repo" != *:* && "$tpl_repo" == *@* ]]; then
     url="${tpl_repo%@*}"
     ref="${tpl_repo##*@}"
-  }
-  # owner/repo shorthand -> GitHub URL; leave URLs and local paths untouched.
-  [[ "$url" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] && url="https://github.com/${url}.git"
+  fi
+  # owner/repo shorthand -> GitHub URL, but only when it isn't an existing local
+  # directory (a local path like myorg/myrepo takes precedence over the shorthand).
+  if [[ ! -d "$url" && "$url" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+    url="https://github.com/${url}.git"
+  fi
   tpl_dir="$(clone_template "$url" "$ref")"
   tpl_source="repo:${tpl_repo}"
-elif [[ -d "./${TEMPLATE_NAME}" ]]; then
-  tpl_dir="./${TEMPLATE_NAME}"
-  tpl_source="local:./${TEMPLATE_NAME}"
+elif [[ -d "./${template}" ]]; then
+  tpl_dir="./${template}"
+  tpl_source="local:./${template}"
 else
   tpl_dir="$(clone_template "$DEFAULT_REPO" "")"
   tpl_source="default:${DEFAULT_REPO}"
@@ -117,12 +130,15 @@ fi
 [[ -f "$tpl_dir/.claude-plugin/plugin.json" ]] ||
   die "template has no .claude-plugin/plugin.json: $tpl_dir"
 tpl_ver="$(jq -r '.version // "unknown"' "$tpl_dir/.claude-plugin/plugin.json")"
+tpl_license="$(jq -r '.license // "MIT"' "$tpl_dir/.claude-plugin/plugin.json")"
 
 # --- scaffold --------------------------------------------------------------
-info "scaffolding $dest (template source: $tpl_source)"
+mode="portable"
+[[ -n "$register_root" ]] && mode="marketplace"
+info "scaffolding $dest (mode: $mode, template source: $tpl_source)"
 mkdir -p "$dest/.claude-plugin"
 
-# Copy component directories from the template, then rename the identifier.
+# Components come from the template (identifier renamed to the new plugin name).
 for comp in commands agents skills scripts; do
   [[ -d "$tpl_dir/$comp" ]] || continue
   cp -R "$tpl_dir/$comp" "$dest/$comp"
@@ -130,19 +146,19 @@ done
 if [[ -n "$(find "$dest" -type f -print -quit 2>/dev/null)" ]]; then
   while IFS= read -r -d '' f; do
     content="$(cat "$f")"
-    content="${content//"$TEMPLATE_NAME"/$name}"
+    content="${content//"$template"/$name}"
     printf '%s' "$content" >"$f"
-  done < <(grep -rlZ -F --binary-files=without-match "$TEMPLATE_NAME" "$dest" 2>/dev/null || true)
+  done < <(grep -rlZ -F --binary-files=without-match "$template" "$dest" 2>/dev/null || true)
 fi
 
-# Generate the manifest (identity only; drop any repo-specific fields).
-jq -n --arg name "$name" --arg desc "$description" --arg author "$author" \
+# Manifest: identity only; the license is inherited from the template.
+jq -n --arg name "$name" --arg desc "$description" --arg author "$author" --arg license "$tpl_license" \
   '{name: $name, version: "0.1.0", description: $desc}
    + (if $author == "" then {} else {author: {name: $author}} end)
-   + {license: "MIT", keywords: []}' \
+   + {license: $license, keywords: []}' \
   >"$dest/.claude-plugin/plugin.json"
 
-# Generate docs from inline scaffolds (mirror of templates/*.tmpl — see note).
+# Docs from inline scaffolds.
 render() {
   local c="$1"
   c="${c//\{\{NAME\}\}/$name}"
@@ -159,6 +175,10 @@ render "$(
 ## Usage
 
 _Document the commands, agents, and skills this plugin provides._
+
+## Development
+
+See `CONTEXT.md` for design notes and `CHANGELOG.md` for release history.
 EOF
 )" >"$dest/README.md"
 
@@ -166,7 +186,8 @@ render "$(
   cat <<'EOF'
 # {{NAME}} — Context
 
-> Orientation for humans and AI assistants working on this plugin.
+> Orientation for humans and AI assistants working on this plugin. It explains
+> the *why* and the non-obvious concepts. Keep it current as the plugin evolves.
 
 ## Purpose
 
@@ -174,11 +195,29 @@ render "$(
 
 ## Mental model
 
-_Describe the core idea and the one concept a newcomer must understand first._
+_Describe the core idea in a few sentences: what problem does this plugin solve,
+and what is the one concept a newcomer must understand first?_
+
+## Components
+
+| Path        | Type           | Responsibility                            |
+| ----------- | -------------- | ----------------------------------------- |
+| `commands/` | Slash commands | User-invoked entry points.                |
+| `agents/`   | Subagents      | Delegated, task-scoped workers.           |
+| `skills/`   | Skills         | Model-invoked capabilities and knowledge. |
+| `scripts/`  | Shell          | Deterministic, mechanized steps (no LLM). |
+
+## Model selection
+
+Use the **minimum capable model** for each subagent or command (`model:`
+frontmatter): `haiku` for mechanical/bounded work, `sonnet` for moderate
+reasoning, `opus` for deep or ambiguous problems. Push anything fully
+deterministic into `scripts/` so no model is spent on it.
 
 ## Challenging concepts & gotchas
 
-_Document ordering constraints, external dependencies, and known failure modes._
+_Document ordering constraints, external dependencies, environment assumptions,
+and known failure modes here._
 EOF
 )" >"$dest/CONTEXT.md"
 
@@ -199,11 +238,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 EOF
 )" >"$dest/CHANGELOG.md"
 
-# Provenance: portable mode records the resolved source and template version.
+# Provenance: template + resolved source + mode.
 today="$(date +%Y-%m-%d)"
-jq -n --arg tpl "$TEMPLATE_NAME" --arg tver "$tpl_ver" --arg src "$tpl_source" --arg date "$today" \
-  '{template: $tpl, templateVersion: $tver, source: $src, mode: "portable", scaffoldedWith: "forge-scaffold.sh", scaffoldedAt: $date}' \
+jq -n --arg tpl "$template" --arg tver "$tpl_ver" --arg src "$tpl_source" --arg mode "$mode" --arg date "$today" \
+  '{template: $tpl, templateVersion: $tver, source: $src, mode: $mode, scaffoldedWith: "forge-scaffold.sh", scaffoldedAt: $date}' \
   >"$dest/.claude-plugin/scaffold.json"
 
+# --- register (marketplace mode only) --------------------------------------
+if [[ -n "$register_root" ]]; then
+  tmp="$(mktemp)"
+  mp="$register_root/.claude-plugin/marketplace.json"
+  # No version field: plugin.json is the source of truth (release-please updates
+  # it, not the catalog, so a version here would drift).
+  jq --arg name "$name" --arg src "./plugins/$name" --arg desc "$description" \
+    '.plugins += [{name: $name, source: $src, description: $desc}]' "$mp" >"$tmp" && mv "$tmp" "$mp"
+
+  cfg="$register_root/release-please-config.json"
+  if [[ -f "$cfg" ]]; then
+    tmp="$(mktemp)"
+    jq --arg path "plugins/$name" --arg comp "$name" \
+      '.packages[$path] = {
+          "release-type": "simple",
+          "component": $comp,
+          "changelog-path": "CHANGELOG.md",
+          "extra-files": [
+            {"type": "json", "path": ".claude-plugin/plugin.json", "jsonpath": "$.version"}
+          ]
+        }' "$cfg" >"$tmp" && mv "$tmp" "$cfg"
+  fi
+
+  man="$register_root/.release-please-manifest.json"
+  if [[ -f "$man" ]]; then
+    tmp="$(mktemp)"
+    # Seed at 0.0.0 so release-please cuts a clean 0.1.0 as the first release.
+    jq --arg path "plugins/$name" '.[$path] = "0.0.0"' "$man" >"$tmp" && mv "$tmp" "$man"
+  fi
+  info "registered $name in the marketplace"
+fi
+
 info "done: $dest"
-printf 'Next: flesh out %s/CONTEXT.md, README.md, and the components.\n' "$dest"

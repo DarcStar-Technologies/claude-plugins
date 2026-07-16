@@ -85,6 +85,27 @@ make_template_repo() {
   [[ "$output" == repo:* ]]
 }
 
+@test "a local relative path is used as-is, not treated as owner/repo (finding 1)" {
+  local src="$WORK/myorg/myrepo"
+  mkdir -p "$src/plugins"
+  cp -R "$(repo_root_dir)/plugins/_template" "$src/plugins/_template"
+  git -C "$src" init -q
+  git -C "$src" add -A
+  git -C "$src" -c user.email=t@t -c user.name=t commit -qm init
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' f1 --template-repo myorg/myrepo"
+  [ "$status" -eq 0 ]
+  run jq -r '.source' "$WORK/f1/.claude-plugin/scaffold.json"
+  [ "$output" = "repo:myorg/myrepo" ]
+}
+
+@test "an @-bearing URL is not mangled by ref parsing (finding 2)" {
+  # ssh-style URL keeps its @; GIT_SSH_COMMAND=false makes the fetch fail fast
+  # instead of hanging on a TCP connect. The error must show the URL intact.
+  run env GIT_SSH_COMMAND=false bash "$SCAFFOLDER" f2 --template-repo "git@example.com:owner/repo.git"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"git@example.com:owner/repo.git"* ]]
+}
+
 @test "rejects an underscore-prefixed name" {
   run bash "$SCAFFOLDER" _bad
   [ "$status" -ne 0 ]

@@ -19,13 +19,16 @@ Each Bash call runs in a **fresh shell**, so recompute paths in every command.
 
 - Find the repo root, if any:
   `ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"`.
-- **Marketplace mode** — if `"$ROOT/scripts/new-plugin.sh"` and
-  `"$ROOT/.claude-plugin/marketplace.json"` both exist, you're inside the DarcStar
-  marketplace repo: scaffold **and register** the plugin there.
+Both modes use the same scaffolder,
+`"${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh"` — the only difference is
+whether it registers the plugin.
+
+- **Marketplace mode** — if `"$ROOT/.claude-plugin/marketplace.json"` exists, you
+  are inside a marketplace repo: scaffold into `plugins/<name>` **and register** it
+  by passing `--register "$ROOT"`.
 - **Portable mode** — otherwise, or if the user asked for a standalone plugin
-  (`--portable`): use the bundled
-  `"${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh"`, which creates a standalone
-  plugin in the current directory and registers nothing.
+  (`--portable`): scaffold a standalone plugin in the current directory (no
+  `--register`), registering nothing.
 
 Tell the user which mode you're in. If `$ARGUMENTS` has no description, ask what
 the plugin should do before continuing.
@@ -63,7 +66,7 @@ Pass the description as a single **single-quoted** argument so punctuation, quot
 or `$` can't break the command.
 
 - **Marketplace mode:**
-  `"$ROOT/scripts/new-plugin.sh" <name> --description 'One clear sentence.'`
+  `"${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh" <name> --description 'One clear sentence.' --register "$ROOT"`
   — registers the plugin in the marketplace, release config, and provenance; never
   edit those by hand.
 - **Portable mode:**

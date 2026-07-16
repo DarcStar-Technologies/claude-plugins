@@ -87,7 +87,7 @@ while IFS= read -r dir; do
 
     scaffold="$dir/.claude-plugin/scaffold.json"
     if [[ ! -f "$scaffold" ]]; then
-      fail "$name: missing .claude-plugin/scaffold.json (scaffold via scripts/new-plugin.sh)"
+      fail "$name: missing .claude-plugin/scaffold.json (scaffold with plugin-forge / forge-scaffold.sh)"
     elif ! jq empty "$scaffold" 2>/dev/null; then
       fail "$name: scaffold.json is not valid JSON"
     elif [[ -z "$(jq -r '.template // empty' "$scaffold")" ]]; then

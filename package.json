@@ -13,7 +13,7 @@
     "lint": "bash scripts/lint.sh",
     "lint:md": "markdownlint-cli2",
     "test": "bats scripts/tests",
-    "new-plugin": "bash scripts/new-plugin.sh",
+    "new-plugin": "bash plugins/plugin-forge/scripts/forge-scaffold.sh",
     "scaffold:report": "bash scripts/scaffold-report.sh",
     "scaffold:check": "bash scripts/scaffold-report.sh --strict",
     "commitlint": "commitlint"

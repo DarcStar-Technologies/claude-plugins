@@ -11,17 +11,17 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Marketplace foundation: `.claude-plugin/marketplace.json`, plugin templates in
-  `templates/`, and the `_template` reference plugin.
+- Marketplace foundation: `.claude-plugin/marketplace.json` and the `_template`
+  reference plugin.
 - Mechanized validation scripts under `scripts/` (manifest, docs, and version
   checks) with a `bats` test suite.
 - Automation: Conventional Commits enforced by commitlint, release-please for
   per-plugin versioning and changelogs, pre-commit hooks (shellcheck, shfmt,
   markdownlint, actionlint, and the local validators), and GitHub Actions CI.
 - Project documentation: `README.md`, `CONTRIBUTING.md`, and `CLAUDE.md`.
-- Scaffold provenance tracking: `new-plugin.sh --template` records the source
-  template and version in each plugin's `.claude-plugin/scaffold.json`, enforced
-  by `validate-manifests.sh` and surfaced (with drift detection) by
+- Scaffold provenance tracking: the scaffolder records the source template and
+  version in each plugin's `.claude-plugin/scaffold.json`, enforced by
+  `validate-manifests.sh` and surfaced (with drift detection) by
   `scripts/scaffold-report.sh`.
 - Template drift policy: `scaffold-report.sh --strict` (a CI gate) fails on
   unlisted **major** template drift; `.scaffold-exceptions.json` records
@@ -33,3 +33,10 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
   Plugin changelogs hold only an `[Unreleased]` section; release-please writes the
   versioned entries. The release workflow skips cleanly when no plugins are
   registered.
+
+### Changed
+
+- Scaffolding is unified into plugin-forge's `forge-scaffold.sh` (one engine;
+  `--register` toggles marketplace registration, and it also scaffolds standalone
+  plugins in portable mode). Removed the separate `scripts/new-plugin.sh` and the
+  `templates/*.tmpl` directory; docs/manifest are generated from inline scaffolds.

@@ -13,7 +13,7 @@ _Nothing open right now — propose ideas via
 
 - **plugin-forge** — generate a plugin from a natural-language description,
   defaulting to the current template version and prompting for anything it can't
-  confidently infer. Delegates the deterministic work to `scripts/new-plugin.sh`.
+  confidently infer. Delegates the deterministic work to its `forge-scaffold.sh`.
   → [#2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2)
 
 ### Follow-ups
@@ -21,8 +21,8 @@ _Nothing open right now — propose ideas via
 - **Portable mode for plugin-forge** — scaffold a standalone plugin outside this
   repo: resolve the template from a local `_template/`, a `_template-v*` version
   tag, or a specified repo (no bundled copy that could drift), and make
-  marketplace/release registration optional. Relocating `new-plugin.sh` alone
-  does not achieve this.
+  marketplace/release registration optional (one scaffolder, `--register` toggles
+  marketplace mode).
   → [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
 - **Multiple named templates** — rearchitect scaffolding so plugin families
   (MCP servers, command suites, agent packs) share common structure and can be

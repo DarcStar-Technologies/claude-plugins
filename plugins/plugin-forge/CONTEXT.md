@@ -14,17 +14,19 @@ project**. Implements
 and [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
 (portable mode).
 
-## Two modes
+## One scaffolder, two modes
 
-`/forge` detects its mode at runtime:
+`scripts/forge-scaffold.sh` is the single scaffolding engine. The modes differ
+only in registration:
 
-- **Marketplace mode** — inside a checkout of this repo (`scripts/new-plugin.sh` +
-  `.claude-plugin/marketplace.json` present). Scaffolds into `plugins/<name>/` and
-  registers the plugin in the marketplace catalog + release automation, via
-  `scripts/new-plugin.sh`.
-- **Portable mode** — anywhere else. Scaffolds a standalone plugin in the current
-  directory and registers nothing, via the bundled
-  `${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh`.
+- **Marketplace mode** (`--register <repo-root>`) — scaffold into
+  `<root>/plugins/<name>` and register the plugin in that repo's marketplace
+  catalog + release automation.
+- **Portable mode** (default) — scaffold a standalone plugin in the current
+  directory (or `--out <dir>`) and register nothing.
+
+`/forge` detects which mode to use (a marketplace repo is present → `--register`;
+otherwise portable) and calls the same script either way.
 
 ## Mental model
 
@@ -35,21 +37,21 @@ deterministic, use the minimum-capable model for the rest:
 | ----- | --- | -------------- |
 | Understanding | `agents/plugin-planner.md` (sonnet) | Description → structured plan + clarifying questions. Read-only. |
 | Orchestration | `commands/forge.md` | Detect mode; run plan → ask → scaffold → realize → validate. |
-| Mechanization (marketplace) | `../../scripts/new-plugin.sh` | Render, copy, register in marketplace/release. |
-| Mechanization (portable) | `scripts/forge-scaffold.sh` | Resolve a template, scaffold a standalone plugin. No registration. |
+| Mechanization | `scripts/forge-scaffold.sh` | Resolve a template, scaffold, optionally register (`--register`). No model. |
 
-## Template resolution (portable mode)
+## Template resolution
 
 `forge-scaffold.sh` **resolves** the template — rather than bundling a static copy
 — in precedence order:
 
-1. `--template-version <ver>` → the `_template-v<ver>` release tag from this repo,
+0. `--register <root>` → `<root>/plugins/<template>` (marketplace),
+1. `--template-version <ver>` → the `<template>-v<ver>` release tag from this repo,
 2. `--template-repo <owner/repo[@ref]>` → that repo (or a git URL / local path),
-3. a local `./_template/` directory,
-4. the latest `_template` from this repo (the default).
+3. a local `./<template>/` directory,
+4. the latest `<template>` from this repo (the default).
 
-The `_template-v*` release tags are the version source, so there is **no bundled
-copy to drift**. Marketplace mode always uses the repo's current `_template`.
+The `<template>-v*` release tags are the version source, so there is **no bundled
+copy to drift**.
 
 ## Model selection
 
@@ -60,17 +62,15 @@ copy to drift**. Marketplace mode always uses the repo's current `_template`.
 
 ## Challenging concepts & gotchas
 
-- **Two engines, one command.** `forge.md` picks `new-plugin.sh` (marketplace) or
-  `forge-scaffold.sh` (portable) based on whether it is inside this repo.
-- **Portable docs are inline.** `forge-scaffold.sh` generates the new plugin's
-  docs/manifest from small inline scaffolds that mirror `../../templates/*.tmpl`.
-  Unifying the two template sources is tracked in
-  [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
-  (multiple named templates).
+- **Components only from the template.** The scaffolder copies the template's
+  `commands/agents/skills/scripts`, but generates docs/manifest from inline
+  scaffolds. A custom `--template-repo` therefore contributes *components*, not
+  docs — honoring custom-template docs is tracked in
+  [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6).
 - **Portable needs git + network** for the tag/repo/default sources; a local
-  `./_template/` works offline. Resolution fails with a clear message otherwise.
+  `./<template>/` works offline. Resolution fails with a clear message otherwise.
 - **Provenance.** Every forged plugin gets `.claude-plugin/scaffold.json` with the
-  template + version; portable also records the resolved `source` and `mode`.
+  template, resolved `source`, and `mode`.
 - **Ask, don't invent.** The planner emits `questions[]` for anything ambiguous;
   `/forge` must resolve them with the user before creating files.
 
@@ -78,6 +78,7 @@ copy to drift**. Marketplace mode always uses the repo's current `_template`.
 
 - Issues: [#2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2)
   (marketplace), [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
-  (portable mode)
-- Scaffolders: `../../scripts/new-plugin.sh`, `scripts/forge-scaffold.sh`
+  (portable mode), [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
+  (multiple templates)
+- Scaffolder: `scripts/forge-scaffold.sh`
 - Repo conventions: `../../CONTRIBUTING.md`
