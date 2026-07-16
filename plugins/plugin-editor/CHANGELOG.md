@@ -5,6 +5,13 @@ All notable changes to the `plugin-editor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.6.0...plugin-editor-v0.7.0) (2026-07-16)
+
+
+### Features
+
+* **plugin-editor:** auto-scaffold a bundled bats stub for new scripts ([#42](https://github.com/DarcStar-Technologies/claude-plugins/issues/42)) ([0017b1c](https://github.com/DarcStar-Technologies/claude-plugins/commit/0017b1c84c7aba30aeebefb44a53b8fb303b5b95))
+
 ## [0.6.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.5.0...plugin-editor-v0.6.0) (2026-07-16)
 
 
