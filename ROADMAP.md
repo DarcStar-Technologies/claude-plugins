@@ -24,8 +24,12 @@ _Nothing open right now — propose ideas via
   marketplace/release registration optional. Relocating `new-plugin.sh` alone
   does not achieve this.
   → [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
-- Resolve a **specific** older template version (from git history of
-  `plugins/_template/`); plugin-forge supports only the current version today.
+- **Multiple named templates** — rearchitect scaffolding so plugin families
+  (MCP servers, command suites, agent packs) share common structure and can be
+  selected with `--template <name>` (already a flag; only one template exists
+  today). → [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
+- Resolving a **specific** older template version folds into #5 — fetch the
+  `<template>-v*` version tag rather than reading git history.
 
 ## Foundation (done)
 
