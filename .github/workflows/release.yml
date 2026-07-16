@@ -41,8 +41,33 @@ jobs:
           fi
 
       - uses: googleapis/release-please-action@v4
+        id: release
         if: steps.guard.outputs.run == 'true'
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Fully automate releases: enable GitHub auto-merge on release-please's open
+      # release PR (labelled `autorelease: pending`) so it merges itself once the
+      # required CI checks pass — and merging it is what tags + publishes. The
+      # release PR still runs CI, so a bad release can never merge.
+      #
+      # Prerequisites configured once via the GitHub API (not in this file):
+      #   - repo setting `allow_auto_merge = true`
+      #   - a branch-protection rule on `main` whose required status checks are
+      #     "validate & lint" and "shell tests (bats)" (so --auto gates on CI).
+      # See CONTRIBUTING.md → "Automated releases".
+      - name: Auto-merge the release PR once CI passes
+        if: steps.guard.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+                  --label 'autorelease: pending' --json number --jq '.[0].number // empty')"
+          if [ -n "$pr" ]; then
+            echo "Enabling auto-merge on release PR #$pr"
+            gh pr merge "$pr" --repo "$GITHUB_REPOSITORY" --squash --auto
+          else
+            echo "No open release PR to auto-merge."
+          fi
