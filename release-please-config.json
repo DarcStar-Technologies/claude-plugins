@@ -4,10 +4,32 @@
   "include-component-in-tag": true,
   "initial-version": "0.1.0",
   "packages": {
-    "plugins/_template": {
+    "templates/default": {
       "release-type": "simple",
-      "component": "_template",
+      "component": "default",
       "changelog-path": "CHANGELOG.md",
+      "exclude-paths": [
+        "templates/default/README.md",
+        "templates/default/CONTEXT.md",
+        "templates/default/CHANGELOG.md"
+      ],
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
+    "templates/command-suite": {
+      "release-type": "simple",
+      "component": "command-suite",
+      "changelog-path": "CHANGELOG.md",
+      "exclude-paths": [
+        "templates/command-suite/README.md",
+        "templates/command-suite/CONTEXT.md",
+        "templates/command-suite/CHANGELOG.md"
+      ],
       "extra-files": [
         {
           "type": "json",

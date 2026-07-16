@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Every plugin must be self-documenting: require CONTEXT.md, CHANGELOG.md and
-# README.md in each plugin directory (including the _template reference).
+# README.md in each plugin directory (including the templates under templates/).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/lib/common.sh
 . "$SCRIPT_DIR/lib/common.sh"

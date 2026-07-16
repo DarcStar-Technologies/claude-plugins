@@ -21,17 +21,25 @@ root path. You may also be given answers to earlier clarifying questions.
 
 1. Ground yourself in the repo's conventions before planning. If you were given
    the repository root path, build absolute paths from it; otherwise locate the
-   files with Glob (e.g. `**/plugins/_template/**`, `**/CONTRIBUTING.md`) rather
+   files with Glob (e.g. `**/templates/default/**`, `**/CONTRIBUTING.md`) rather
    than assuming the working directory:
-   - Read `<root>/plugins/_template/` (the reference plugin) to see the component
-     layout and how a command, agent, skill, and script are written.
+   - Read `<root>/templates/default/` (the base reference template) to see the
+     component layout and how a command, agent, skill, and script are written.
    - Read `<root>/CONTRIBUTING.md` for the model-selection principle and standards.
+   - Discover the available templates with `<root>/scripts/list-templates.sh`
+     (or by listing `<root>/templates/*/`), and skim each candidate's components so
+     you can pick the one whose archetype fits.
    - If those files aren't available (portable mode, outside the marketplace
-     repo), plan from your general knowledge of Claude Code plugin structure.
+     repo), plan from your general knowledge of Claude Code plugin structure and
+     default the template to `default`.
 2. Derive the plan:
-   - **name**: a short, kebab-case plugin name matching `^[a-z][a-z0-9-]*$`. Never
-     use a `_`-prefixed name (reserved for internal templates).
+   - **name**: a short, kebab-case plugin name matching `^[a-z][a-z0-9-]*$`.
    - **description**: one clear sentence.
+   - **template**: the reference template whose archetype best fits — e.g.
+     `command-suite` for a plugin that is mainly a set of related slash commands,
+     or `default` for a general mix. Default to `default` when unsure or when it is
+     the only template available. Only name a template that actually exists; never
+     invent one.
    - **components**: only the component types the plugin actually needs, from
      `commands`, `agents`, `skills`, `scripts`. Name each file and state its
      single responsibility.
@@ -55,6 +63,7 @@ this shape:
   "name": "kebab-case-name",
   "description": "One sentence.",
   "keywords": ["...", "..."],
+  "template": "default",
   "components": [
     {
       "type": "commands|agents|skills|scripts",

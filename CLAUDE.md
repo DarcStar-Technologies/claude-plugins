@@ -14,6 +14,7 @@ changelogs; pre-commit hooks and CI enforce structure.
 ```bash
 npm install                 # install commitlint + markdownlint (dev tooling)
 plugins/plugin-forge/scripts/forge-scaffold.sh NAME --register .   # scaffold + register a plugin
+scripts/list-templates.sh   # list scaffolding templates (the plugins under templates/)
 scripts/scaffold-report.sh  # template provenance + drift per plugin
 scripts/check-all.sh        # manifests + docs + versions (the core gate)
 npm test                    # bats tests:  bats scripts/tests
@@ -35,9 +36,15 @@ There is no build step; plugins are Markdown, JSON, and shell.
   `CHANGELOG.md`, `README.md`, and — for public plugins — `.claude-plugin/scaffold.json`
   (template provenance). Optional component dirs: `commands/`, `agents/`,
   `skills/`, `scripts/`, `hooks/`.
-- **`plugins/_template/`** — the reference plugin and the template the scaffolder
-  copies components from. The `_` prefix marks it internal: validators skip
-  `_`-prefixed plugins for marketplace membership, so it is never published.
+- **Templates (`templates/*/`)** — the reference plugins (a sibling tree to
+  `plugins/`) the scaffolder copies components from. `default` is the
+  general-purpose base; `command-suite` is an archetype for command-only plugins.
+  Living under `templates/` — not any name prefix — marks them internal: validators
+  skip them for marketplace membership, so they are never published, but they
+  **are** release-managed and tagged (`<name>-v*`), for drift comparison and
+  `--template-version` fetches. List them with `scripts/list-templates.sh`; select
+  one with `forge-scaffold.sh --template <name>` (default `default`). See
+  `CONTRIBUTING.md` → "Adding a template" to add more.
 - **`plugins/plugin-forge/scripts/forge-scaffold.sh`** — the single scaffolder.
   In the repo it runs with `--register .` (marketplace mode: writes to `plugins/`
   and registers); portably it creates a standalone plugin elsewhere. Docs and the
@@ -69,9 +76,12 @@ There is no build step; plugins are Markdown, JSON, and shell.
 - **Minimum capable model.** Subagents/commands set `model:` frontmatter to the
   smallest model that is correct (`haiku` → `sonnet` → `opus`). Anything fully
   deterministic goes in a `scripts/` shell script (with a bats test), not a model.
-- **`_template` is a copy source.** The scaffolder copies its component dirs and
-  rewrites the literal string `_template` to the new name — avoid that literal for
-  anything you want preserved.
+- **Templates are copy sources.** The scaffolder copies a template's component
+  dirs and substitutes `{{NAME}}`/`{{DESC}}` placeholders in them — use those for
+  anything that should become the new plugin's identity. A template's prose docs
+  (`README.md`/`CONTEXT.md`/`CHANGELOG.md`) are in the release config's
+  `exclude-paths`, so incidental doc-only edits don't cut a new template version —
+  only changes to its components or manifest do.
 - **Commit format is enforced.** commitlint requires Conventional Commits
   (`feat`/`fix`/…, plugin-name or area scope). See `CONTRIBUTING.md`.
 

@@ -1,5 +1,5 @@
 {
-  "template": "_template",
+  "template": "default",
   "templateVersion": "0.2.0",
   "source": "repo:.",
   "mode": "marketplace",

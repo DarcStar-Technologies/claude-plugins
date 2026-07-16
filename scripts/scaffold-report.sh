@@ -59,7 +59,7 @@ while IFS= read -r dir; do
   tver="$(jq -r '.templateVersion // "-"' "$scaffold")"
 
   current="-"
-  tmanifest="$root/plugins/$tmpl/.claude-plugin/plugin.json"
+  tmanifest="$root/templates/$tmpl/.claude-plugin/plugin.json"
   [[ -f "$tmanifest" ]] && current="$(jq -r '.version // "-"' "$tmanifest")"
 
   status="ok"

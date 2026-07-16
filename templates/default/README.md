@@ -1,9 +1,9 @@
-# _template
+# default
 
-Reference plugin for the DarcStar Technologies marketplace. It is the canonical
-example of the layout every plugin follows and the template that plugin-forge's
-scaffolder copies from. It is intentionally **not** listed in the public
-marketplace catalog (its name is prefixed with `_`).
+The general-purpose reference template for the DarcStar Technologies marketplace.
+It is the canonical example of the layout every plugin follows and the default
+source plugin-forge's scaffolder copies from. It lives under `templates/` and is
+intentionally **not** listed in the public marketplace catalog.
 
 ## What it demonstrates
 

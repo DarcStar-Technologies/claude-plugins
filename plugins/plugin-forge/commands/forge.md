@@ -35,23 +35,41 @@ the plugin should do before continuing.
 
 ## 2. Template source
 
-- Marketplace mode always uses the repo's current `_template`.
-- Portable mode resolves the template in this precedence (pass the user's choice
-  through to the scaffolder in step 5):
-  1. `--template-version <ver>` → the `_template-v<ver>` release tag,
+The marketplace ships several **reference templates** — the plugins under
+`templates/` (a sibling of `plugins/`). Each contributes its component set
+(commands/agents/skills/scripts) to the new plugin. List them to choose the best
+fit:
+
+- `"$ROOT/scripts/list-templates.sh"` (add `--json` for a machine-readable list).
+
+Pick the template whose archetype matches what the plugin is — e.g.
+`command-suite` for a plugin that is mainly a set of related slash commands, or
+`default` for a general mix of command/agent/skill/script. The planner proposes
+one in step 3; override it from the user's explicit request.
+
+`--template <name>` selects **which** template (default `default`). The *source*
+of that template is then resolved by mode:
+
+- **Marketplace mode** — the template is the plugin of that name under `templates/`
+  in this repo. Pass `--template <name>` (omit for `default`).
+- **Portable mode** — resolve the named template's source in this precedence (pass
+  the user's choice through to the scaffolder in step 5):
+  1. `--template-version <ver>` → the `<name>-v<ver>` release tag,
   2. `--template-repo <owner/repo[@ref]>` → that repo,
-  3. a local `./_template/` directory,
-  4. the latest template from the DarcStar repo (the default).
+  3. a local `./<name>/` directory,
+  4. the latest `<name>` template from the DarcStar repo (the default).
 
 ## 3. Plan (delegate to the planner subagent)
 
 - Use the `plugin-planner` agent (via the Task tool). Give it the description and,
-  in marketplace mode, the repo root so it can read the conventions. In portable
-  mode the repo files may be absent — tell it to plan from general Claude Code
-  plugin knowledge.
-- It returns a JSON plan: `name`, `description`, `keywords`, `components[]` (each
-  with `type`, `file`, `responsibility`, `model`, `tools`), and `questions[]`. If
-  it doesn't return a single valid JSON object, ask it to try again.
+  in marketplace mode, the repo root and the available templates (from step 2) so
+  it can read the conventions and pick a template. In portable mode the repo files
+  may be absent — tell it to plan from general Claude Code plugin knowledge and
+  default the template to `default`.
+- It returns a JSON plan: `name`, `description`, `keywords`, `template` (the
+  best-fit template name), `components[]` (each with `type`, `file`,
+  `responsibility`, `model`, `tools`), and `questions[]`. If it doesn't return a
+  single valid JSON object, ask it to try again.
 
 ## 4. Resolve unknowns — ask, don't guess
 
@@ -65,13 +83,16 @@ the plugin should do before continuing.
 Pass the description as a single **single-quoted** argument so punctuation, quotes,
 or `$` can't break the command.
 
+Add `--template <name>` when the plan chose a template other than the default
+`default`.
+
 - **Marketplace mode:**
-  `"${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh" <name> --description 'One clear sentence.' --register "$ROOT"`
+  `"${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh" <name> --description 'One clear sentence.' [--template <template>] --register "$ROOT"`
   — registers the plugin in the marketplace, release config, and provenance; never
   edit those by hand.
 - **Portable mode:**
   `"${CLAUDE_PLUGIN_ROOT}/scripts/forge-scaffold.sh" <name> --description 'One clear sentence.'`
-  plus any of `--out <dir>`, `--template-version <ver>`, `--template-repo <repo>`.
+  plus any of `--template <name>`, `--out <dir>`, `--template-version <ver>`, `--template-repo <repo>`.
 - If it fails because the destination already exists, ask for a different name.
 
 ## 6. Realize the plan

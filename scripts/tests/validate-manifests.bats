@@ -40,8 +40,8 @@ teardown() { teardown_fixture; }
   [[ "$output" == *"not listed in marketplace"* ]]
 }
 
-@test "internal (_-prefixed) plugins need not be in the marketplace" {
-  add_plugin _template 0.1.0
+@test "templates (under templates/) need not be in the marketplace" {
+  add_template default 0.1.0
   run "$FIX/scripts/validate-manifests.sh"
   [ "$status" -eq 0 ]
 }

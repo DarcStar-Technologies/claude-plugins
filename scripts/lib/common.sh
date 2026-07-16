@@ -39,24 +39,37 @@ repo_root() {
 }
 
 plugins_dir() { printf '%s/plugins\n' "$(repo_root)"; }
+templates_dir() { printf '%s/templates\n' "$(repo_root)"; }
 
-# Print each plugin directory, one per line. Pass an explicit scope so callers
-# read clearly (and so shellcheck never treats a bare call as ambiguous):
-#   list_plugin_dirs all      include internal (_-prefixed) templates
-#   list_plugin_dirs public   only publishable plugins (the default)
+# Print plugin directories, one per line. Templates are identified by living under
+# templates/ (a sibling of plugins/), not by any name prefix. Pass an explicit
+# scope so callers read clearly:
+#   list_plugin_dirs public     publishable plugins under plugins/ (the default)
+#   list_plugin_dirs templates  reference templates under templates/
+#   list_plugin_dirs all        both
 list_plugin_dirs() {
   local scope="${1:-public}"
-  local pdir base dir
-  pdir="$(plugins_dir)"
-  [[ -d "$pdir" ]] || return 0
-  for dir in "$pdir"/*/; do
-    [[ -d "$dir" ]] || continue
-    base="$(basename "$dir")"
-    if [[ "$base" == _* && "$scope" != "all" ]]; then
-      continue
-    fi
-    printf '%s\n' "${dir%/}"
+  local -a roots=()
+  case "$scope" in
+    public) roots=("$(plugins_dir)") ;;
+    templates) roots=("$(templates_dir)") ;;
+    all) roots=("$(plugins_dir)" "$(templates_dir)") ;;
+    *) roots=("$(plugins_dir)") ;;
+  esac
+  local root dir
+  for root in "${roots[@]}"; do
+    [[ -d "$root" ]] || continue
+    for dir in "$root"/*/; do
+      [[ -d "$dir" ]] || continue
+      printf '%s\n' "${dir%/}"
+    done
   done
+}
+
+# Return 0 if the given plugin directory is an internal reference template
+# (it lives under templates/) rather than a published plugin (under plugins/).
+is_template_dir() {
+  [[ "$(basename "$(dirname "$1")")" == "templates" ]]
 }
 
 # Return 0 if the argument is a valid semantic version (semver.org 2.0.0).

@@ -31,17 +31,17 @@ project, registering nothing:
 ```
 
 Portable mode resolves the template, in order, from `--template-version <ver>`
-(the `_template-v<ver>` release tag), `--template-repo <owner/repo[@ref]>`, a local
-`./_template/`, or the latest from this repo. plugin-forge plans from your
-description (asking about anything unclear), scaffolds via the right engine, fills
-in the components, and validates.
+(the `<name>-v<ver>` release tag), `--template-repo <owner/repo[@ref]>`, a local
+`./templates/<name>/` (or `./<name>/`), or the latest from this repo. plugin-forge
+plans from your description (asking about anything unclear), scaffolds via the
+right engine, fills in the components, and validates.
 
 ## Notes
 
 - Marketplace mode requires a checkout of this repo (it calls the repo's scripts);
   portable mode works in any project.
 - Portable mode needs `git` + network for the tag/repo/default template sources; a
-  local `./_template/` works offline.
+  local `./templates/<name>/` (or `./<name>/`) works offline.
 
 ## Development
 

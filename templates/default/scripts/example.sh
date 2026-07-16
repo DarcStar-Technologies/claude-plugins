@@ -4,4 +4,4 @@
 set -euo pipefail
 
 name="${1:-world}"
-printf 'Hello, %s! — from the DarcStar plugin template.\n' "$name"
+printf 'Hello, %s! — from the {{NAME}} plugin.\n' "$name"

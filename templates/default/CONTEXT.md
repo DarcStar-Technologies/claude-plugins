@@ -1,9 +1,9 @@
-# _template — Context
+# default — Context
 
-> Orientation for humans and AI assistants. This reference plugin exists to show
-> *how* a DarcStar plugin is structured and *why* it is structured that way.
-> Copy it with plugin-forge (`forge-scaffold.sh`), then rewrite this file for the real
-> plugin.
+> Orientation for humans and AI assistants. This reference template exists to show
+> *how* a DarcStar plugin is structured and *why*. plugin-forge copies its
+> component directories (not this file) when you scaffold `--template default`;
+> then rewrite the generated docs for the real plugin.
 
 ## Purpose
 
@@ -21,7 +21,7 @@ must satisfy, and the two design principles the marketplace enforces:
 ## How the pieces fit
 
 ```text
-_template/
+templates/default/
 ├─ .claude-plugin/plugin.json   manifest: name, semver version, description
 ├─ commands/hello.md            /hello  ->  runs scripts/example.sh
 ├─ agents/example-reviewer.md   subagent, model: haiku, read-only tools
@@ -36,6 +36,14 @@ _template/
 commands reference bundled files as `${CLAUDE_PLUGIN_ROOT}/scripts/example.sh`
 regardless of where the marketplace is installed.
 
+## Placeholders
+
+Components may contain `{{NAME}}` and `{{DESC}}` — the scaffolder substitutes the
+new plugin's name and description when it copies them (see `scripts/example.sh`,
+whose greeting says `from the {{NAME}} plugin`). Anything without a placeholder is
+copied verbatim. This replaced the old scheme of blind-rewriting the template's
+own name, which the `_` prefix used to make safe.
+
 ## Model selection
 
 | Task character                        | Model    | Example here        |
@@ -47,29 +55,31 @@ regardless of where the marketplace is installed.
 
 ## Gotchas
 
-- **Naming:** the `_` prefix marks this plugin as internal. The validation
-  scripts skip `_`-prefixed plugins when checking marketplace membership, so it
-  is never published even though it is fully valid.
+- **Location, not naming:** templates live under `templates/` (a sibling of
+  `plugins/`). The validators treat anything under `templates/` as internal — it
+  is skipped for marketplace membership and never published, even though it is a
+  fully valid plugin. (Nothing depends on a name prefix anymore.)
 - **Versioning:** release-please bumps `plugin.json` and writes the released
   `CHANGELOG.md` sections from Conventional Commits — don't hand-edit those, and
   keep `CHANGELOG.md` to an `[Unreleased]` section (the tool owns the versioned
-  entries). `_template` is release-managed like any plugin — tagged, but kept out
-  of the public catalog by its `_` prefix. Its version advancing (when you change
-  template conventions) is what `scaffold-report.sh` compares against to flag
-  drift in plugins built from an older template.
-- **Changelog noise:** release-please attributes commits by path, so any commit
-  touching `plugins/_template/**` (including broad foundation commits) lands in
-  `_template`'s generated changelog. This is accepted — `_template` is internal —
-  and release-please hides `ci`/`chore`/`docs`/`test` types by default, so only
-  `feat`/`fix` subjects appear. Keep template edits in `_template`-scoped commits
-  to keep it tidy.
-- **Copies:** the scaffolder copies the component directories and rewrites the
-  string `_template` to the new plugin name, so avoid using that literal string
-  for anything you want preserved.
+  entries). `default` is release-managed like any plugin — tagged (`default-v*`),
+  but kept out of the public catalog by its location. Its version advancing (when
+  you change template conventions) is what `scaffold-report.sh` compares against to
+  flag drift in plugins built from an older template.
+- **Changelog noise:** release-please attributes commits by path, so a commit
+  touching `templates/default/**` lands in `default`'s generated changelog —
+  *except* its prose docs (`README.md`/`CONTEXT.md`/`CHANGELOG.md`), which are in
+  the release config's `exclude-paths`: a commit whose only `default` files are
+  those docs does **not** bump it (so cross-cutting doc refreshes stop over-bumping
+  the template). release-please also hides `ci`/`chore`/`docs`/`test` types by
+  default, so only `feat`/`fix` subjects appear.
+- **Copies:** the scaffolder copies the component directories and substitutes
+  `{{NAME}}`/`{{DESC}}`; use those placeholders for anything that should become the
+  new plugin's identity, and avoid them elsewhere.
 - **Provenance:** scaffolded plugins get `.claude-plugin/scaffold.json` naming
-  the template and version they came from. `_template` itself has none — it is
-  the source, not a scaffold. `../../scripts/scaffold-report.sh` surfaces which
-  plugins were built from an older template version (`DRIFT`).
+  the template and version they came from. `default` itself has none — it is the
+  source, not a scaffold. `../../scripts/scaffold-report.sh` surfaces which plugins
+  were built from an older template version (`DRIFT`).
 
 ## References
 

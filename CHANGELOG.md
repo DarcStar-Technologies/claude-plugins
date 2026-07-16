@@ -11,8 +11,8 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Marketplace foundation: `.claude-plugin/marketplace.json` and the `_template`
-  reference plugin.
+- Marketplace foundation: `.claude-plugin/marketplace.json` and the `default`
+  reference template.
 - Mechanized validation scripts under `scripts/` (manifest, docs, and version
   checks) with a `bats` test suite.
 - Automation: Conventional Commits enforced by commitlint, release-please for
@@ -27,12 +27,20 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
   unlisted **major** template drift; `.scaffold-exceptions.json` records
   intentional exceptions as `plugin-name → reason`. Minor/patch drift stays
   informational.
-- release-please versions every plugin, including the internal `_template`
-  reference (kept out of the public catalog by its `_` prefix, but release-tagged
-  so its version advances through the automated flow and drives drift detection).
+- release-please versions every plugin, including the internal templates under
+  `templates/` (kept out of the public catalog by their location, but release-tagged
+  so their versions advance through the automated flow and drive drift detection).
   Plugin changelogs hold only an `[Unreleased]` section; release-please writes the
   versioned entries. The release workflow skips cleanly when no plugins are
   registered.
+- Multiple named templates: templates live under `templates/` (a sibling of
+  `plugins/`, identified by location rather than a name prefix) — `default` plus the
+  new `command-suite` archetype — discoverable with `scripts/list-templates.sh` and
+  selectable via `forge-scaffold.sh --template <name>`. Components substitute
+  `{{NAME}}`/`{{DESC}}` placeholders on copy. Each template is release-managed and
+  tagged, and `scaffold-report.sh` computes drift per template. Release-config
+  hardening adds `exclude-paths` so a template no longer version-bumps on incidental
+  prose-doc touches. Implements #6.
 
 ### Changed
 

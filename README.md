@@ -41,9 +41,11 @@ Manage it with:
 | Plugin | Description |
 | ------ | ----------- |
 | [`plugin-forge`](./plugins/plugin-forge) | Generate a new plugin from a natural-language description; prompts for anything it can't infer. |
+| [`semver`](./plugins/semver) | Deterministic semver operations — validate, compare, bump, and next-version from Conventional Commits. |
 
-> `plugins/_template` is the reference/scaffold plugin. It is intentionally not
-> published to the catalog.
+> The plugins under `templates/` (e.g. `default`, `command-suite`) are internal
+> reference **templates** the scaffolder builds from — list them with
+> `scripts/list-templates.sh`. They are intentionally not published to the catalog.
 >
 > **Note on `plugin-forge`:** run inside a checkout of this repo it scaffolds and
 > registers a plugin here; run anywhere else it scaffolds a standalone plugin
@@ -52,8 +54,7 @@ Manage it with:
 ## Roadmap
 
 Planned plugins and larger work are tracked in [`ROADMAP.md`](./ROADMAP.md) and
-[GitHub Issues](https://github.com/DarcStar-Technologies/claude-plugins/issues) —
-e.g. an [AI-assisted plugin scaffolder](https://github.com/DarcStar-Technologies/claude-plugins/issues/2).
+[GitHub Issues](https://github.com/DarcStar-Technologies/claude-plugins/issues).
 
 ## Repository layout
 
@@ -61,8 +62,10 @@ e.g. an [AI-assisted plugin scaffolder](https://github.com/DarcStar-Technologies
 .
 ├─ .claude-plugin/marketplace.json   marketplace catalog
 ├─ plugins/
-│  ├─ _template/                     reference plugin & scaffold source
 │  └─ <name>/                        one directory per published plugin
+├─ templates/                        internal scaffolding templates (not published)
+│  ├─ default/                       general-purpose reference template
+│  └─ command-suite/                 archetype: command-only plugins
 ├─ scripts/                          mechanized validation & tooling (+ bats tests)
 ├─ .github/workflows/                CI gates and release automation
 ├─ CHANGELOG.md                      repo-level (tooling/structure) changelog
@@ -82,10 +85,11 @@ e.g. an [AI-assisted plugin scaffolder](https://github.com/DarcStar-Technologies
 
 ## Contributing
 
-Start a new plugin from the template:
+List the available templates, then scaffold a new plugin from one:
 
 ```text
-plugins/plugin-forge/scripts/forge-scaffold.sh my-plugin --description "What it does" --register .
+scripts/list-templates.sh
+plugins/plugin-forge/scripts/forge-scaffold.sh my-plugin --template command-suite --description "What it does" --register .
 ```
 
 Then read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the commit format, release
