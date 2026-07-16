@@ -106,8 +106,10 @@ info "recorded provenance: template '$template' @ $template_version"
 # Register in the marketplace catalog.
 mp="$root/.claude-plugin/marketplace.json"
 tmp="$(mktemp)"
-jq --arg name "$name" --arg src "./plugins/$name" --arg desc "$description" --arg ver "$version" \
-  '.plugins += [{name: $name, source: $src, description: $desc, version: $ver}]' \
+# No version field here: plugin.json is the source of truth. release-please
+# updates plugin.json, not the catalog, so a version here would silently drift.
+jq --arg name "$name" --arg src "./plugins/$name" --arg desc "$description" \
+  '.plugins += [{name: $name, source: $src, description: $desc}]' \
   "$mp" >"$tmp" && mv "$tmp" "$mp"
 info "registered in marketplace.json"
 
@@ -126,7 +128,10 @@ jq --arg path "plugins/$name" --arg comp "$name" \
 
 man="$root/.release-please-manifest.json"
 tmp="$(mktemp)"
-jq --arg path "plugins/$name" --arg ver "$version" '.[$path] = $ver' "$man" >"$tmp" && mv "$tmp" "$man"
+# Seed the last-released version at 0.0.0 (nothing released yet) so release-please
+# cuts a clean 0.1.0 as the plugin's first release. plugin.json keeps 0.1.0 as the
+# in-development version.
+jq --arg path "plugins/$name" '.[$path] = "0.0.0"' "$man" >"$tmp" && mv "$tmp" "$man"
 info "registered in release automation"
 
 info "done — next steps:"

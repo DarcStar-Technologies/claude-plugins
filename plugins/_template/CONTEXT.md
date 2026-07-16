@@ -50,12 +50,19 @@ regardless of where the marketplace is installed.
 - **Naming:** the `_` prefix marks this plugin as internal. The validation
   scripts skip `_`-prefixed plugins when checking marketplace membership, so it
   is never published even though it is fully valid.
-- **Versioning:** for *scaffolded* plugins, release-please bumps `plugin.json`
-  and the released `CHANGELOG.md` sections from Conventional Commits — don't
-  hand-edit those. `_template` itself is **excluded** from release automation, so
-  bump its version by hand when you change template conventions; that bump is
-  what `scaffold-report.sh` compares against to flag drift in plugins built from
-  an older template.
+- **Versioning:** release-please bumps `plugin.json` and writes the released
+  `CHANGELOG.md` sections from Conventional Commits — don't hand-edit those, and
+  keep `CHANGELOG.md` to an `[Unreleased]` section (the tool owns the versioned
+  entries). `_template` is release-managed like any plugin — tagged, but kept out
+  of the public catalog by its `_` prefix. Its version advancing (when you change
+  template conventions) is what `scaffold-report.sh` compares against to flag
+  drift in plugins built from an older template.
+- **Changelog noise:** release-please attributes commits by path, so any commit
+  touching `plugins/_template/**` (including broad foundation commits) lands in
+  `_template`'s generated changelog. This is accepted — `_template` is internal —
+  and release-please hides `ci`/`chore`/`docs`/`test` types by default, so only
+  `feat`/`fix` subjects appear. Keep template edits in `_template`-scoped commits
+  to keep it tidy.
 - **Copies:** `new-plugin.sh` copies the component directories and rewrites the
   string `_template` to the new plugin name, so avoid using that literal string
   for anything you want preserved.

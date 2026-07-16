@@ -23,8 +23,8 @@ jobs:
       #  - RELEASE_PLEASE_TOKEN is set. This org's enterprise policy blocks the
       #    default GITHUB_TOKEN from opening PRs, so a fine-grained PAT (Contents
       #    RW, Pull requests RW) is required.
-      #  - At least one plugin is registered in release-please-config.json. The
-      #    internal _template is deliberately excluded, so a fresh repo has none.
+      #  - At least one plugin is registered in release-please-config.json (a
+      #    fresh repo, before any plugin is added, has none).
       - name: Check release preconditions
         id: guard
         env:

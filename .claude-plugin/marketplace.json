@@ -8,5 +8,11 @@
     "description": "DarcStar Technologies Claude Code plugin marketplace — a public showcase of our automation and tooling craft.",
     "version": "0.1.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "plugin-forge",
+      "source": "./plugins/plugin-forge",
+      "description": "Generate a new plugin from a natural-language description: infers name, components, tools, and minimum-capable models, defaults to the current template version, and prompts for anything it can't confidently infer."
+    }
+  ]
 }

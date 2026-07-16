@@ -47,3 +47,10 @@ teardown() { teardown_fixture; }
   [ "$status" -ne 0 ]
   [[ "$output" == *"unknown template"* ]]
 }
+
+@test "new-plugin.sh registers the plugin without a catalog version" {
+  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null
+  run jq -r '.plugins[] | select(.name == "acme-tool") | has("version")' \
+    "$FIX/.claude-plugin/marketplace.json"
+  [ "$output" = "false" ]
+}

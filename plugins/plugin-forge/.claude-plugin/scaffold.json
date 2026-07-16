@@ -1,0 +1,6 @@
+{
+  "template": "_template",
+  "templateVersion": "0.1.0",
+  "scaffoldedWith": "scripts/new-plugin.sh",
+  "scaffoldedAt": "2026-07-15"
+}

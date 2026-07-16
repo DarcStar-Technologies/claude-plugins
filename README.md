@@ -18,7 +18,7 @@ Every plugin here is independently versioned (SemVer), self-documenting
 
 | Plugin | Description |
 | ------ | ----------- |
-| _(none published yet — this is the foundation release)_ | |
+| [`plugin-forge`](./plugins/plugin-forge) | Generate a new plugin from a natural-language description; prompts for anything it can't infer. |
 
 > `plugins/_template` is the reference/scaffold plugin. It is intentionally not
 > published to the catalog.

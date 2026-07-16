@@ -25,19 +25,23 @@ setup_fixture() {
 JSON
 }
 
-# A fuller fixture that mirrors the real repo (scripts, templates, plugins,
-# manifests) so integration tests can exercise new-plugin.sh end to end.
+# A fuller fixture that mirrors the real repo (scripts, templates, the _template
+# reference, and empty manifests) so integration tests can exercise new-plugin.sh
+# end to end. It deliberately copies ONLY _template, not real published plugins,
+# so these tests stay isolated as the marketplace grows.
 setup_full_fixture() {
   FIX="$(mktemp -d)"
   local r
   r="$(repo_root_dir)"
   cp -r "$r/scripts" "$FIX/scripts"
   cp -r "$r/templates" "$FIX/templates"
-  cp -r "$r/plugins" "$FIX/plugins"
+  mkdir -p "$FIX/plugins"
+  cp -r "$r/plugins/_template" "$FIX/plugins/_template"
   mkdir -p "$FIX/.claude-plugin"
-  cp "$r/.claude-plugin/marketplace.json" "$FIX/.claude-plugin/marketplace.json"
-  cp "$r/release-please-config.json" "$FIX/release-please-config.json"
-  cp "$r/.release-please-manifest.json" "$FIX/.release-please-manifest.json"
+  printf '{ "name": "test", "owner": { "name": "test" }, "plugins": [] }\n' \
+    >"$FIX/.claude-plugin/marketplace.json"
+  printf '{ "packages": {} }\n' >"$FIX/release-please-config.json"
+  printf '{}\n' >"$FIX/.release-please-manifest.json"
 }
 
 teardown_fixture() {
