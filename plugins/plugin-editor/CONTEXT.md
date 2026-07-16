@@ -19,9 +19,12 @@ inserting a changelog bullet, deciding release-please vs. hand-bump, detecting a
 active install — is a tested shell script. The command is the conductor:
 
 ```text
-/edit-plugin [--dry-run] [<dir>] — <change>
+/edit-plugin [--dry-run] [--plugin=<dir>] [--type=add|change|fix|remove] [<dir>] [— <change>]
    │
    ├─ no <dir>? list-plugins.sh         → user picks from the marketplace's plugins
+   ├─ change not fully described?       → guided intake: change-type Q (skipped if
+   │                                       --type=), then plugin-specific suggestions
+   │                                       (AskUserQuestion, "Other" always available)
    ├─ edit-planner (agent, read-only)   → a concrete plan + clarifying questions
    ├─ confirm with the user             → NOTHING is edited before this
    │     └─ --dry-run? show the plan as a preview and STOP here (disk untouched)
@@ -75,6 +78,13 @@ one source of truth for each.
   presenting the plan — before any of check-template.sh / update-changelog.sh /
   sync-version.sh / check-install-status.sh run — so the plugin's directory and disk
   state are left untouched.
+- **`--plugin=<dir>` and `--type=add|change|fix|remove` are leading-token flags too**,
+  under the same strict rule as `--dry-run` (only recognized before `<dir>`/the change
+  text; literal text inside the change description doesn't misfire). They exist so the
+  guided-intake flow can **resume from whatever is already known**: a known plugin
+  (positional `<dir>` or `--plugin=`) skips the picker, a known `--type=` skips the
+  change-type question, and an already-fully-described change skips guided intake
+  entirely.
 - **Versioning is context-aware.** In this release-please repo you do **not**
   hand-bump `plugin.json` — `sync-version.sh` detects the config and tells you the
   Conventional Commit to land instead. Standalone plugins get a real bump.
