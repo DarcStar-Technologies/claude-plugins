@@ -94,9 +94,10 @@ actionable change text (not empty, not a placeholder):
   PREVIEW**, state explicitly that **nothing on disk was or will be changed**,
   and tell the user the exact command to re-run **without** `--dry-run` to apply it.
   Then **STOP** — do not proceed to step 6 (apply), step 7 (verify), step 8
-  (check-template.sh / update-changelog.sh / sync-version.sh / verify-repo.sh),
-  step 9 (reload hint), or the completed-work summary in step 10. The dry run ends
-  here.
+  (check-template.sh / update-changelog.sh / sync-version.sh / scaffold-test.sh /
+  verify-repo.sh — none of which run, so no changelog entry, version bump, or
+  scaffolded test stub is written), step 9 (reload hint), or the completed-work
+  summary in step 10. The dry run ends here.
 - **Otherwise:** get an explicit go-ahead before making any change, then continue.
 
 ## 6. Apply the edits
@@ -126,7 +127,21 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
 3. `"$SCRIPTS/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
-4. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
+4. **Only if the plan created any new `scripts/*.sh`:** for each `files[]` entry with
+   `action: "create"` whose `path` is a new **top-level** `scripts/<name>.sh` (matches
+   `scripts/*.sh` with no further `/` — never a nested `scripts/lib/*` path, mirroring
+   verify-repo.sh's own scope), run `"$SCRIPTS/scaffold-test.sh" <plugin-dir> <path...>`
+   (pass every such new-script path in **one** call) to write a bundled
+   `scripts/tests/<name>.bats` stub for each. It is **idempotent** — an existing stub is
+   left untouched — so relay its output and continue even when every path was already
+   scaffolded. **On a non-zero exit** (a passed path's script isn't present under the
+   plugin dir — e.g. a mis-tagged path), fix the path or the applied edit (step 6/7) and
+   re-run so the new script gets its bundled stub before you finish. **Skip this item
+   entirely when the plan created no new `scripts/*.sh`.** It runs **before**
+   verify-repo.sh so that script picks up the new stub(s). Each stub is a **skipped
+   placeholder** — it gives the script a bundled test file to flesh out; it does not
+   itself exercise the script, so it never blocks a correct edit.
+5. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
    Pass every path from the plan's `files[]` as `<files...>`. On top of
    check-template.sh (which already hard-validates the plugin's own structure and
    shellchecks its scripts), it runs the repo's `scripts/check-all.sh` (in a
@@ -152,6 +167,9 @@ Give the user a clear summary of the change:
 
 - **Files** — each path touched and, in one line, what changed (as confirmed by the
   verify step in 7).
+- **Scaffolded tests** — any bundled `scripts/tests/<name>.bats` stub `scaffold-test.sh`
+  wrote for a newly created script, noting it is a placeholder smoke test to flesh out
+  with real assertions.
 - **Changelog** — the `[Unreleased]` category and bullet that was recorded.
 - **Version** — the new version (standalone) or the Conventional Commit to land
   (release-please-managed), from `sync-version.sh`.

@@ -27,6 +27,11 @@
 #   or repo-relative — all normalized).
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=lib/plan-paths.sh
+. "$SCRIPT_DIR/lib/plan-paths.sh"
+
 die() {
   printf 'verify-repo: %s\n' "$*" >&2
   exit 1
@@ -53,15 +58,8 @@ find_up() { # <start-dir> <relpath> -> prints the nearest ancestor containing re
   return 1
 }
 
-# Normalize a plan file path to plugin-relative form (strip a leading ./, and a
-# leading <plugin-dir>/ or <basename>/ prefix), so scripts/foo.sh, ./scripts/foo.sh
-# and plugins/<name>/scripts/foo.sh all match the same way.
-norm_rel() {
-  local p="${1#./}" pd="${plugin_dir#./}"
-  p="${p#"$pd"/}"
-  p="${p#"$(basename "$plugin_dir")"/}"
-  printf '%s' "$p"
-}
+# norm_rel (plan-path normalization) is shared with scaffold-test.sh via
+# lib/plan-paths.sh, sourced above.
 
 # Locate the marketplace root once (empty if none) — reused by sections 1 and 2.
 mp_root="$(find_up "$plugin_dir" .claude-plugin/marketplace.json || true)"
@@ -92,7 +90,7 @@ fi
 if [[ -n "$mp_root" ]]; then
   for arg in "$@"; do
     [[ -n "$arg" ]] || continue
-    rel="$(norm_rel "$arg")"
+    rel="$(norm_rel "$plugin_dir" "$arg")"
     case "$rel" in
       scripts/*.sh)
         # A removed script has no behavior left to test — skip its centralized test.
