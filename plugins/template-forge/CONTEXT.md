@@ -68,12 +68,23 @@ authoring and `opus` more than it needs. All mechanical work lives in `scripts/`
   use its real name; only the component files use `{{NAME}}`/`{{DESC}}` (what a future
   plugin inherits). A template's prose docs are in the release config's `exclude-paths`
   so doc-only edits don't cut a new template version.
-- **`--from-plugin` reverse substitution is best-effort and textual.** It replaces the
-  source plugin's *description first* then its *name* (the name often occurs inside the
-  description, so name-first would corrupt the longer match), across every non-binary
-  copied file. It cannot understand semantics — the command/model reconciles anything
-  plugin-specific it can't safely genericize.
-- **Idempotent, fail-fast.** The scaffolder dies if `templates/<name>/` exists or the
-  release package is already registered — and it checks the package **before** writing
-  any files, so a re-run can't half-create a template.
+- **`--from-plugin` reverse substitution is best-effort but guarded.** It replaces the
+  source plugin's *description first* (matched **literally**, so a description with
+  regex metacharacters still matches) then its *name* — the name only on **word
+  boundaries**, so a short name (`go`, `cli`) can't rewrite substrings of unrelated
+  words (`category`). Files are selected with `grep -F`; each rewritten file keeps its
+  single trailing newline (or markdownlint MD047 would reject it). It still cannot
+  understand semantics — the command/model reconciles anything it can't safely
+  genericize.
+- **The template's own identity uses `@@NAME@@`/`@@DESC@@`, not `{{NAME}}`/`{{DESC}}`.**
+  The scaffolder renders the template's *own* docs from `@@NAME@@`/`@@DESC@@`, leaving
+  the literal `{{NAME}}`/`{{DESC}}` tokens — which appear in those docs as *guidance*
+  about component placeholders — untouched. Rendering `{{NAME}}` directly would clobber
+  that guidance with the template's identity.
+- **Validate-then-write, fail-fast, self-cleaning.** All checks run **before** any file
+  is written — name shape, destination free, (register mode) config + manifest present,
+  no `templates/<name>` package and no component-name collision with an existing plugin
+  or template, valid `--components`, and a resolvable `--from-plugin` with a
+  standard-named source. So a rejected run never leaves a partial template; an
+  unexpected mid-write failure is undone by an `EXIT` trap that removes the dest.
 - **Deterministic dependency.** `jq` is required (registration is jq edits).
