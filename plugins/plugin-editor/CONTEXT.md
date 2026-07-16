@@ -33,6 +33,8 @@ active install — is a tested shell script. The command is the conductor:
    ├─ check-template.sh                 → structure + template drift
    ├─ update-changelog.sh               → [Unreleased] entry
    ├─ sync-version.sh                   → bump / commit guidance
+   ├─ verify-repo.sh                    → repo check-all.sh (in a marketplace) +
+   │                                       scoped shellcheck/bats on touched files
    └─ check-install-status.sh           → reload hint
 ```
 
@@ -49,6 +51,7 @@ never edits until the user approves.
 | `scripts/check-template.sh` | Shell | Structural validators + reuse of `scaffold-upgrade` for template drift. |
 | `scripts/update-changelog.sh` | Shell | Insert a bullet under `[Unreleased] > ### <category>`. |
 | `scripts/sync-version.sh` | Shell | Context-aware versioning (release-please vs. standalone). |
+| `scripts/verify-repo.sh` | Shell | Post-apply repo verification — marketplace `check-all.sh`, scoped `shellcheck`/`bats` on what the edit touched. |
 | `scripts/check-install-status.sh` | Shell | Is the plugin installed/stale → reload hint. |
 
 ## Model selection
@@ -63,10 +66,14 @@ model cost.
 
 - **`semver`** — `sync-version.sh` bumps standalone plugins with `semver.sh`.
 - **`scaffold-upgrade`** — `check-template.sh` calls `check-upgrade.sh` for drift.
+- **the repo's own checks** — `verify-repo.sh` shells out to the marketplace's
+  `scripts/check-all.sh` (plus `shellcheck` / `bats`), located by walking up from the
+  plugin directory; each is skipped with a clear note — never a failure — when absent
+  (standalone/portable use).
 
-Both are found at run time (`$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a marketplace
-ancestor → `PATH`), the same pattern the rest of the marketplace uses, so there is
-one source of truth for each.
+The first two are found at run time (`$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a
+marketplace ancestor → `PATH`), the same pattern the rest of the marketplace uses, so
+there is one source of truth for each.
 
 ## Gotchas
 
@@ -76,8 +83,15 @@ one source of truth for each.
   the rule below; a `--dry-run` inside the change description is literal — otherwise
   "add a `--dry-run` flag to X" would misfire). When set, the command stops immediately
   after presenting the plan — before any of check-template.sh / update-changelog.sh /
-  sync-version.sh / check-install-status.sh run — so the plugin's directory and disk
-  state are left untouched.
+  sync-version.sh / verify-repo.sh / check-install-status.sh run — so the plugin's
+  directory and disk state are left untouched.
+- **Post-apply verification is marketplace-aware.** `verify-repo.sh` (step 8) runs the
+  repo's `scripts/check-all.sh` only when a marketplace ancestor is found from the
+  plugin directory; a standalone/portable plugin skips that part (and says so) but
+  still `shellcheck`s whatever `scripts/*.sh` the edit touched and runs the plugin's
+  own bundled `scripts/tests/*.bats` (plus the repo's `scripts/tests/<name>.bats` for
+  a touched script). A failure here is surfaced before the step-10 summary — the
+  command must not report the edit as done over a broken check.
 - **Flags live in the "directive segment".** All three flags (`--dry-run`,
   `--plugin=<dir>`, `--type=add|change|fix|remove`) are recognized anywhere **before
   the `—` change-description separator**, alongside the plugin dir, in any order; when

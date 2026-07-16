@@ -94,8 +94,9 @@ actionable change text (not empty, not a placeholder):
   PREVIEW**, state explicitly that **nothing on disk was or will be changed**,
   and tell the user the exact command to re-run **without** `--dry-run` to apply it.
   Then **STOP** — do not proceed to step 6 (apply), step 7 (verify), step 8
-  (check-template.sh / update-changelog.sh / sync-version.sh), step 9 (reload hint),
-  or the completed-work summary in step 10. The dry run ends here.
+  (check-template.sh / update-changelog.sh / sync-version.sh / verify-repo.sh),
+  step 9 (reload hint), or the completed-work summary in step 10. The dry run ends
+  here.
 - **Otherwise:** get an explicit go-ahead before making any change, then continue.
 
 ## 6. Apply the edits
@@ -112,7 +113,7 @@ actionable change text (not empty, not a placeholder):
   cannot resolve it, stop and tell the user exactly what is missing before going on.
 - Only continue once every planned change is confirmed.
 
-## 8. Check, record, version — deterministic scripts
+## 8. Check, record, version, verify — deterministic scripts
 
 Run these with Bash and relay each script's output. Each Bash call is a fresh
 shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
@@ -125,6 +126,14 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
 3. `"$SCRIPTS/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
+4. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply verification.
+   Pass every path from the plan's `files[]` as `<files...>`. It runs the repo's
+   `scripts/check-all.sh` when this is a marketplace checkout (skipping cleanly — not
+   erroring — when it isn't, e.g. standalone/portable use), `shellcheck`s any touched
+   `scripts/*.sh`, and runs the plugin's own `bats` tests plus the repo's
+   `scripts/tests/<name>.bats` for any touched script. If it reports a real failure,
+   surface it and go back to fix the edit (step 6/7) or stop — never present the
+   change as done, and do not proceed to step 9/10 over a broken check.
 
 ## 9. Reload hint
 
