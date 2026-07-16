@@ -10,26 +10,31 @@ Modify an existing Claude Code plugin safely. Work through these steps in order 
 
 `$ARGUMENTS` is the target plugin directory followed by the change to make — both
 optional, since guided intake (step 2) can supply whatever is missing. Any of the
-leading flags `--dry-run`, `--plugin=<dir>`, and `--type=add|change|fix|remove` may
-precede them (see below).
+flags `--dry-run`, `--plugin=<dir>`, and `--type=add|change|fix|remove` may appear
+before the change description (see below).
 
 ## 1. Locate the plugin
 
-- **First, parse any leading flags.** Recognize `--dry-run`, `--plugin=<dir>`, and
-  `--type=add|change|fix|remove` as flags **only when they are leading tokens** of
-  `$ARGUMENTS` (before `<plugin-dir>` and the change text), in any order. Strip each
-  one you find and remember it. The **leading-token rule is strict**: a `--dry-run`,
-  `--plugin=`, or `--type=` that appears **inside the change description** (e.g. "add
-  a `--dry-run` flag to …" or "fix the `--type=` parser") is literal content — leave
-  it in place and do **not** treat it as a flag.
+- **First, split off the change description, then parse flags.** Everything after the
+  `—` change-description separator (however the user typed it) is the **literal change
+  description** — never scan it for flags. What precedes it is the **directive
+  segment**: zero or more flags plus an optional `<plugin-dir>`, in any order. If
+  `$ARGUMENTS` has **no** separator, recognize flags only as **leading tokens** (before
+  `<plugin-dir>`) and treat everything after `<plugin-dir>` as the change description.
+  Either way, a flag-looking token that is really content (e.g. "add a `--dry-run` flag
+  to …", "fix the `--type=` parser") stays literal instead of misfiring.
+- **Recognize these flags** in the directive segment — strip each one and remember it:
   - `--dry-run` → this is a **dry run**: you will preview the plan and stop, never
     touching disk (see step 5).
-  - `--plugin=<dir>` → use `<dir>` as the resolved plugin directory and skip the
-    positional-arg / cwd / picker resolution below.
-  - `--type=<...>` → the change type is known; step 2 will not re-ask it.
+  - `--plugin=<dir>` → the plugin directory is `<dir>`, and it is **authoritative**:
+    skip the resolution below, and if a positional `<plugin-dir>` was *also* given,
+    drop that redundant token so it can't leak into the change description.
+  - `--type=<...>` → the change type is known; carry it forward as the **authoritative**
+    change type — used in step 2 and passed to the planner in step 3 even when guided
+    intake is skipped.
 - **Resolve the plugin directory** (skip if `--plugin=` already supplied one): if the
-  remaining `$ARGUMENTS` names a directory, use it. Otherwise, if the current
-  directory contains `.claude-plugin/plugin.json`, use that.
+  directive segment names a directory, use it. Otherwise, if the current directory
+  contains `.claude-plugin/plugin.json`, use that.
 - If neither gives a target, **offer a picker** instead of guessing: run
   `"$SCRIPTS/list-plugins.sh"` (recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"`
   fresh). If it prints a non-empty JSON array, use `AskUserQuestion` to let the user
@@ -41,34 +46,40 @@ precede them (see below).
 
 ## 2. Guided intake — fill in what's missing
 
-Decide first whether the change is **already fully specified** — i.e. there is real,
-actionable change text after the plugin dir (not empty, not a placeholder). If so,
-**skip this whole step** and go straight to step 3 (Plan) with that text, exactly as
-before. Otherwise, gather what's missing — never re-asking anything a flag or the
-invocation text already answered:
+The **change description** is whatever change text remains after the flags and the
+plugin dir are stripped. Judge whether it is **already fully specified** — real,
+actionable change text (not empty, not a placeholder):
 
-- **Change type.** If `--type=` was captured, use it and do **not** ask. Otherwise
-  ask exactly one `AskUserQuestion` (single-select) with four options — **Add a
-  feature**, **Change a behavior**, **Fix a bug**, **Remove a capability** (a short
-  description each) — keeping the tool's built-in free-form option.
-- **Specific suggestions.** Ground them in what the plugin actually is: read the
-  resolved plugin's own `.claude-plugin/plugin.json`, `CONTEXT.md`, `README.md`, and
-  its `commands/`, `agents/`, `skills/`, `scripts/` (whatever exists, if not already
-  read this turn). Compose **3–5 plausible, concrete** suggestions specific to both
-  the chosen change type **and** this particular plugin — never generic placeholders —
-  and present them via a single-select `AskUserQuestion`, always keeping the built-in
-  **"Other"** free-form option so the user can describe their own change instead.
-- **Combine what's known.** Fold together any literal change text from the
-  invocation, the flagged/answered change type, and the chosen or freely-typed
-  suggestion into **one concrete change description**, then proceed to step 3 (Plan)
-  with it.
+- **If it is fully specified:** skip the intake questions and go straight to step 3
+  (Plan). Still carry any captured `--type=` forward as the authoritative change type
+  (step 3) — do not let the planner re-infer the type from the prose.
+- **If it is not:** gather what's missing — never re-asking anything a flag or the
+  invocation text already answered:
+  - **Change type.** If `--type=` was captured, use it and do **not** ask. Otherwise
+    ask exactly one `AskUserQuestion` (single-select) with four options — **Add a
+    feature**, **Change a behavior**, **Fix a bug**, **Remove a capability** (a short
+    description each) — keeping the tool's built-in free-form option.
+  - **Specific suggestions.** Ground them in what the plugin actually is: read the
+    resolved plugin's own `.claude-plugin/plugin.json`, `CONTEXT.md`, `README.md`, and
+    its `commands/`, `agents/`, `skills/`, `scripts/` (whatever exists, if not already
+    read this turn). Compose **3–5 plausible, concrete** suggestions specific to both
+    the chosen change type **and** this particular plugin — never generic placeholders —
+    and present them via a single-select `AskUserQuestion`, always keeping the built-in
+    **"Other"** free-form option so the user can describe their own change instead.
+  - **Combine what's known.** Fold together any literal change text from the
+    invocation, the flagged/answered change type, and the chosen or freely-typed
+    suggestion into **one concrete change description**, then proceed to step 3 (Plan)
+    with it.
 
 ## 3. Plan (delegate to the planner)
 
 - Invoke the `edit-planner` agent (Task tool) with the plugin directory and the
-  requested change. It returns a JSON plan: `summary`, `changeType`, `files[]`,
-  `changelog`, `bumpLevel`, `templateDivergence`, `questions[]`. If it does not
-  return one valid JSON object, ask it to try again.
+  requested change — plus, when `--type=` was captured, the **authoritative change
+  type**, so the plan's `changeType`, `changelog.category`, and `bumpLevel` reflect the
+  user's stated intent rather than a re-inference from the prose. It returns a JSON
+  plan: `summary`, `changeType`, `files[]`, `changelog`, `bumpLevel`,
+  `templateDivergence`, `questions[]`. If it does not return one valid JSON object, ask
+  it to try again.
 
 ## 4. Resolve unknowns — ask, don't guess
 
