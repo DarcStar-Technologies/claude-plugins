@@ -1,7 +1,7 @@
 {
   "name": "plugin-editor",
   "version": "0.5.0",
-  "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, verifies the repo's own checks and tests still pass, updates its changelog and version, and flags a stale active install.",
+  "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, cross-checks the repo's own checks and tests, updates its changelog and version, and flags a stale active install.",
   "author": {
     "name": "DarcStar Technologies",
     "url": "https://github.com/DarcStar-Technologies"

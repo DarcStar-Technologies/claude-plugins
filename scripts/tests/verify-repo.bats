@@ -1,8 +1,10 @@
 #!/usr/bin/env bats
 #
-# Tests for plugin-editor/scripts/verify-repo.sh — post-apply repo verification.
+# Tests for plugin-editor/scripts/verify-repo.sh — post-apply cross-checks.
 # Each test builds a throwaway fixture (a marketplace root with a plugin and a
-# stub check-all.sh) so the real repo is never touched.
+# stub check-all.sh) so the real repo is never touched. The design is scoped +
+# advisory: repo-wide check-all and the repo's centralized tests WARN but never
+# block; only the plugin's own bundled tests are a hard failure.
 
 load helpers
 
@@ -24,14 +26,16 @@ SH
 }
 teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
 
-@test "runs the repo's check-all.sh in a marketplace checkout and passes" {
+# --- section 1: repo-wide validation (advisory) --------------------------
+
+@test "runs the repo's check-all.sh in a marketplace checkout and reports OK" {
   run "$VR" "$PDIR"
   [ "$status" -eq 0 ]
   [[ "$output" == *"stub check-all ran"* ]]
   [[ "$output" == *"check-all.sh OK"* ]]
 }
 
-@test "fails when the repo's check-all.sh fails" {
+@test "a failing check-all.sh is advisory: warns but does NOT block" {
   cat >"$FIX/scripts/check-all.sh" <<'SH'
 #!/usr/bin/env bash
 echo "boom"
@@ -39,8 +43,9 @@ exit 1
 SH
   chmod +x "$FIX/scripts/check-all.sh"
   run "$VR" "$PDIR"
-  [ "$status" -eq 1 ]
-  [[ "$output" == *"CHECK-ALL FAILED"* ]]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"WARNING"* ]]
+  [[ "$output" == *"repo-wide checks failed"* ]]
 }
 
 @test "skips repo-wide validation cleanly outside a marketplace" {
@@ -54,51 +59,70 @@ SH
   rm -rf "$solo"
 }
 
-@test "shellchecks a touched clean script and passes" {
-  command -v shellcheck >/dev/null 2>&1 || skip "shellcheck not installed"
-  printf '#!/usr/bin/env bash\necho "hello"\n' >"$PDIR/scripts/ok.sh"
-  run "$VR" "$PDIR" scripts/ok.sh
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"shellcheck OK"* ]]
-}
-
-@test "fails when a touched script has a shellcheck problem" {
-  command -v shellcheck >/dev/null 2>&1 || skip "shellcheck not installed"
-  # `local` outside a function is an error-level finding (SC2168), so this fails
-  # regardless of any local ~/.shellcheckrc that mutes lower-severity checks.
-  printf '#!/usr/bin/env bash\nlocal x=1\n' >"$PDIR/scripts/bad.sh"
-  run "$VR" "$PDIR" scripts/bad.sh
-  [ "$status" -eq 1 ]
-}
-
-@test "skips shellcheck cleanly when no touched scripts are passed" {
+@test "distinguishes a marketplace whose check-all.sh is missing" {
+  rm -f "$FIX/scripts/check-all.sh"
   run "$VR" "$PDIR"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"no touched scripts"* ]]
+  [[ "$output" == *"marketplace found but scripts/check-all.sh is missing"* ]]
 }
 
-@test "runs the repo-root bats test named for a touched script (passing)" {
-  command -v bats >/dev/null 2>&1 || skip "bats not installed"
-  printf '#!/usr/bin/env bats\n@test "ok" { true; }\n' >"$FIX/scripts/tests/foo.bats"
-  printf '#!/usr/bin/env bash\ntrue\n' >"$PDIR/scripts/foo.sh"
-  run "$VR" "$PDIR" scripts/foo.sh
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"bats OK"* ]]
-}
+# --- section 2a: the plugin's own bundled tests (hard) -------------------
 
-@test "fails when a touched script's repo-root bats test fails" {
-  command -v bats >/dev/null 2>&1 || skip "bats not installed"
-  printf '#!/usr/bin/env bats\n@test "bad" { false; }\n' >"$FIX/scripts/tests/foo.bats"
-  printf '#!/usr/bin/env bash\ntrue\n' >"$PDIR/scripts/foo.sh"
-  run "$VR" "$PDIR" scripts/foo.sh
-  [ "$status" -eq 1 ]
-}
-
-@test "runs a plugin's own bundled bats tests" {
+@test "runs the plugin's own bundled tests and passes" {
   command -v bats >/dev/null 2>&1 || skip "bats not installed"
   mkdir -p "$PDIR/scripts/tests"
   printf '#!/usr/bin/env bats\n@test "bundled ok" { true; }\n' >"$PDIR/scripts/tests/self.bats"
   run "$VR" "$PDIR"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"bats OK"* ]]
+  [[ "$output" == *"bundled bats OK"* ]]
+}
+
+@test "fails (hard) when the plugin's own bundled test fails" {
+  command -v bats >/dev/null 2>&1 || skip "bats not installed"
+  mkdir -p "$PDIR/scripts/tests"
+  printf '#!/usr/bin/env bats\n@test "bundled bad" { false; }\n' >"$PDIR/scripts/tests/self.bats"
+  run "$VR" "$PDIR"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"BUNDLED BATS FAILED"* ]]
+}
+
+# --- section 2b: the repo's centralized tests (advisory) ----------------
+
+@test "runs the repo-root test named for a touched script and reports OK" {
+  command -v bats >/dev/null 2>&1 || skip "bats not installed"
+  printf '#!/usr/bin/env bats\n@test "ok" { true; }\n' >"$FIX/scripts/tests/foo.bats"
+  printf '#!/usr/bin/env bash\ntrue\n' >"$PDIR/scripts/foo.sh"
+  run "$VR" "$PDIR" scripts/foo.sh
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"centralized bats OK"* ]]
+}
+
+@test "a failing centralized test is advisory: warns but does NOT block" {
+  command -v bats >/dev/null 2>&1 || skip "bats not installed"
+  printf '#!/usr/bin/env bats\n@test "bad" { false; }\n' >"$FIX/scripts/tests/foo.bats"
+  printf '#!/usr/bin/env bash\ntrue\n' >"$PDIR/scripts/foo.sh"
+  run "$VR" "$PDIR" scripts/foo.sh
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"WARNING"* ]]
+  [[ "$output" == *"repo-root test"* ]]
+}
+
+@test "skips a centralized test when the touched script was removed" {
+  command -v bats >/dev/null 2>&1 || skip "bats not installed"
+  # A failing test that must NOT run because the script it covers is gone.
+  printf '#!/usr/bin/env bats\n@test "should not run" { false; }\n' >"$FIX/scripts/tests/foo.bats"
+  # scripts/foo.sh intentionally NOT created (the edit removed it).
+  run "$VR" "$PDIR" scripts/foo.sh
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"no bats tests found"* ]]
+  [[ "$output" != *"centralized"* ]]
+}
+
+@test "normalizes ./-prefixed and plugin-dir-prefixed touched paths (and dedups)" {
+  command -v bats >/dev/null 2>&1 || skip "bats not installed"
+  printf '#!/usr/bin/env bats\n@test "ok" { true; }\n' >"$FIX/scripts/tests/foo.bats"
+  printf '#!/usr/bin/env bash\ntrue\n' >"$PDIR/scripts/foo.sh"
+  run "$VR" "$PDIR" "./scripts/foo.sh" "$PDIR/scripts/foo.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"centralized bats OK"* ]]
 }

@@ -59,9 +59,10 @@ the plan.
    - `update-changelog.sh` — records the change under `[Unreleased]`,
    - `sync-version.sh` — bumps the version (or, in a release-please repo, tells you
      the Conventional Commit to land),
-   - `verify-repo.sh` — runs the marketplace's own `check-all.sh` (skipped cleanly
-     outside a marketplace) plus `shellcheck`/`bats` scoped to what changed,
-     surfacing (and stopping on) any real failure before anything is reported done,
+   - `verify-repo.sh` — advisory cross-checks: the marketplace's own `check-all.sh`
+     (skipped cleanly outside a marketplace) and the plugin's `bats` tests; it blocks
+     only on the plugin's own bundled tests, and surfaces repo-wide / centralized-test
+     issues as warnings to review before merging,
    - `check-install-status.sh` — if the plugin is installed in this session,
      suggests `/plugin update` + `/reload-plugins`.
 5. It finishes with a **summary** of every file touched, what changed, and the

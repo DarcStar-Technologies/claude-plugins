@@ -126,14 +126,19 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
 3. `"$SCRIPTS/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
-4. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply verification.
-   Pass every path from the plan's `files[]` as `<files...>`. It runs the repo's
-   `scripts/check-all.sh` when this is a marketplace checkout (skipping cleanly — not
-   erroring — when it isn't, e.g. standalone/portable use), `shellcheck`s any touched
-   `scripts/*.sh`, and runs the plugin's own `bats` tests plus the repo's
-   `scripts/tests/<name>.bats` for any touched script. If it reports a real failure,
-   surface it and go back to fix the edit (step 6/7) or stop — never present the
-   change as done, and do not proceed to step 9/10 over a broken check.
+4. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
+   Pass every path from the plan's `files[]` as `<files...>`. On top of
+   check-template.sh (which already hard-validates the plugin's own structure and
+   shellchecks its scripts), it runs the repo's `scripts/check-all.sh` (in a
+   marketplace) and the plugin's `bats` tests. It is **scoped and advisory**: because
+   this command only edits inside the plugin dir, it hard-fails (exit non-zero) **only**
+   on the plugin's own bundled `scripts/tests/*.bats`, which are in-bounds to fix.
+   Repo-wide `check-all.sh` failures and the repo's centralized
+   `scripts/tests/<name>.bats` are surfaced as **`WARNING:` lines**, never blocks (they
+   may be pre-existing breakage elsewhere, or a behavior change that needs a follow-up
+   test update outside this plugin). **On a non-zero exit**, fix the edit (step 6/7) and
+   re-check before finishing. **Relay any `WARNING:` lines** to the user as advisories
+   to review before merging — they do not block steps 9–10.
 
 ## 9. Reload hint
 
