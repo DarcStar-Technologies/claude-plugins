@@ -5,6 +5,13 @@ All notable changes to the `_template` reference plugin are documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/_template-v0.1.0..._template-v0.2.0) (2026-07-16)
+
+
+### Features
+
+* **plugin-forge:** portable mode — scaffold plugins outside this repo ([#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)) ([#7](https://github.com/DarcStar-Technologies/claude-plugins/issues/7)) ([60c96d1](https://github.com/DarcStar-Technologies/claude-plugins/commit/60c96d19a819b7a5ed63560ba1e07d5981a4c6a9))
+
 ## 0.1.0 (2026-07-16)
 
 
