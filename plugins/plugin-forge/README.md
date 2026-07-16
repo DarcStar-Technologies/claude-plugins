@@ -1,9 +1,10 @@
 # plugin-forge
 
-Generate a new marketplace plugin from a natural-language description. plugin-forge
-infers the name, components, tools, and minimum-capable models, defaults to the
-current template version, and asks you about anything it can't confidently infer —
-then hands the mechanical work to `scripts/new-plugin.sh`.
+Generate a new Claude Code plugin from a natural-language description. plugin-forge
+infers the name, components, tools, and minimum-capable models, asks you about
+anything it can't confidently infer, and hands the mechanical work to a shell
+scaffolder — either **for this marketplace** or as a **standalone plugin in any
+project**.
 
 ## Installation
 
@@ -14,24 +15,33 @@ then hands the mechanical work to `scripts/new-plugin.sh`.
 
 ## Usage
 
-Run inside a checkout of the `claude-plugins` marketplace:
+`/forge` auto-detects its mode.
+
+**In the marketplace repo** — scaffolds and registers a plugin here:
 
 ```text
 /forge a plugin with a /changelog command that summarizes git commits since the last tag
 ```
 
-plugin-forge will:
+**Anywhere else (portable mode)** — scaffolds a standalone plugin in the current
+project, registering nothing:
 
-1. Plan the plugin from your description (via the `plugin-planner` agent).
-2. Ask you about anything ambiguous, and confirm the plan.
-3. Scaffold and register it with `scripts/new-plugin.sh`.
-4. Fill in the components and validate with `scripts/check-all.sh`.
+```text
+/forge a plugin that lints Dockerfiles --portable
+```
 
-## Notes & limitations
+Portable mode resolves the template, in order, from `--template-version <ver>`
+(the `_template-v<ver>` release tag), `--template-repo <owner/repo[@ref]>`, a local
+`./_template/`, or the latest from this repo. plugin-forge plans from your
+description (asking about anything unclear), scaffolds via the right engine, fills
+in the components, and validates.
 
-- Must be run from the marketplace repository — it calls the repo's scripts.
-- Only the **current** template version is supported today; requesting a specific
-  older version is a roadmap item (see [`CONTEXT.md`](./CONTEXT.md)).
+## Notes
+
+- Marketplace mode requires a checkout of this repo (it calls the repo's scripts);
+  portable mode works in any project.
+- Portable mode needs `git` + network for the tag/repo/default template sources; a
+  local `./_template/` works offline.
 
 ## Development
 
