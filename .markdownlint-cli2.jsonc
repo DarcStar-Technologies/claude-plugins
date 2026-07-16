@@ -17,5 +17,8 @@
     "MD060": false
   },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules", "**/node_modules"]
+  // Plugin CHANGELOG.md files are generated and owned by release-please, whose
+  // format (double blank lines, `*` bullets) intentionally differs from these
+  // rules. The hand-curated root CHANGELOG.md is still linted.
+  "ignores": ["node_modules", "**/node_modules", "plugins/**/CHANGELOG.md"]
 }
