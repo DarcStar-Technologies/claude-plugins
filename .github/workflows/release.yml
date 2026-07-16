@@ -54,20 +54,48 @@ jobs:
       # release PR still runs CI, so a bad release can never merge.
       #
       # Prerequisites configured once via the GitHub API (not in this file):
-      #   - repo setting `allow_auto_merge = true`
+      #   - repo settings `allow_auto_merge = true` and `allow_squash_merge = true`
       #   - a branch-protection rule on `main` whose required status checks are
       #     "validate & lint" and "shell tests (bats)" (so --auto gates on CI).
       # See CONTRIBUTING.md → "Automated releases".
+      #
+      # Finding the PR: prefer the number release-please just reported in its `pr`
+      # output — it is authoritative and immediate. Do NOT rely solely on
+      # `gh pr list --label`: GitHub's label search index is eventually consistent,
+      # so right after release-please opens the PR the label query can return empty
+      # for a few seconds, which would leave a freshly-created release PR un-armed.
+      # The label query stays only as a fallback for an already-open PR that this
+      # run did not modify (absent from the action output); such a PR is old and
+      # already indexed, so a single query is enough — no retry needed.
+      #
+      # This step is best-effort and must never fail the release job: the release
+      # itself already happened in the release-please step above. It also re-runs on
+      # every push while a release PR is open, so enabling auto-merge can hit benign
+      # states (already armed, "clean" status, repo settings). We warn and continue
+      # rather than red-flag an otherwise-healthy run — worst case a human merges.
       - name: Auto-merge the release PR once CI passes
         if: steps.guard.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          RELEASE_PR_JSON: ${{ steps.release.outputs.pr }}
         run: |
-          pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
-                  --label 'autorelease: pending' --json number --jq '.[0].number // empty')"
+          # Fast path: the PR release-please opened/updated this run (no index lag).
+          pr="$(jq -r '.number // empty' <<<"${RELEASE_PR_JSON:-}" 2>/dev/null || true)"
+          source="release-please output"
+
+          # Fallback: an already-open PR untouched this run isn't in the output.
+          # It's old and already indexed, so one query suffices (|| true so a
+          # transient API blip yields "no PR" rather than failing the job).
+          if [ -z "$pr" ]; then
+            pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+                    --label 'autorelease: pending' --json number --jq '.[0].number // empty' || true)"
+            source="label query"
+          fi
+
           if [ -n "$pr" ]; then
-            echo "Enabling auto-merge on release PR #$pr"
-            gh pr merge "$pr" --repo "$GITHUB_REPOSITORY" --squash --auto
+            echo "Enabling auto-merge on release PR #$pr (found via $source)"
+            gh pr merge "$pr" --repo "$GITHUB_REPOSITORY" --squash --auto \
+              || echo "::warning::Could not enable auto-merge on #$pr (already armed, clean status, or repo settings) — merge it manually if it doesn't land. Continuing."
           else
             echo "No open release PR to auto-merge."
           fi
