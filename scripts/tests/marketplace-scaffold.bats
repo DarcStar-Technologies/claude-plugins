@@ -23,7 +23,7 @@ teardown() { teardown_fixture; }
   run jq -r '.template' "$prov"
   [ "$output" = "_template" ]
   run jq -r '.templateVersion' "$prov"
-  [ "$output" = "0.1.0" ]
+  [ "$output" = "$(jq -r '.version' "$FIX/plugins/_template/.claude-plugin/plugin.json")" ]
   run jq -r '.mode' "$prov"
   [ "$output" = "marketplace" ]
 }
