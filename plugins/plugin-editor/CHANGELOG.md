@@ -5,6 +5,13 @@ All notable changes to the `plugin-editor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.3.0...plugin-editor-v0.4.0) (2026-07-16)
+
+
+### Features
+
+* **plugin-editor:** add --dry-run flag to preview the plan without applying ([#30](https://github.com/DarcStar-Technologies/claude-plugins/issues/30)) ([6da2e50](https://github.com/DarcStar-Technologies/claude-plugins/commit/6da2e50f872026e7559548f858bb377815d51a8a))
+
 ## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.2.0...plugin-editor-v0.3.0) (2026-07-16)
 
 
