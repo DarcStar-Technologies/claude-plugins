@@ -18,6 +18,11 @@
       "name": "semver",
       "source": "./plugins/semver",
       "description": "Deterministic semver operations: validate, compare, bump, and next-version from Conventional Commits."
+    },
+    {
+      "name": "scaffold-upgrade",
+      "source": "./plugins/scaffold-upgrade",
+      "description": "Check whether a plugin scaffolded from a template can be upgraded to the latest version of that template."
     }
   ]
 }

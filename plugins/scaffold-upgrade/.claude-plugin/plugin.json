@@ -1,0 +1,20 @@
+{
+  "name": "scaffold-upgrade",
+  "version": "0.1.0",
+  "description": "Check whether a plugin scaffolded from a template can be upgraded to the latest version of that template.",
+  "author": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "homepage": "https://github.com/DarcStar-Technologies/claude-plugins/tree/main/plugins/scaffold-upgrade",
+  "repository": "https://github.com/DarcStar-Technologies/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "scaffold",
+    "template",
+    "upgrade",
+    "provenance",
+    "drift",
+    "semver"
+  ]
+}
