@@ -33,6 +33,8 @@ active install — is a tested shell script. The command is the conductor:
    ├─ check-template.sh                 → structure + template drift
    ├─ update-changelog.sh               → [Unreleased] entry
    ├─ sync-version.sh                   → bump / commit guidance
+   ├─ new scripts/*.sh in the plan?     → scaffold-test.sh writes a bundled bats
+   │                                       stub per new script (idempotent)
    ├─ verify-repo.sh                    → advisory cross-checks: repo check-all.sh +
    │                                       plugin tests (hard only on own bundled tests)
    └─ check-install-status.sh           → reload hint
@@ -51,6 +53,7 @@ never edits until the user approves.
 | `scripts/check-template.sh` | Shell | Structural validators + reuse of `scaffold-upgrade` for template drift. |
 | `scripts/update-changelog.sh` | Shell | Insert a bullet under `[Unreleased] > ### <category>`. |
 | `scripts/sync-version.sh` | Shell | Context-aware versioning (release-please vs. standalone). |
+| `scripts/scaffold-test.sh` | Shell | Scaffolds a bundled `scripts/tests/<name>.bats` stub for each newly created plugin script; idempotent — never overwrites an existing one. |
 | `scripts/verify-repo.sh` | Shell | Post-apply cross-checks — marketplace `check-all.sh` + plugin `bats` tests, scoped & advisory (hard only on the plugin's own bundled tests). |
 | `scripts/check-install-status.sh` | Shell | Is the plugin installed/stale → reload hint. |
 
@@ -96,6 +99,16 @@ there is one source of truth for each.
   update outside this plugin. The **only** hard failure verify-repo adds is the
   plugin's **own bundled** `scripts/tests/*.bats` (in-bounds to fix). A removed script
   skips its centralized test.
+- **New scripts get a bundled test stub, in-bounds only.** When the approved plan
+  *creates* a new top-level `scripts/*.sh`, step 8 runs `scaffold-test.sh` to write a
+  `scripts/tests/<name>.bats` stub for it — always inside the **target plugin's own**
+  `scripts/tests/`, never the marketplace's centralized `scripts/tests/` (out of bounds
+  for this command). That keeps it in-bounds *and* means verify-repo.sh's **hard**
+  bundled-tests check — not just its advisory centralized-test check — then covers the
+  new script. It fires only for newly **created** top-level `scripts/*.sh` (not modified
+  scripts, and not a nested `scripts/lib/*` path), is **idempotent** (an existing or
+  hand-written stub is left untouched), and the generated stub is a placeholder smoke
+  test the author should still flesh out with real assertions.
 - **Flags live in the "directive segment".** All three flags (`--dry-run`,
   `--plugin=<dir>`, `--type=add|change|fix|remove`) are recognized anywhere **before
   the `—` change-description separator**, alongside the plugin dir, in any order; when

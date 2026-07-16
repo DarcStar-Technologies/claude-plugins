@@ -126,7 +126,17 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
 3. `"$SCRIPTS/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
-4. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
+4. **Only if the plan created any new `scripts/*.sh`:** for each `files[]` entry with
+   `action: "create"` whose `path` is a new **top-level** `scripts/<name>.sh` (matches
+   `scripts/*.sh` with no further `/` — never a nested `scripts/lib/*` path, mirroring
+   verify-repo.sh's own scope), run `"$SCRIPTS/scaffold-test.sh" <plugin-dir> <path...>`
+   (pass every such new-script path in **one** call) to write a bundled
+   `scripts/tests/<name>.bats` stub for each. It is **idempotent** — an existing stub is
+   left untouched — so relay its output and continue even when every path was already
+   scaffolded. **Skip this item entirely when the plan created no new `scripts/*.sh`.**
+   It runs **before** verify-repo.sh so that script's bundled-tests check (below)
+   exercises the new stub(s) rather than only advisory centralized-test coverage.
+5. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
    Pass every path from the plan's `files[]` as `<files...>`. On top of
    check-template.sh (which already hard-validates the plugin's own structure and
    shellchecks its scripts), it runs the repo's `scripts/check-all.sh` (in a
@@ -152,6 +162,9 @@ Give the user a clear summary of the change:
 
 - **Files** — each path touched and, in one line, what changed (as confirmed by the
   verify step in 7).
+- **Scaffolded tests** — any bundled `scripts/tests/<name>.bats` stub `scaffold-test.sh`
+  wrote for a newly created script, noting it is a placeholder smoke test to flesh out
+  with real assertions.
 - **Changelog** — the `[Unreleased]` category and bullet that was recorded.
 - **Version** — the new version (standalone) or the Conventional Commit to land
   (release-please-managed), from `sync-version.sh`.
