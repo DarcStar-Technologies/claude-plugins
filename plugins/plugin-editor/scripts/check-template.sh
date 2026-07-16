@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # check-template.sh — after editing a plugin, verify it still holds up:
-#   (a) STRUCTURE — run the marketplace's own checks (scripts/check-all.sh) when
-#       the plugin lives in one; otherwise run standalone equivalents.
+#   (a) STRUCTURE — validate the TARGET plugin only (its manifest fields + semver
+#       version, name vs. directory, the required docs, the changelog structure,
+#       and its scripts via shellcheck) — never the whole repo.
 #   (b) TEMPLATE LINEAGE — if the plugin was scaffolded from a template, reuse the
 #       scaffold-upgrade plugin's check-upgrade.sh to report drift vs that template.
 #
-# Both the check-all runner and check-upgrade.sh are resolved at run time (env
-# override -> marketplace ancestor -> PATH), so nothing is vendored. Exits non-zero
-# if the structural checks fail.
+# check-upgrade.sh is resolved at run time (env override -> marketplace ancestor ->
+# PATH), so nothing is vendored. Exits non-zero if the structural checks fail.
 #
 # Usage: check-template.sh <plugin-dir>
 set -euo pipefail
@@ -22,62 +22,57 @@ plugin_dir="${1:?usage: check-template.sh <plugin-dir>}"
 plugin_dir="${plugin_dir%/}"
 [[ -d "$plugin_dir" ]] || die "plugin directory not found: $plugin_dir"
 
-# find_up <start> <relative> — first ancestor of <start> that contains <relative>.
-find_up() {
-  local d
-  d="$(cd "$1" 2>/dev/null && pwd)" || return 1
-  while [[ -n "$d" && "$d" != "/" ]]; do
-    [[ -e "$d/$2" ]] && {
-      printf '%s' "$d"
-      return 0
-    }
-    d="$(dirname "$d")"
-  done
-  return 1
-}
-
 status=0
 
-# --- (a) structure --------------------------------------------------------
+# --- (a) structure — the TARGET plugin only, never the whole repo ---------
 printf '== structure ==\n'
-if repo="$(find_up "$plugin_dir" scripts/check-all.sh)"; then
-  if "$repo/scripts/check-all.sh"; then
-    printf 'structure OK (check-all)\n'
-  else
-    printf 'STRUCTURE CHECK FAILED (see check-all output above)\n'
-    status=1
-  fi
+errs=0
+manifest="$plugin_dir/.claude-plugin/plugin.json"
+if ! jq empty "$manifest" 2>/dev/null; then
+  printf 'invalid or missing plugin.json\n'
+  errs=1
 else
-  errs=0
-  manifest="$plugin_dir/.claude-plugin/plugin.json"
-  if ! jq empty "$manifest" 2>/dev/null; then
-    printf 'invalid or missing plugin.json\n'
-    errs=1
-  else
-    for field in name version description; do
-      jq -e "has(\"$field\")" "$manifest" >/dev/null 2>&1 || {
-        printf 'plugin.json missing field: %s\n' "$field"
-        errs=1
-      }
-    done
-  fi
-  for f in CONTEXT.md CHANGELOG.md README.md; do
-    [[ -f "$plugin_dir/$f" ]] || {
-      printf 'missing %s\n' "$f"
+  for field in name version description; do
+    jq -e "has(\"$field\")" "$manifest" >/dev/null 2>&1 || {
+      printf 'plugin.json missing field: %s\n' "$field"
       errs=1
     }
   done
-  if command -v shellcheck >/dev/null 2>&1; then
-    while IFS= read -r -d '' sh; do
-      shellcheck "$sh" || errs=1
-    done < <(find "$plugin_dir" -name '*.sh' -print0 2>/dev/null)
-  fi
-  if [[ "$errs" -eq 0 ]]; then
-    printf 'structure OK (standalone checks)\n'
-  else
-    printf 'STRUCTURE CHECK FAILED\n'
-    status=1
-  fi
+  pname="$(jq -r '.name // empty' "$manifest")"
+  [[ "$pname" == "$(basename "$plugin_dir")" ]] ||
+    printf 'note: plugin.json name "%s" does not match directory "%s"\n' "$pname" "$(basename "$plugin_dir")"
+  pver="$(jq -r '.version // empty' "$manifest")"
+  [[ "$pver" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]] || {
+    printf 'version "%s" is not valid semver\n' "$pver"
+    errs=1
+  }
+fi
+for f in CONTEXT.md CHANGELOG.md README.md; do
+  [[ -f "$plugin_dir/$f" ]] || {
+    printf 'missing %s\n' "$f"
+    errs=1
+  }
+done
+if [[ -f "$plugin_dir/CHANGELOG.md" ]]; then
+  grep -qiE '^#[[:space:]]+changelog' "$plugin_dir/CHANGELOG.md" || {
+    printf "CHANGELOG.md missing '# Changelog' title\n"
+    errs=1
+  }
+  grep -qE '^##[[:space:]]+\[?(Unreleased|[0-9])' "$plugin_dir/CHANGELOG.md" || {
+    printf "CHANGELOG.md has no [Unreleased] or version section\n"
+    errs=1
+  }
+fi
+if command -v shellcheck >/dev/null 2>&1; then
+  while IFS= read -r -d '' sh; do
+    shellcheck "$sh" || errs=1
+  done < <(find "$plugin_dir" -name '*.sh' -print0 2>/dev/null)
+fi
+if [[ "$errs" -eq 0 ]]; then
+  printf 'structure OK (target plugin)\n'
+else
+  printf 'STRUCTURE CHECK FAILED\n'
+  status=1
 fi
 
 # --- (b) template lineage / drift ----------------------------------------

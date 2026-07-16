@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- check-template.sh now validates only the target plugin (manifest fields, semver version, name/dir, docs, changelog structure, and scripts) instead of running check-all across the whole repository.
+
 ### Added
 
 - /edit-plugin now lists the marketplace's plugins to pick from when no target directory is given, verifies every planned edit actually landed before reporting, and ends with a clear summary of files changed, the changelog entry, and the version outcome.
