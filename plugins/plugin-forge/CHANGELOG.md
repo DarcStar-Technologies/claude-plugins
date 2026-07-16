@@ -32,7 +32,7 @@ Entries below `[Unreleased]` are generated automatically from
 
 ### Changed
 
-- `/forge` invoked with no description now runs a guided intake (an `AskUserQuestion` for the kind of plugin, grounded in the real reference templates, then 3-5 concrete component-set suggestions) instead of a bare free-text ask; the given-description flow is unchanged.
+- `/forge` invoked with no description now runs a guided intake instead of a bare free-text ask: it captures the plugin's purpose, then refines the shape via `AskUserQuestion` (the kind of plugin — grounded in the real reference templates and carried forward as the authoritative `--template` — then concrete component-set suggestions). The given-description flow is unchanged.
 
 ### Added
 
