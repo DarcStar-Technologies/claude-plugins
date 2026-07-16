@@ -41,6 +41,15 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
   tagged, and `scaffold-report.sh` computes drift per template. Release-config
   hardening adds `exclude-paths` so a template no longer version-bumps on incidental
   prose-doc touches. Implements #6.
+- CI-gated automatic releases: `release.yml` turns on GitHub auto-merge for
+  release-please's release PR, so a merged `feat`/`fix` publishes hands-free once
+  the required checks (`validate & lint`, `shell tests (bats)`) pass — merging the
+  release PR is what tags and publishes. The PR is located from release-please's own
+  `pr` output (authoritative and immediate; GitHub's label search index lags a few
+  seconds, so a same-run PR would otherwise be missed), with a single label-query
+  fallback for a pre-existing PR. The step is best-effort and never fails the
+  release job. Requires the repo's `allow_auto_merge`/`allow_squash_merge` settings
+  and a `main` branch-protection rule (see CONTRIBUTING.md → "Automated releases").
 
 ### Changed
 
