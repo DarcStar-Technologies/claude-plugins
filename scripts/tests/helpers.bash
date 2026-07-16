@@ -41,6 +41,10 @@ setup_full_fixture() {
     >"$FIX/.claude-plugin/marketplace.json"
   printf '{ "packages": {} }\n' >"$FIX/release-please-config.json"
   printf '{}\n' >"$FIX/.release-please-manifest.json"
+  # scaffold-report reuses the semver engine; point it at the real one rather
+  # than copying the semver plugin into the fixture (which validators would flag).
+  SEMVER_BIN="$(repo_root_dir)/plugins/semver/scripts/semver.sh"
+  export SEMVER_BIN
 }
 
 # Scaffold + register a plugin into the fixture marketplace (marketplace mode),

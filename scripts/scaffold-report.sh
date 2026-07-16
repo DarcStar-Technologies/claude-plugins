@@ -20,6 +20,10 @@ strict=0
 [[ "${1:-}" == "--strict" ]] && strict=1
 
 root="$(repo_root)"
+# Reuse the semver plugin's engine for version comparison (single source of truth).
+# SEMVER_BIN overrides the path (used by tests that run against a fixture repo).
+semver_bin="${SEMVER_BIN:-$root/plugins/semver/scripts/semver.sh}"
+[[ -x "$semver_bin" ]] || die "semver engine not found: $semver_bin (the semver plugin provides it)"
 exceptions_file="$root/.scaffold-exceptions.json"
 if [[ -f "$exceptions_file" ]]; then
   jq empty "$exceptions_file" 2>/dev/null ||
@@ -31,16 +35,6 @@ fi
 reason_for() {
   [[ -f "$exceptions_file" ]] || return 0
   jq -r --arg n "$1" '.exceptions[$n] // empty' "$exceptions_file"
-}
-
-# major <semver> -> the major component, or "-" when it is not a plain integer.
-major() {
-  local m="${1%%.*}"
-  if [[ "$m" =~ ^[0-9]+$ ]]; then
-    printf '%s' "$m"
-  else
-    printf '%s' "-"
-  fi
 }
 
 fmt='%-24s %-12s %-9s %-8s %s\n'
@@ -71,18 +65,22 @@ while IFS= read -r dir; do
   status="ok"
   if [[ "$current" == "-" ]]; then
     status="template-gone"
-  elif [[ "$tver" != "$current" ]]; then
-    rec_major="$(major "$tver")"
-    cur_major="$(major "$current")"
-    if [[ "$rec_major" != "-" && "$cur_major" != "-" && "$cur_major" -gt "$rec_major" ]]; then
-      if [[ -n "$(reason_for "$name")" ]]; then
-        status="MAJOR-DRIFT(allowed)"
+  elif ! "$semver_bin" validate "$tver" >/dev/null 2>&1 ||
+    ! "$semver_bin" validate "$current" >/dev/null 2>&1; then
+    status="unknown-version"
+  else
+    cmp="$("$semver_bin" compare "$current" "$tver")"
+    if [[ "$cmp" != "0" ]]; then
+      if [[ "$cmp" == "1" && "$("$semver_bin" diff "$tver" "$current")" == "major" ]]; then
+        if [[ -n "$(reason_for "$name")" ]]; then
+          status="MAJOR-DRIFT(allowed)"
+        else
+          status="MAJOR-DRIFT"
+          blocking=1
+        fi
       else
-        status="MAJOR-DRIFT"
-        blocking=1
+        status="DRIFT"
       fi
-    else
-      status="DRIFT"
     fi
   fi
 

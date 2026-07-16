@@ -13,6 +13,11 @@
       "name": "plugin-forge",
       "source": "./plugins/plugin-forge",
       "description": "Generate a new plugin from a natural-language description: infers name, components, tools, and minimum-capable models, defaults to the current template version, and prompts for anything it can't confidently infer."
+    },
+    {
+      "name": "semver",
+      "source": "./plugins/semver",
+      "description": "Deterministic semver operations: validate, compare, bump, and next-version from Conventional Commits."
     }
   ]
 }
