@@ -9,5 +9,9 @@
   "homepage": "https://github.com/DarcStar-Technologies/claude-plugins/tree/main/plugins/_template",
   "repository": "https://github.com/DarcStar-Technologies/claude-plugins",
   "license": "MIT",
-  "keywords": ["template", "reference", "scaffold"]
+  "keywords": [
+    "template",
+    "reference",
+    "scaffold"
+  ]
 }

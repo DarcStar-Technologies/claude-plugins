@@ -9,5 +9,11 @@
   "homepage": "https://github.com/DarcStar-Technologies/claude-plugins/tree/main/plugins/plugin-forge",
   "repository": "https://github.com/DarcStar-Technologies/claude-plugins",
   "license": "MIT",
-  "keywords": ["scaffold", "generator", "plugin", "ai-assisted", "meta"]
+  "keywords": [
+    "scaffold",
+    "generator",
+    "plugin",
+    "ai-assisted",
+    "meta"
+  ]
 }
