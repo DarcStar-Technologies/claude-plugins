@@ -19,9 +19,12 @@ inserting a changelog bullet, deciding release-please vs. hand-bump, detecting a
 active install — is a tested shell script. The command is the conductor:
 
 ```text
-/edit-plugin [--dry-run] [<dir>] — <change>
+/edit-plugin [--dry-run] [--plugin=<dir>] [--type=add|change|fix|remove] [<dir>] [— <change>]
    │
    ├─ no <dir>? list-plugins.sh         → user picks from the marketplace's plugins
+   ├─ change not fully described?       → guided intake: change-type Q (skipped if
+   │                                       --type=), then plugin-specific suggestions
+   │                                       (AskUserQuestion, "Other" always available)
    ├─ edit-planner (agent, read-only)   → a concrete plan + clarifying questions
    ├─ confirm with the user             → NOTHING is edited before this
    │     └─ --dry-run? show the plan as a preview and STOP here (disk untouched)
@@ -69,12 +72,24 @@ one source of truth for each.
 
 - **Never edit outside the target plugin's directory.** The command is scoped to
   `<plugin-dir>`; the planner is read-only.
-- **`--dry-run` is the flag only as the leading token of `$ARGUMENTS`** (a
-  `--dry-run` inside the change description is literal — otherwise "add a `--dry-run`
-  flag to X" would misfire). When set, the command stops immediately after
-  presenting the plan — before any of check-template.sh / update-changelog.sh /
+- **`--dry-run` is a directive-segment flag** (recognized before the `—` separator per
+  the rule below; a `--dry-run` inside the change description is literal — otherwise
+  "add a `--dry-run` flag to X" would misfire). When set, the command stops immediately
+  after presenting the plan — before any of check-template.sh / update-changelog.sh /
   sync-version.sh / check-install-status.sh run — so the plugin's directory and disk
   state are left untouched.
+- **Flags live in the "directive segment".** All three flags (`--dry-run`,
+  `--plugin=<dir>`, `--type=add|change|fix|remove`) are recognized anywhere **before
+  the `—` change-description separator**, alongside the plugin dir, in any order; when
+  there is no separator they must be **leading** (before `<dir>`). Either way a
+  flag-looking token *inside* the change description stays literal (so "add a
+  `--dry-run` flag to X" doesn't misfire). They let the flow **resume from whatever is
+  already known**: a known plugin (positional `<dir>` or `--plugin=`) skips the picker,
+  a known `--type=` skips the change-type question **and** is passed to the planner as
+  the authoritative change type (even when the change is already fully described, so an
+  explicit `--type=` is never silently re-inferred), and an already-fully-described
+  change skips the guided-intake questions entirely. `--plugin=` wins over a positional
+  `<dir>`; the redundant positional token is dropped so it can't leak into the change.
 - **Versioning is context-aware.** In this release-please repo you do **not**
   hand-bump `plugin.json` — `sync-version.sh` detects the config and tells you the
   Conventional Commit to land instead. Standalone plugins get a real bump.
