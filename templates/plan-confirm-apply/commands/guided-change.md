@@ -25,9 +25,12 @@ The flag `--dry-run` may appear before the change description.
 - **Resolve the target:** if the directive segment names one, use it. Otherwise offer a
   **picker** instead of guessing: run `"${CLAUDE_PLUGIN_ROOT}/scripts/discover-targets.sh"`
   (recompute the path in each fresh shell). If it prints a non-empty JSON array, use
-  `AskUserQuestion` to let the user choose (one option per entry: label = `name`,
-  description = `description`; use the chosen `path`). Only if it exits non-zero or
-  returns `[]` fall back to asking in free text.
+  `AskUserQuestion` to let the user choose — one option per entry (label = `name`,
+  description = `description`; use the chosen entry's `path`, which is absolute). Since
+  `AskUserQuestion` allows at most **4** options, when there are more entries present
+  the 4 most relevant and rely on its built-in **"Other"** for the user to name another
+  (or ask them to narrow first). Only if the script exits non-zero or returns `[]` fall
+  back to asking in free text.
 - Confirm the resolved target exists before continuing; if not, stop and say so.
 
 ## 2. Guided intake — fill in what's missing
@@ -64,14 +67,17 @@ text, not empty or a placeholder):
 ## 6. Apply the edits
 
 - Make exactly the actions in the approved plan, operating **only inside the resolved
-  target**. Use Edit/Write. Never touch anything outside it. Push anything fully
-  deterministic into a `scripts/*.sh` step rather than doing it by hand.
+  target**. Each action's `path` is **relative to the resolved target** — join it to the
+  target directory (never apply it against your current working directory). Use
+  Edit/Write. Never touch anything outside the target. Push anything fully deterministic
+  into a `scripts/*.sh` step rather than doing it by hand.
 
 ## 7. Verify the edits landed
 
-- Re-read **every** file in the plan's `actions[]` and confirm the specific change is
-  actually present — a semantic check, not just that the file parses. For a deletion,
-  confirm the file or capability is really gone.
+- Re-read **every** file in the plan's `actions[]` (each `path` resolved against the
+  target directory, as in step 6) and confirm the specific change is actually present —
+  a semantic check, not just that the file parses. For a deletion, confirm the file or
+  capability is really gone.
 - If a change didn't land or landed wrong, fix it with Edit and re-check. If you can't
   resolve it, stop and tell the user exactly what is missing before going on.
 

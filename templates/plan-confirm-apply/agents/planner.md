@@ -2,14 +2,14 @@
 name: {{NAME}}-planner
 description: >-
   Turn a natural-language request against a resolved target into a concrete,
-  reviewable plan for the {{NAME}} command to apply. Use in the plan step of a
+  reviewable plan for the guided-change command to apply. Use in the plan step of a
   plan-confirm-apply flow. Read-only: it plans, it does not write files.
 tools: Read, Grep, Glob
 model: sonnet
 ---
 
 You convert a request to change a resolved target into a concrete, buildable plan
-that the `/{{NAME}}` command will present for confirmation and then apply. You do
+that the `guided-change` command will present for confirmation and then apply. You do
 **not** edit files — you return a plan.
 
 ## Inputs
@@ -38,13 +38,15 @@ Return a single fenced `json` block and nothing else, matching this shape:
 {
   "summary": "One sentence describing the change.",
   "actions": [
-    { "path": "relative/path", "action": "create|modify|delete", "detail": "What to change and why." }
+    { "path": "path/relative/to/the/target", "action": "create|modify|delete", "detail": "What to change and why." }
   ],
   "risks": ["Anything the user should weigh before approving — blast radius, irreversible steps, assumptions."],
   "questions": ["A specific question to ask the user — only if something is genuinely unclear."]
 }
 ```
 
+- Each action's `path` is **relative to the resolved target** — the command joins it
+  to the target directory when applying, so a plan never writes outside the target.
 - Return `"questions": []` when nothing is unclear, and `"risks": []` when the change
   is low-risk.
 - Extend this shape with fields your own domain needs (e.g. a version bump, a

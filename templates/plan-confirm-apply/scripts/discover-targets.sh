@@ -5,7 +5,8 @@
 #
 # Adapt the three markers below to your domain; the *shape* — walk up to a root
 # marker, list candidate dirs under it, emit a JSON array of
-# {name, path, description} — is what the command relies on.
+# {name, path, description} — is what the command relies on. Each `path` is
+# ABSOLUTE, so the command can use it regardless of its own working directory.
 #
 # Usage: discover-targets.sh [search-root]   (default: .)
 #
@@ -28,15 +29,16 @@ command -v jq >/dev/null 2>&1 || die "jq is required"
 
 root_arg="${1:-.}"
 
-# Nearest ancestor containing $ROOT_MARKER.
+# Nearest ancestor containing $ROOT_MARKER (tests the filesystem root too).
 find_root() {
   local d
   d="$(cd "$1" 2>/dev/null && pwd)" || return 1
-  while [[ -n "$d" && "$d" != "/" ]]; do
+  while [[ -n "$d" ]]; do
     [[ -e "$d/$ROOT_MARKER" ]] && {
       printf '%s' "$d"
       return 0
     }
+    [[ "$d" == "/" ]] && break
     d="$(dirname "$d")"
   done
   return 1
@@ -48,17 +50,23 @@ root="$(find_root "$root_arg")" || exit 2 # no root marker -> caller falls back
   exit 0
 }
 
-out='[]'
+# One jq per descriptor (validate + extract name/description together), then a
+# single jq to assemble the array — instead of several forks per candidate.
+entries=()
 while IFS= read -r dir; do
   [[ -n "$dir" ]] || continue
   meta="$dir/$DESCRIPTOR"
   [[ -f "$meta" ]] || continue
-  jq empty "$meta" 2>/dev/null || continue # skip an unparseable descriptor, don't abort
-  name="$(jq -r '.name // empty' "$meta")"
+  line="$(jq -r '[.name // "", .description // ""] | @tsv' "$meta" 2>/dev/null)" || continue
+  name="${line%%$'\t'*}"
+  desc="${line#*$'\t'}"
   [[ -n "$name" ]] || continue
-  desc="$(jq -r '.description // ""' "$meta")"
-  out="$(jq --arg n "$name" --arg p "$CANDIDATES_DIR/$(basename "$dir")" --arg d "$desc" \
-    '. += [{name: $n, path: $p, description: $d}]' <<<"$out")"
+  entries+=("$(printf '%s\t%s\t%s' "$name" "$desc" "$dir")") # path is absolute ($dir)
 done < <(find "$root/$CANDIDATES_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
 
-printf '%s\n' "$out"
+[[ "${#entries[@]}" -gt 0 ]] || {
+  printf '[]\n'
+  exit 0
+}
+printf '%s\n' "${entries[@]}" |
+  jq -R -s 'split("\n") | map(select(length > 0) | split("\t") | {name: .[0], path: .[2], description: .[1]})'
