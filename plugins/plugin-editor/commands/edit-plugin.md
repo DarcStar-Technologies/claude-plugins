@@ -1,6 +1,6 @@
 ---
 description: Modify an existing plugin — add a feature, change behavior, fix a bug, or remove a capability — with clarifying questions, template checks, changelog + version updates, and a reload hint.
-argument-hint: "<plugin-dir> — <what to change>"
+argument-hint: "[--dry-run] <plugin-dir> — <what to change>"
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Task, AskUserQuestion
 model: sonnet
 ---
@@ -8,10 +8,18 @@ model: sonnet
 Modify an existing Claude Code plugin safely. Work through these steps in order and
 **never edit anything until the user approves the plan.**
 
-`$ARGUMENTS` is the target plugin directory followed by the change to make.
+`$ARGUMENTS` is the target plugin directory followed by the change to make,
+optionally preceded by the `--dry-run` flag (see below).
 
 ## 1. Locate the plugin
 
+- **First, check for `--dry-run`.** Treat `--dry-run` as the flag **only when it is
+  the leading token** of `$ARGUMENTS` (before `<plugin-dir>`). If so, strip that
+  leading token and remember that this is a **dry run** — you will preview the plan
+  and stop, never touching disk (see step 4) — then parse `<plugin-dir>` and the
+  change description from what remains. A `--dry-run` that appears **inside the
+  change description** (e.g. "add a `--dry-run` flag to …") is literal content:
+  leave it in place and do **not** enter dry-run mode.
 - If `$ARGUMENTS` names a directory, use it. Otherwise, if the current directory
   contains `.claude-plugin/plugin.json`, use that.
 - If neither gives a target, **offer a picker** instead of guessing: run
@@ -38,8 +46,14 @@ Modify an existing Claude Code plugin safely. Work through these steps in order 
 ## 4. Confirm the plan — do NOT edit yet
 
 - Present the plan: the files it will touch and how, the `[Unreleased]` entry, the
-  version impact, and any `templateDivergence` note. Get an explicit go-ahead
-  before making any change.
+  version impact, and any `templateDivergence` note.
+- **If this is a `--dry-run`:** label the plan you just presented as a **DRY RUN /
+  PREVIEW**, state explicitly that **nothing on disk was or will be changed**,
+  and tell the user the exact command to re-run **without** `--dry-run` to apply it.
+  Then **STOP** — do not proceed to step 5 (apply), step 6 (verify), step 7
+  (check-template.sh / update-changelog.sh / sync-version.sh), step 8 (reload hint),
+  or the completed-work summary in step 9. The dry run ends here.
+- **Otherwise:** get an explicit go-ahead before making any change, then continue.
 
 ## 5. Apply the edits
 

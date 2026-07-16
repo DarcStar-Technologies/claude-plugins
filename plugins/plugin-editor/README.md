@@ -8,11 +8,19 @@ and a reload hint if the plugin is active in your session.
 ## Usage
 
 ```text
-/edit-plugin [<plugin-dir>] — <what you want to change>
+/edit-plugin [--dry-run] [<plugin-dir>] — <what you want to change>
 ```
 
 Omit `<plugin-dir>` (when the current directory isn't itself a plugin) and it
 lists the marketplace's plugins for you to pick from.
+
+Prefix the command with `--dry-run` to **preview** the plan — the locate and plan
+steps run (it may still show the picker or ask clarifying questions to build an
+accurate preview), the plan is shown, and then the command stops. No edits are
+applied, no changelog entry is written, no version is bumped, and no other script
+runs. Re-run without the leading `--dry-run` to apply it. (`--dry-run` only counts
+as the flag in the leading position — inside your change text, e.g. "add a
+`--dry-run` flag", it's treated as literal content.)
 
 Examples:
 
