@@ -21,9 +21,9 @@ teardown() { teardown_fixture; }
   local prov="$FIX/plugins/acme-tool/.claude-plugin/scaffold.json"
   [ -f "$prov" ]
   run jq -r '.template' "$prov"
-  [ "$output" = "_template" ]
+  [ "$output" = "default" ]
   run jq -r '.templateVersion' "$prov"
-  [ "$output" = "$(jq -r '.version' "$FIX/plugins/_template/.claude-plugin/plugin.json")" ]
+  [ "$output" = "$(jq -r '.version' "$FIX/templates/default/.claude-plugin/plugin.json")" ]
   run jq -r '.mode' "$prov"
   [ "$output" = "marketplace" ]
 }
@@ -39,7 +39,7 @@ teardown() { teardown_fixture; }
 }
 
 @test "rejects an unknown template" {
-  run fixture_scaffold acme-tool --template _nope
+  run fixture_scaffold acme-tool --template nope
   [ "$status" -ne 0 ]
 }
 

@@ -6,9 +6,8 @@ this file is a curated, human-readable index of the larger items.
 
 ## Planned plugins
 
-- **semver** — deterministic semver operations (`/semver` validate / compare /
-  next-version) for any project; its comparator is reused by the repo's drift
-  tooling. → [#10](https://github.com/DarcStar-Technologies/claude-plugins/issues/10)
+_None open right now — propose one via a
+[GitHub issue](https://github.com/DarcStar-Technologies/claude-plugins/issues)._
 
 ## Shipped
 
@@ -19,20 +18,22 @@ this file is a curated, human-readable index of the larger items.
 - **Portable mode + unified scaffolder** — `/forge` scaffolds a standalone plugin
   in any project or registers into the marketplace (`--register`); one engine,
   resolving the template from a `<template>-v*` version tag, a repo, a local
-  `_template/`, or the latest from this repo.
+  `templates/<name>/`, or the latest from this repo.
   → [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
-
-### Follow-ups
-
-- **Multiple named templates** — rearchitect scaffolding so plugin families
-  (MCP servers, command suites, agent packs) share common structure and can be
-  selected with `--template <name>` (already a flag; only one template exists
-  today). Includes release-config hardening so a template doesn't version-bump on
-  incidental touches. → [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
+- **semver** — deterministic semver operations (`/semver` validate / compare /
+  next-version) for any project; its comparator is reused by the repo's drift
+  tooling. → [#10](https://github.com/DarcStar-Technologies/claude-plugins/issues/10)
+- **Multiple named templates** — templates live under `templates/` (a sibling of
+  `plugins/`, identified by location rather than a name prefix): `default` and
+  `command-suite`. Discover with `scripts/list-templates.sh` and select with
+  `--template <name>`. Each is release-tagged with per-template drift, and
+  release-config `exclude-paths` stops incidental prose-doc touches from bumping a
+  template. Adding a new archetype is documented in `CONTRIBUTING.md`.
+  → [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
 
 ## Foundation (done)
 
-Marketplace structure, the `_template` reference plugin, mechanized validators
+Marketplace structure, the `default` reference template, mechanized validators
 with a `bats` suite, Conventional Commits + release-please automation, CI gates,
 and scaffold provenance with a template-drift policy. See
 [`CHANGELOG.md`](./CHANGELOG.md).

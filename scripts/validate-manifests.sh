@@ -76,9 +76,10 @@ while IFS= read -r dir; do
     fail "$name: plugin.json name '$pname' does not match directory '$name'"
   is_semver "$pver" || fail "$name: version '$pver' is not valid semver"
 
-  # Public (non-internal) plugins must appear in the marketplace catalog and
-  # record which template they were scaffolded from.
-  if [[ "$name" != _* ]]; then
+  # Public plugins (under plugins/) must appear in the marketplace catalog and
+  # record which template they were scaffolded from. Templates (under templates/)
+  # need neither.
+  if ! is_template_dir "$dir"; then
     listed=0
     for dn in ${declared_names[@]+"${declared_names[@]}"}; do
       [[ "$dn" == "$name" ]] && listed=1 && break

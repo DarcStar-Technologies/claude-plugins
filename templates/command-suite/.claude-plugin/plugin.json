@@ -1,0 +1,18 @@
+{
+  "name": "command-suite",
+  "version": "0.1.0",
+  "description": "Reference template for a plugin that exposes several related slash commands backed by one shared, deterministic script. Not published to the public catalog.",
+  "author": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "homepage": "https://github.com/DarcStar-Technologies/claude-plugins/tree/main/templates/command-suite",
+  "repository": "https://github.com/DarcStar-Technologies/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "template",
+    "reference",
+    "commands",
+    "suite"
+  ]
+}

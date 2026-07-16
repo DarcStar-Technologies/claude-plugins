@@ -26,13 +26,14 @@ scripts/check-all.sh
 ```
 
 plugin-forge's scaffolder is the single scaffolding engine; `--register .` puts it
-in marketplace mode. It creates `plugins/my-plugin/` from the `_template` reference
+in marketplace mode. It creates `plugins/my-plugin/` from the `default` template
 and registers the plugin in `marketplace.json`, `release-please-config.json`, and
 `.release-please-manifest.json`. Every plugin must keep its `CONTEXT.md`,
 `CHANGELOG.md`, `README.md`, and a valid `.claude-plugin/plugin.json`.
 
-Pass `--template <name>` to scaffold from a different internal template (default
-`_template`). The command records provenance in
+Pass `--template <name>` to scaffold from a different template under `templates/`
+(default `default`); run `scripts/list-templates.sh` to see what's available. The command
+records provenance in
 `plugins/<name>/.claude-plugin/scaffold.json` — the template name and the
 template version the plugin was generated from. **CI requires this file on every
 public plugin.** Review provenance and spot templates that have moved on since a
@@ -65,6 +66,34 @@ To consciously accept that a plugin lags a major template version, add it to
 
 The reason is required (it is the audit trail). Remove the entry once the plugin
 is migrated; the report warns about exceptions naming plugins that don't exist.
+
+## Adding a template
+
+Templates are the reference plugins under `templates/` (a sibling of `plugins/`)
+that the scaffolder copies component directories from. `default` is the
+general-purpose base; `command-suite` is an archetype for command-only plugins.
+List them with `scripts/list-templates.sh`. Only **components** are copied — the
+scaffolder always generates a new plugin's docs and manifest inline — so templates
+differ by their component set, not their docs.
+
+A template is just an internal plugin (identified by living under `templates/`),
+so to add one:
+
+1. Create `templates/your-archetype/` as a fully valid plugin: `plugin.json` (name
+   `your-archetype`, version `0.1.0`), `CONTEXT.md`, `CHANGELOG.md`, `README.md`,
+   and the component dirs (`commands/`, `agents/`, `skills/`, `scripts/`) that
+   define the archetype. In components, use the `{{NAME}}`/`{{DESC}}` placeholders
+   for anything that should become the new plugin's identity — the scaffolder
+   substitutes them on copy.
+2. Register it for release management: add a package under
+   `templates/your-archetype` in `release-please-config.json` (with
+   `component: your-archetype` and the `plugin.json` `extra-files` entry), seed
+   `.release-please-manifest.json` at `0.0.0`, and list its prose docs
+   (`README.md`/`CONTEXT.md`/`CHANGELOG.md`) under the package's `exclude-paths` so
+   incidental doc edits don't cut a new template version.
+3. Run `scripts/check-all.sh` and `npm test`. `list-templates.sh` and
+   `forge-scaffold.sh --template your-archetype` pick it up automatically; living
+   under `templates/` keeps it out of the public catalog.
 
 ## Commit messages — Conventional Commits
 

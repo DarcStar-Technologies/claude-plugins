@@ -13,15 +13,17 @@
 #                     [--template-version VER | --template-repo REPO[@REF]]
 #
 # Template resolution (highest precedence first):
-#   0. --register <root>        -> <root>/plugins/<template> (marketplace)
+#   0. --register <root>        -> <root>/templates/<template> (marketplace)
 #   1. --template-version VER   -> tag <template>-vVER from the default repo
 #   2. --template-repo REPO     -> owner/repo, a git URL, or a local path (+@ref)
-#   3. ./<template>             -> a local template directory
+#   3. ./templates/<template> or ./<template>  -> a local template directory
 #   4. (default)                -> latest <template> from the default repo
 #
-# Only components (commands/agents/skills/scripts) are taken from the template;
-# docs and the manifest are generated from the inline scaffolds below. A custom
-# template therefore contributes components, not docs — see issue #6.
+# Templates live under templates/ (a sibling of plugins/); a plugin is public iff
+# it is under plugins/. Only components (commands/agents/skills/scripts) are taken
+# from the template — docs and the manifest are generated from the inline scaffolds
+# below, and {{NAME}}/{{DESC}} placeholders inside components are substituted too.
+# A custom template therefore contributes components, not docs.
 set -euo pipefail
 
 DEFAULT_REPO="https://github.com/DarcStar-Technologies/claude-plugins.git"
@@ -42,7 +44,7 @@ shift
 
 description="A Claude Code plugin."
 author=""
-template="_template"
+template="default"
 out="."
 register_root=""
 tpl_version=""
@@ -91,13 +93,13 @@ clone_template() {
     git clone --depth 1 -- "$url" "$tmp_clone" >/dev/null 2>&1 ||
       die "could not fetch '$url'"
   fi
-  printf '%s/plugins/%s' "$tmp_clone" "$template"
+  printf '%s/templates/%s' "$tmp_clone" "$template"
 }
 
 tpl_source=""
 tpl_dir=""
 if [[ -n "$register_root" ]]; then
-  tpl_dir="$register_root/plugins/$template"
+  tpl_dir="$register_root/templates/$template"
   tpl_source="repo:$register_root"
 elif [[ -n "$tpl_version" ]]; then
   tpl_dir="$(clone_template "$DEFAULT_REPO" "${template}-v${tpl_version}")"
@@ -118,6 +120,9 @@ elif [[ -n "$tpl_repo" ]]; then
   fi
   tpl_dir="$(clone_template "$url" "$ref")"
   tpl_source="repo:${tpl_repo}"
+elif [[ -d "./templates/${template}" ]]; then
+  tpl_dir="./templates/${template}"
+  tpl_source="local:./templates/${template}"
 elif [[ -d "./${template}" ]]; then
   tpl_dir="./${template}"
   tpl_source="local:./${template}"
@@ -138,18 +143,28 @@ mode="portable"
 info "scaffolding $dest (mode: $mode, template source: $tpl_source)"
 mkdir -p "$dest/.claude-plugin"
 
-# Components come from the template (identifier renamed to the new plugin name).
+# Docs and components share these placeholders. A template opts into name/description
+# substitution by writing {{NAME}}/{{DESC}}; anything else is copied verbatim (no
+# blunt rewriting of the template's own name, which the `_` prefix used to guard).
+render() {
+  local c="$1"
+  c="${c//\{\{NAME\}\}/$name}"
+  c="${c//\{\{DESC\}\}/$description}"
+  printf '%s\n' "$c"
+}
+
+# Components come from the template; substitute placeholders only in the text
+# files that actually contain one. Binary assets and placeholder-free files are
+# copied verbatim (grep -I / --binary-files=without-match never matches binaries),
+# so their exact bytes are preserved.
 for comp in commands agents skills scripts; do
   [[ -d "$tpl_dir/$comp" ]] || continue
   cp -R "$tpl_dir/$comp" "$dest/$comp"
 done
-if [[ -n "$(find "$dest" -type f -print -quit 2>/dev/null)" ]]; then
-  while IFS= read -r -d '' f; do
-    content="$(cat "$f")"
-    content="${content//"$template"/$name}"
-    printf '%s' "$content" >"$f"
-  done < <(grep -rlZ -F --binary-files=without-match "$template" "$dest" 2>/dev/null || true)
-fi
+while IFS= read -r -d '' f; do
+  content="$(cat "$f")" # read fully before the redirect truncates the file
+  render "$content" >"$f"
+done < <(grep -rlZ -F --binary-files=without-match -e '{{NAME}}' -e '{{DESC}}' "$dest" 2>/dev/null || true)
 
 # Manifest: identity only; the license is inherited from the template.
 jq -n --arg name "$name" --arg desc "$description" --arg author "$author" --arg license "$tpl_license" \
@@ -159,13 +174,6 @@ jq -n --arg name "$name" --arg desc "$description" --arg author "$author" --arg 
   >"$dest/.claude-plugin/plugin.json"
 
 # Docs from inline scaffolds.
-render() {
-  local c="$1"
-  c="${c//\{\{NAME\}\}/$name}"
-  c="${c//\{\{DESC\}\}/$description}"
-  printf '%s\n' "$c"
-}
-
 render "$(
   cat <<'EOF'
 # {{NAME}}

@@ -23,7 +23,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
       - name: shellcheck
-        run: find scripts plugins -name '*.sh' -exec shellcheck {} +
+        run: find scripts plugins templates -name '*.sh' -exec shellcheck {} +
 
       - name: actionlint
         run: |
