@@ -97,6 +97,23 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "templates/plan-confirm-apply": {
+      "release-type": "simple",
+      "component": "plan-confirm-apply",
+      "changelog-path": "CHANGELOG.md",
+      "exclude-paths": [
+        "templates/plan-confirm-apply/README.md",
+        "templates/plan-confirm-apply/CONTEXT.md",
+        "templates/plan-confirm-apply/CHANGELOG.md"
+      ],
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }

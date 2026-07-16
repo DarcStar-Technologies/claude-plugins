@@ -1,0 +1,36 @@
+# plan-confirm-apply — Context
+
+> Orientation for humans and AI assistants working on this template.
+
+## Purpose
+
+Reference template for the plan-confirm-apply archetype: a guided command that resolves a target, delegates to a read-only planner subagent for a structured change plan, requires explicit confirmation before touching disk, then applies and reverifies.
+
+## Mental model
+
+This is a **template**: an internal plugin under `templates/` whose component
+directories (`commands/`, `agents/`, `skills/`, `scripts/`) the marketplace
+scaffolder copies into new plugins, substituting `{{NAME}}`/`{{DESC}}`. It differs
+from a published plugin only by living under `templates/` (never in
+`marketplace.json`) — so keep the components archetype-shaped and generic.
+
+## Challenging concepts & gotchas
+
+- **The confirm-before-edit gate is the whole point.** The command must present the
+  planner's plan and get an explicit go-ahead **before** any Edit/Write. Preserve that
+  ordering (plan → confirm → apply) when adapting the command; a `--dry-run` path stops
+  right after the preview.
+- **The planner is read-only.** `agents/planner.md` (`name: {{NAME}}-planner`) plans and
+  asks clarifying questions — it never writes files. Keep its tool list read-only.
+- **`discover-targets.sh` is domain-parameterized.** It ships with generic
+  `ROOT_MARKER` / `CANDIDATES_DIR` / `DESCRIPTOR` env defaults; a scaffolded plugin
+  points them at its own layout. It exits non-zero (no output) when there's no root
+  marker so the command falls back to a free-text prompt, and prints `[]` when the root
+  has no candidates — keep those two signals distinct.
+- **Placeholders.** Components use `{{NAME}}`/`{{DESC}}` for the scaffolded plugin's
+  identity (e.g. the agent name `{{NAME}}-planner`, the command's `description`). The
+  forge scaffolder substitutes them on copy.
+- **This is deliberately domain-neutral.** It was distilled from a plugin-editing
+  plugin, but the changelog/versioning/template-drift housekeeping was dropped — that
+  is a consumer's concern, not the archetype's. Add your own post-apply steps in the
+  command's apply/verify phase.
