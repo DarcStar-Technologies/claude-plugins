@@ -18,6 +18,10 @@ _Nothing open right now — propose ideas via
 
 ### Follow-ups
 
+- **Portable mode for plugin-forge** — scaffold a standalone plugin outside this
+  repo by bundling templates + a reference and making marketplace/release
+  registration optional. Relocating `new-plugin.sh` alone does not achieve this.
+  → [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
 - Resolve a **specific** older template version (from git history of
   `plugins/_template/`); plugin-forge supports only the current version today.
 
