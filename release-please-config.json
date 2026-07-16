@@ -73,6 +73,18 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "plugins/plugin-editor": {
+      "release-type": "simple",
+      "component": "plugin-editor",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }

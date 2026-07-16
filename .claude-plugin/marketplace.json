@@ -23,6 +23,11 @@
       "name": "scaffold-upgrade",
       "source": "./plugins/scaffold-upgrade",
       "description": "Check whether a plugin scaffolded from a template can be upgraded to the latest version of that template."
+    },
+    {
+      "name": "plugin-editor",
+      "source": "./plugins/plugin-editor",
+      "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, updates its changelog and version, and flags a stale active install."
     }
   ]
 }

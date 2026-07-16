@@ -1,0 +1,8 @@
+{
+  "template": "default",
+  "templateVersion": "0.3.0",
+  "source": "repo:.",
+  "mode": "marketplace",
+  "scaffoldedWith": "forge-scaffold.sh",
+  "scaffoldedAt": "2026-07-16"
+}
