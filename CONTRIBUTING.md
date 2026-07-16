@@ -101,11 +101,12 @@ changelog sections. The repo-level [`CHANGELOG.md`](./CHANGELOG.md) tracks
 tooling/structure changes and is curated by maintainers.
 
 A plugin's `.release-please-manifest.json` entry starts at `0.0.0` (nothing
-released yet) while its `plugin.json` holds the in-development version, so
-release-please cuts a clean `0.1.0` as the first release. The brief mismatch is
-expected and resolves the first time a release lands. The marketplace catalog
-entry deliberately carries **no** version — `plugin.json` is the single source of
-truth, and CI fails if a catalog entry pins one.
+released yet) while its `plugin.json` holds the in-development version. The
+repo-level `initial-version` (`0.1.0`) in `release-please-config.json` makes the
+first release a clean `0.1.0` rather than release-please's default `1.0.0`
+graduation; the brief manifest/`plugin.json` mismatch resolves the first time a
+release lands. The marketplace catalog entry deliberately carries **no** version —
+`plugin.json` is the single source of truth, and CI fails if a catalog entry pins one.
 
 > **Maintainers — release token.** This org's enterprise policy blocks the
 > default `GITHUB_TOKEN` from opening pull requests, so `release.yml` runs

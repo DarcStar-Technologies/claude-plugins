@@ -270,7 +270,8 @@ if [[ -n "$register_root" ]]; then
   man="$register_root/.release-please-manifest.json"
   if [[ -f "$man" ]]; then
     tmp="$(mktemp)"
-    # Seed at 0.0.0 so release-please cuts a clean 0.1.0 as the first release.
+    # Seed at 0.0.0; the repo's release-please `initial-version` (0.1.0) makes the
+    # first release a clean 0.1.0 rather than the default 1.0.0 graduation.
     jq --arg path "plugins/$name" '.[$path] = "0.0.0"' "$man" >"$tmp" && mv "$tmp" "$man"
   fi
   info "registered $name in the marketplace"
