@@ -123,7 +123,9 @@ Each plugin is versioned independently with [SemVer](https://semver.org/), and
 each has its own `CHANGELOG.md` in [Keep a Changelog](https://keepachangelog.com/)
 format. **release-please** reads merged Conventional Commits on `main`, opens a
 release PR that bumps the affected `plugin.json` versions and writes their
-changelog entries, and tags releases when that PR merges.
+changelog entries, and tags releases when that PR merges. That release PR is
+**auto-merged once its CI passes** (see "Automated releases" below), so a merged
+`feat`/`fix` publishes hands-free — no manual approval step.
 
 You therefore **never** manually edit released version numbers or generated
 changelog sections. The repo-level [`CHANGELOG.md`](./CHANGELOG.md) tracks
@@ -143,6 +145,21 @@ release lands. The marketplace catalog entry deliberately carries **no** version
 > secret (Contents: RW, Pull requests: RW, scoped to this repo). Until that
 > secret exists the release job skips cleanly. Rotate the token before it
 > expires.
+
+### Automated releases
+
+**Maintainers:** the release PR merges itself once CI is green, via `release.yml`'s
+auto-merge step (`gh pr merge --auto` on the `autorelease: pending` PR). This relies
+on two GitHub settings that live outside git and must stay in place:
+
+- the repo setting **Allow auto-merge** (`allow_auto_merge = true`);
+- a **branch-protection rule on `main`** whose required status checks are exactly
+  `validate & lint` and `shell tests (bats)` — no required reviews (this repo is
+  solo-maintained), `enforce_admins` off (so an admin can still merge if a check
+  wedges).
+
+The `--auto` gate waits on those checks, so a red release PR can never publish. To
+pause auto-releases, remove the auto-merge step or the branch protection.
 
 ## Model selection
 
