@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Entries below `[Unreleased]` are generated automatically from
 [Conventional Commits](https://www.conventionalcommits.org/) by release-please.
 
+## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge-v0.2.0...plugin-forge-v0.3.0) (2026-07-16)
+
+
+### Features
+
+* **templates:** support multiple named templates under templates/ ([#13](https://github.com/DarcStar-Technologies/claude-plugins/issues/13)) ([afb499c](https://github.com/DarcStar-Technologies/claude-plugins/commit/afb499cc3db618e22d66f99f05b281fe36c0ece9)), closes [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
+
 ## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge-v0.1.0...plugin-forge-v0.2.0) (2026-07-16)
 
 

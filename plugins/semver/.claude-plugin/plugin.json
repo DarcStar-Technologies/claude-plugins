@@ -1,6 +1,6 @@
 {
   "name": "semver",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Deterministic semver operations: validate, compare, bump, and next-version from Conventional Commits.",
   "license": "MIT",
   "keywords": [
