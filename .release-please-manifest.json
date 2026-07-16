@@ -5,5 +5,5 @@
   "plugins/semver": "0.2.0",
   "plugins/scaffold-upgrade": "0.1.0",
   "plugins/plugin-editor": "0.7.0",
-  "plugins/template-forge": "0.0.0"
+  "plugins/template-forge": "0.1.0"
 }
