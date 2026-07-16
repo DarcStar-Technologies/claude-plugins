@@ -33,6 +33,8 @@ active install — is a tested shell script. The command is the conductor:
    ├─ check-template.sh                 → structure + template drift
    ├─ update-changelog.sh               → [Unreleased] entry
    ├─ sync-version.sh                   → bump / commit guidance
+   ├─ verify-repo.sh                    → advisory cross-checks: repo check-all.sh +
+   │                                       plugin tests (hard only on own bundled tests)
    └─ check-install-status.sh           → reload hint
 ```
 
@@ -49,6 +51,7 @@ never edits until the user approves.
 | `scripts/check-template.sh` | Shell | Structural validators + reuse of `scaffold-upgrade` for template drift. |
 | `scripts/update-changelog.sh` | Shell | Insert a bullet under `[Unreleased] > ### <category>`. |
 | `scripts/sync-version.sh` | Shell | Context-aware versioning (release-please vs. standalone). |
+| `scripts/verify-repo.sh` | Shell | Post-apply cross-checks — marketplace `check-all.sh` + plugin `bats` tests, scoped & advisory (hard only on the plugin's own bundled tests). |
 | `scripts/check-install-status.sh` | Shell | Is the plugin installed/stale → reload hint. |
 
 ## Model selection
@@ -63,10 +66,14 @@ model cost.
 
 - **`semver`** — `sync-version.sh` bumps standalone plugins with `semver.sh`.
 - **`scaffold-upgrade`** — `check-template.sh` calls `check-upgrade.sh` for drift.
+- **the repo's own checks** — `verify-repo.sh` shells out to the marketplace's
+  `scripts/check-all.sh` and `bats`, located by walking up from the plugin directory; a
+  missing one is skipped with a clear note — never a failure — and check-all /
+  centralized-test failures are advisory `WARNING`s (see the gotcha below).
 
-Both are found at run time (`$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a marketplace
-ancestor → `PATH`), the same pattern the rest of the marketplace uses, so there is
-one source of truth for each.
+The first two are found at run time (`$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a
+marketplace ancestor → `PATH`), the same pattern the rest of the marketplace uses, so
+there is one source of truth for each.
 
 ## Gotchas
 
@@ -76,8 +83,19 @@ one source of truth for each.
   the rule below; a `--dry-run` inside the change description is literal — otherwise
   "add a `--dry-run` flag to X" would misfire). When set, the command stops immediately
   after presenting the plan — before any of check-template.sh / update-changelog.sh /
-  sync-version.sh / check-install-status.sh run — so the plugin's directory and disk
-  state are left untouched.
+  sync-version.sh / verify-repo.sh / check-install-status.sh run — so the plugin's
+  directory and disk state are left untouched.
+- **Post-apply verification is scoped and advisory.** `verify-repo.sh` (step 8) adds
+  cross-checks on top of check-template.sh's hard, plugin-scoped structural check.
+  Because `/edit-plugin` only edits inside the plugin dir, anything it can't fix
+  in-bounds must not falsely block a correct edit: the repo-wide `check-all.sh` (run
+  only when a marketplace ancestor is found) and the repo's **centralized**
+  `scripts/tests/<name>.bats` for a touched script are advisory `WARNING`s, never hard
+  failures — a repo-wide failure is usually pre-existing breakage in another plugin; a
+  centralized-test failure usually means a behavior change needs a follow-up test
+  update outside this plugin. The **only** hard failure verify-repo adds is the
+  plugin's **own bundled** `scripts/tests/*.bats` (in-bounds to fix). A removed script
+  skips its centralized test.
 - **Flags live in the "directive segment".** All three flags (`--dry-run`,
   `--plugin=<dir>`, `--type=add|change|fix|remove`) are recognized anywhere **before
   the `—` change-description separator**, alongside the plugin dir, in any order; when

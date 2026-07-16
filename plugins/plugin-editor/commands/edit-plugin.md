@@ -94,8 +94,9 @@ actionable change text (not empty, not a placeholder):
   PREVIEW**, state explicitly that **nothing on disk was or will be changed**,
   and tell the user the exact command to re-run **without** `--dry-run` to apply it.
   Then **STOP** — do not proceed to step 6 (apply), step 7 (verify), step 8
-  (check-template.sh / update-changelog.sh / sync-version.sh), step 9 (reload hint),
-  or the completed-work summary in step 10. The dry run ends here.
+  (check-template.sh / update-changelog.sh / sync-version.sh / verify-repo.sh),
+  step 9 (reload hint), or the completed-work summary in step 10. The dry run ends
+  here.
 - **Otherwise:** get an explicit go-ahead before making any change, then continue.
 
 ## 6. Apply the edits
@@ -112,7 +113,7 @@ actionable change text (not empty, not a placeholder):
   cannot resolve it, stop and tell the user exactly what is missing before going on.
 - Only continue once every planned change is confirmed.
 
-## 8. Check, record, version — deterministic scripts
+## 8. Check, record, version, verify — deterministic scripts
 
 Run these with Bash and relay each script's output. Each Bash call is a fresh
 shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
@@ -125,6 +126,19 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
 3. `"$SCRIPTS/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
+4. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
+   Pass every path from the plan's `files[]` as `<files...>`. On top of
+   check-template.sh (which already hard-validates the plugin's own structure and
+   shellchecks its scripts), it runs the repo's `scripts/check-all.sh` (in a
+   marketplace) and the plugin's `bats` tests. It is **scoped and advisory**: because
+   this command only edits inside the plugin dir, it hard-fails (exit non-zero) **only**
+   on the plugin's own bundled `scripts/tests/*.bats`, which are in-bounds to fix.
+   Repo-wide `check-all.sh` failures and the repo's centralized
+   `scripts/tests/<name>.bats` are surfaced as **`WARNING:` lines**, never blocks (they
+   may be pre-existing breakage elsewhere, or a behavior change that needs a follow-up
+   test update outside this plugin). **On a non-zero exit**, fix the edit (step 6/7) and
+   re-check before finishing. **Relay any `WARNING:` lines** to the user as advisories
+   to review before merging — they do not block steps 9–10.
 
 ## 9. Reload hint
 

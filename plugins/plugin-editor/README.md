@@ -2,8 +2,8 @@
 
 Make a change to an existing plugin — add a feature, change a behavior, fix a bug,
 or remove a capability — with the safety rails handled for you: clarifying
-questions, template-conformance checks, a changelog entry, the right version bump,
-and a reload hint if the plugin is active in your session.
+questions, template-conformance and repo-verification checks, a changelog entry, the
+right version bump, and a reload hint if the plugin is active in your session.
 
 ## Usage
 
@@ -59,6 +59,10 @@ the plan.
    - `update-changelog.sh` — records the change under `[Unreleased]`,
    - `sync-version.sh` — bumps the version (or, in a release-please repo, tells you
      the Conventional Commit to land),
+   - `verify-repo.sh` — advisory cross-checks: the marketplace's own `check-all.sh`
+     (skipped cleanly outside a marketplace) and the plugin's `bats` tests; it blocks
+     only on the plugin's own bundled tests, and surfaces repo-wide / centralized-test
+     issues as warnings to review before merging,
    - `check-install-status.sh` — if the plugin is installed in this session,
      suggests `/plugin update` + `/reload-plugins`.
 5. It finishes with a **summary** of every file touched, what changed, and the
