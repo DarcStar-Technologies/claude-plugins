@@ -73,6 +73,16 @@ copy to drift**.
   template, resolved `source`, and `mode`.
 - **Ask, don't invent.** The planner emits `questions[]` for anything ambiguous;
   `/forge` must resolve them with the user before creating files.
+- **Guided intake when no description is given.** Rather than a bare free-text ask,
+  `/forge` (step 1) first captures the plugin's **purpose** (free text — the essential
+  domain input), then refines the *shape* via `AskUserQuestion` (each capped at the
+  tool's **4-option** limit, with the built-in "Other" free-form): the *kind* of plugin,
+  grounded in the real reference templates from `scripts/list-templates.sh`
+  (`command-suite`, `default`, `plan-confirm-apply`) — the chosen archetype is carried
+  forward as the **authoritative `--template`** so the planner honors it rather than
+  re-inferring — then up to 4 concrete component-set suggestions. The answers fold into
+  one description before the normal flow continues. Mirrors `forge-template`'s and
+  `edit-plugin`'s guided intake; applies **only** when no description was given.
 
 ## References
 

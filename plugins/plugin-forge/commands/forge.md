@@ -30,8 +30,33 @@ whether it registers the plugin.
   (`--portable`): scaffold a standalone plugin in the current directory (no
   `--register`), registering nothing.
 
-Tell the user which mode you're in. If `$ARGUMENTS` has no description, ask what
-the plugin should do before continuing.
+Tell the user which mode you're in.
+
+**If `$ARGUMENTS` has no description, run a guided intake** instead of a bare
+free-text ask (mirroring `/forge-template` and `/edit-plugin`). Skip this entirely
+when a description was given — that flow is unchanged.
+
+- **What should the plugin do?** First capture its **purpose** — the one thing `/forge`
+  most needs and cannot infer. Ask the user in free text (this is the essential domain
+  input the planner builds the name, description, and components from, so never skip
+  it). The two questions below only refine the *shape*.
+- **What kind of plugin?** Ask one single-select `AskUserQuestion`, grounded in the
+  real reference templates: run `"$ROOT/scripts/list-templates.sh"` and skim each so
+  the archetype options are concrete — e.g. a command-only suite (`command-suite`), a
+  command + planner-agent + script mix (`default`), or a plan → confirm → apply
+  workflow (`plan-confirm-apply`). `AskUserQuestion` allows at most **4** options, so
+  present the 4 most relevant archetypes (the built-in **"Other"** free-form option is
+  added for you — do not add your own). If the script isn't available (portable mode
+  without this repo checked out), describe those same archetypes from general
+  knowledge. **Record the chosen archetype as the authoritative template** — a
+  deliberate pick is an explicit template request, so pass it to the planner in step 3
+  and as `--template <name>` in step 5 rather than letting the planner re-infer one.
+- **Which components?** Optionally ask a second single-select `AskUserQuestion` with up
+  to **4** concrete component-set suggestions for the chosen kind (its built-in
+  **"Other"** is likewise added for you).
+- **Combine.** Fold the purpose, the chosen archetype, and the component set into one
+  clear description, then continue with the normal flow (template selection in step 2,
+  the planner in step 3), carrying the authoritative template forward.
 
 ## 2. Template source
 
@@ -65,7 +90,9 @@ of that template is then resolved by mode:
   in marketplace mode, the repo root and the available templates (from step 2) so
   it can read the conventions and pick a template. In portable mode the repo files
   may be absent — tell it to plan from general Claude Code plugin knowledge and
-  default the template to `default`.
+  default the template to `default`. **If guided intake (step 1) selected an
+  archetype, pass it as the authoritative template** so the plan uses it rather than
+  re-inferring one.
 - It returns a JSON plan: `name`, `description`, `keywords`, `template` (the
   best-fit template name), `components[]` (each with `type`, `file`,
   `responsibility`, `model`, `tools`), and `questions[]`. If it doesn't return a
