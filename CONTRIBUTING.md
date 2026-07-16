@@ -149,17 +149,23 @@ release lands. The marketplace catalog entry deliberately carries **no** version
 ### Automated releases
 
 **Maintainers:** the release PR merges itself once CI is green, via `release.yml`'s
-auto-merge step (`gh pr merge --auto` on the `autorelease: pending` PR). This relies
-on two GitHub settings that live outside git and must stay in place:
+auto-merge step. The step finds the PR from release-please's own `pr` output (so a
+PR opened in the same run is armed immediately — GitHub's label search index lags a
+few seconds, so `gh pr list --label` alone would miss it), then enables auto-merge
+with `gh pr merge --auto`. It relies on GitHub settings that live outside git and
+must stay in place:
 
-- the repo setting **Allow auto-merge** (`allow_auto_merge = true`);
+- the repo settings **Allow auto-merge** (`allow_auto_merge = true`) and **Allow
+  squash merging** (`allow_squash_merge = true`, since the step squash-merges);
 - a **branch-protection rule on `main`** whose required status checks are exactly
   `validate & lint` and `shell tests (bats)` — no required reviews (this repo is
   solo-maintained), `enforce_admins` off (so an admin can still merge if a check
   wedges).
 
-The `--auto` gate waits on those checks, so a red release PR can never publish. To
-pause auto-releases, remove the auto-merge step or the branch protection.
+The `--auto` gate waits on those checks, so a red release PR can never publish. The
+step is best-effort — it never fails the release job — so if auto-merge can't be
+enabled it warns and leaves the PR for a manual merge. To pause auto-releases,
+remove the auto-merge step or the branch protection.
 
 ## Model selection
 
