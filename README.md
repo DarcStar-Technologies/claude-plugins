@@ -7,11 +7,33 @@ plugins, built to showcase the automation and tooling craft of
 Every plugin here is independently versioned (SemVer), self-documenting
 (`CONTEXT.md` + `CHANGELOG.md`), and held to the same automated quality bar.
 
-## Install the marketplace
+## Installing
+
+Add the marketplace, then install a plugin (the marketplace is named `darcstar`):
 
 ```text
+# Add this marketplace (GitHub owner/repo shorthand)
 /plugin marketplace add DarcStar-Technologies/claude-plugins
-/plugin install <plugin-name>@darcstar
+
+# Install a plugin
+/plugin install plugin-forge@darcstar
+```
+
+Or run `/plugin` to browse and install interactively. You can also add the
+marketplace from a full git URL, or from a **local checkout** (useful for
+development, and required for `plugin-forge` — see the note below):
+
+```text
+/plugin marketplace add https://github.com/DarcStar-Technologies/claude-plugins.git
+/plugin marketplace add ./            # from inside a local clone
+```
+
+Manage it with:
+
+```text
+/plugin marketplace list              # list added marketplaces
+/plugin marketplace update darcstar   # pull the latest catalog
+/plugin marketplace remove darcstar
 ```
 
 ## Available plugins
@@ -22,6 +44,11 @@ Every plugin here is independently versioned (SemVer), self-documenting
 
 > `plugins/_template` is the reference/scaffold plugin. It is intentionally not
 > published to the catalog.
+
+> **Note on `plugin-forge`:** it authors new plugins *for this marketplace* by
+> calling the repo's own `scripts/new-plugin.sh`, so `/forge` must run from a
+> checkout of this repository. Clone it, launch Claude Code there, and add the
+> marketplace with `/plugin marketplace add ./`.
 
 ## Roadmap
 
