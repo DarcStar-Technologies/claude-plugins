@@ -25,8 +25,8 @@ teardown() { teardown_fixture; }
 
 @test "fails when the plugin name does not match its directory" {
   add_plugin mismatch 1.0.0
-  jq '.name = "wrong"' "$FIX/plugins/mismatch/.claude-plugin/plugin.json" >"$FIX/t" \
-    && mv "$FIX/t" "$FIX/plugins/mismatch/.claude-plugin/plugin.json"
+  jq '.name = "wrong"' "$FIX/plugins/mismatch/.claude-plugin/plugin.json" >"$FIX/t" &&
+    mv "$FIX/t" "$FIX/plugins/mismatch/.claude-plugin/plugin.json"
   run "$FIX/scripts/validate-manifests.sh"
   [ "$status" -ne 0 ]
   [[ "$output" == *"does not match directory"* ]]
@@ -56,8 +56,8 @@ teardown() { teardown_fixture; }
 @test "marketplace entries must not pin a version" {
   add_plugin versioned 1.0.0
   jq '(.plugins[] | select(.name == "versioned")) += {version: "1.0.0"}' \
-    "$FIX/.claude-plugin/marketplace.json" >"$FIX/t" \
-    && mv "$FIX/t" "$FIX/.claude-plugin/marketplace.json"
+    "$FIX/.claude-plugin/marketplace.json" >"$FIX/t" &&
+    mv "$FIX/t" "$FIX/.claude-plugin/marketplace.json"
   run "$FIX/scripts/validate-manifests.sh"
   [ "$status" -ne 0 ]
   [[ "$output" == *"must not pin a 'version'"* ]]

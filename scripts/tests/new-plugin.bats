@@ -35,8 +35,8 @@ teardown() { teardown_fixture; }
 @test "scaffold-report flags drift when the template advances" {
   "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null
   # Bump the template version past what the plugin recorded (0.1.0).
-  jq '.version = "0.2.0"' "$FIX/plugins/_template/.claude-plugin/plugin.json" >"$FIX/t" \
-    && mv "$FIX/t" "$FIX/plugins/_template/.claude-plugin/plugin.json"
+  jq '.version = "0.2.0"' "$FIX/plugins/_template/.claude-plugin/plugin.json" >"$FIX/t" &&
+    mv "$FIX/t" "$FIX/plugins/_template/.claude-plugin/plugin.json"
   run "$FIX/scripts/scaffold-report.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"DRIFT"* ]]

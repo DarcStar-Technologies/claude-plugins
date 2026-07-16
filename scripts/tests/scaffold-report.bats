@@ -8,13 +8,13 @@ teardown() { teardown_fixture; }
 # Advance the _template version inside the fixture.
 bump_template() {
   jq --arg v "$1" '.version = $v' \
-    "$FIX/plugins/_template/.claude-plugin/plugin.json" >"$FIX/t" \
-    && mv "$FIX/t" "$FIX/plugins/_template/.claude-plugin/plugin.json"
+    "$FIX/plugins/_template/.claude-plugin/plugin.json" >"$FIX/t" &&
+    mv "$FIX/t" "$FIX/plugins/_template/.claude-plugin/plugin.json"
 }
 
 @test "strict mode fails on unlisted major template drift" {
-  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null   # scaffolded at 0.1.0
-  bump_template 1.0.0                                  # template -> major 1
+  "$FIX/scripts/new-plugin.sh" acme-tool >/dev/null # scaffolded at 0.1.0
+  bump_template 1.0.0                               # template -> major 1
   run "$FIX/scripts/scaffold-report.sh" --strict
   [ "$status" -ne 0 ]
   [[ "$output" == *"MAJOR-DRIFT"* ]]
