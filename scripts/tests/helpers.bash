@@ -25,16 +25,15 @@ setup_fixture() {
 JSON
 }
 
-# A fuller fixture that mirrors the real repo (scripts, templates, the _template
-# reference, and empty manifests) so integration tests can exercise new-plugin.sh
-# end to end. It deliberately copies ONLY _template, not real published plugins,
-# so these tests stay isolated as the marketplace grows.
+# A fuller fixture that mirrors a marketplace repo (validators, the _template
+# reference, and empty manifests) so integration tests can scaffold + register
+# end to end. It copies ONLY _template, not real published plugins, so these
+# tests stay isolated as the marketplace grows.
 setup_full_fixture() {
   FIX="$(mktemp -d)"
   local r
   r="$(repo_root_dir)"
   cp -r "$r/scripts" "$FIX/scripts"
-  cp -r "$r/templates" "$FIX/templates"
   mkdir -p "$FIX/plugins"
   cp -r "$r/plugins/_template" "$FIX/plugins/_template"
   mkdir -p "$FIX/.claude-plugin"
@@ -42,6 +41,12 @@ setup_full_fixture() {
     >"$FIX/.claude-plugin/marketplace.json"
   printf '{ "packages": {} }\n' >"$FIX/release-please-config.json"
   printf '{}\n' >"$FIX/.release-please-manifest.json"
+}
+
+# Scaffold + register a plugin into the fixture marketplace (marketplace mode),
+# using the real plugin-forge scaffolder pointed at the fixture root.
+fixture_scaffold() {
+  "$(repo_root_dir)/plugins/plugin-forge/scripts/forge-scaffold.sh" "$@" --register "$FIX"
 }
 
 teardown_fixture() {

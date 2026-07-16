@@ -18,7 +18,12 @@ Entries below `[Unreleased]` are generated automatically from
 
 ### Added
 
+- Portable mode + unified scaffolder: `scripts/forge-scaffold.sh` is now the single
+  scaffolding engine (replacing the marketplace-only `scripts/new-plugin.sh`). It
+  scaffolds a standalone plugin anywhere, or registers into a marketplace with
+  `--register <root>`, resolving the template from a `<template>-v*` version tag, a
+  repo, a local `./<template>/`, or the latest from this repo. `/forge` auto-detects
+  the mode. Implements #5.
 - `/forge` command and the `plugin-planner` agent: scaffold a new marketplace
-  plugin from a natural-language description, defaulting to the current template
-  version and prompting for anything that can't be inferred. Delegates the
-  deterministic work to `scripts/new-plugin.sh`.
+  plugin from a natural-language description, prompting for anything that can't be
+  inferred. Delegates the deterministic work to `scripts/forge-scaffold.sh`.

@@ -26,6 +26,8 @@ root path. You may also be given answers to earlier clarifying questions.
    - Read `<root>/plugins/_template/` (the reference plugin) to see the component
      layout and how a command, agent, skill, and script are written.
    - Read `<root>/CONTRIBUTING.md` for the model-selection principle and standards.
+   - If those files aren't available (portable mode, outside the marketplace
+     repo), plan from your general knowledge of Claude Code plugin structure.
 2. Derive the plan:
    - **name**: a short, kebab-case plugin name matching `^[a-z][a-z0-9-]*$`. Never
      use a `_`-prefixed name (reserved for internal templates).

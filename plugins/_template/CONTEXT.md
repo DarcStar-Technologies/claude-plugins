@@ -2,7 +2,7 @@
 
 > Orientation for humans and AI assistants. This reference plugin exists to show
 > *how* a DarcStar plugin is structured and *why* it is structured that way.
-> Copy it with `scripts/new-plugin.sh`, then rewrite this file for the real
+> Copy it with plugin-forge (`forge-scaffold.sh`), then rewrite this file for the real
 > plugin.
 
 ## Purpose
@@ -63,7 +63,7 @@ regardless of where the marketplace is installed.
   and release-please hides `ci`/`chore`/`docs`/`test` types by default, so only
   `feat`/`fix` subjects appear. Keep template edits in `_template`-scoped commits
   to keep it tidy.
-- **Copies:** `new-plugin.sh` copies the component directories and rewrites the
+- **Copies:** the scaffolder copies the component directories and rewrites the
   string `_template` to the new plugin name, so avoid using that literal string
   for anything you want preserved.
 - **Provenance:** scaffolded plugins get `.claude-plugin/scaffold.json` naming

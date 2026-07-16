@@ -21,15 +21,15 @@ pre-commit install --hook-type commit-msg
 ## Adding a plugin
 
 ```bash
-scripts/new-plugin.sh my-plugin --description "What it does"
+plugins/plugin-forge/scripts/forge-scaffold.sh my-plugin --description "What it does" --register .
 scripts/check-all.sh
 ```
 
-`new-plugin.sh` creates `plugins/my-plugin/` from `templates/` and the
-`_template` reference, then registers the plugin in `marketplace.json`,
-`release-please-config.json`, and `.release-please-manifest.json`. Every plugin
-must keep its `CONTEXT.md`, `CHANGELOG.md`, `README.md`, and a valid
-`.claude-plugin/plugin.json`.
+plugin-forge's scaffolder is the single scaffolding engine; `--register .` puts it
+in marketplace mode. It creates `plugins/my-plugin/` from the `_template` reference
+and registers the plugin in `marketplace.json`, `release-please-config.json`, and
+`.release-please-manifest.json`. Every plugin must keep its `CONTEXT.md`,
+`CHANGELOG.md`, `README.md`, and a valid `.claude-plugin/plugin.json`.
 
 Pass `--template <name>` to scaffold from a different internal template (default
 `_template`). The command records provenance in

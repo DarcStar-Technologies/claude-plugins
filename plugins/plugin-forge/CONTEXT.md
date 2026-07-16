@@ -1,14 +1,32 @@
 # plugin-forge — Context
 
 > Design notes for humans and AI assistants. plugin-forge is the AI-assisted
-> front-end to the deterministic `scripts/new-plugin.sh`: it decides *what* to
-> build from a description and asks about anything unclear; the script does the
-> mechanical file creation and registration.
+> front-end to a deterministic scaffolder: it decides *what* to build from a
+> description and asks about anything unclear; a shell script does the mechanical
+> file creation.
 
 ## Purpose
 
-Generate a new marketplace plugin from a natural-language description. Implements
-[issue #2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2).
+Generate a new Claude Code plugin from a natural-language description — either
+**for this marketplace** (registering it here) or as a **standalone plugin in any
+project**. Implements
+[#2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2) (marketplace)
+and [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
+(portable mode).
+
+## One scaffolder, two modes
+
+`scripts/forge-scaffold.sh` is the single scaffolding engine. The modes differ
+only in registration:
+
+- **Marketplace mode** (`--register <repo-root>`) — scaffold into
+  `<root>/plugins/<name>` and register the plugin in that repo's marketplace
+  catalog + release automation.
+- **Portable mode** (default) — scaffold a standalone plugin in the current
+  directory (or `--out <dir>`) and register nothing.
+
+`/forge` detects which mode to use (a marketplace repo is present → `--register`;
+otherwise portable) and calls the same script either way.
 
 ## Mental model
 
@@ -18,52 +36,49 @@ deterministic, use the minimum-capable model for the rest:
 | Layer | Who | Responsibility |
 | ----- | --- | -------------- |
 | Understanding | `agents/plugin-planner.md` (sonnet) | Description → structured plan + clarifying questions. Read-only. |
-| Orchestration | `commands/forge.md` | Runs the workflow: plan → ask → scaffold → realize → validate. |
-| Mechanization | `scripts/new-plugin.sh`, `scripts/check-all.sh` (repo-level) | Create files, register in marketplace/release/provenance, validate. No model. |
+| Orchestration | `commands/forge.md` | Detect mode; run plan → ask → scaffold → realize → validate. |
+| Mechanization | `scripts/forge-scaffold.sh` | Resolve a template, scaffold, optionally register (`--register`). No model. |
 
-plugin-forge deliberately owns **no** deterministic scaffolding logic of its own
-— it calls the repo scripts so there is one source of truth.
+## Template resolution
 
-## Workflow
+`forge-scaffold.sh` **resolves** the template — rather than bundling a static copy
+— in precedence order:
 
-1. `/forge <description>` establishes the repo root and reads the current
-   `_template` version.
-2. The `plugin-planner` agent turns the description into a JSON plan (name,
-   components, per-component model + tools, keywords) and a list of questions.
-3. `/forge` asks the user any clarifying questions and confirms the plan — it
-   never guesses a requirement it can't infer.
-4. It calls `scripts/new-plugin.sh <name>` to create and register the plugin.
-5. It reconciles the copied `_template` examples with the plan (rewrite / keep /
-   delete / add) and fills each component, setting the minimum-capable model.
-6. It runs `scripts/check-all.sh` until the plugin is valid.
+0. `--register <root>` → `<root>/plugins/<template>` (marketplace),
+1. `--template-version <ver>` → the `<template>-v<ver>` release tag from this repo,
+2. `--template-repo <owner/repo[@ref]>` → that repo (or a git URL / local path),
+3. a local `./<template>/` directory,
+4. the latest `<template>` from this repo (the default).
+
+The `<template>-v*` release tags are the version source, so there is **no bundled
+copy to drift**.
 
 ## Model selection
 
-- `plugin-planner`: **sonnet** — mapping an open-ended description to a concrete,
-  well-scoped plan (naming, choosing components, least-privilege tools) is genuine
-  judgment: above bounded/mechanical work, short of deep architecture.
-- `/forge` orchestration runs on the session model; its heavy lifting is delegated
-  to shell rather than reasoned token-by-token.
+- `plugin-planner`: **sonnet** — mapping an open-ended description to a concrete
+  plan is genuine judgment: above mechanical work, short of deep architecture.
+- `/forge` orchestration runs on the session model; the heavy lifting is delegated
+  to shell.
 
 ## Challenging concepts & gotchas
 
-- **Runs inside the marketplace repo.** plugin-forge authors plugins *for* this
-  marketplace, so it expects a checkout where `scripts/new-plugin.sh` exists. It
-  resolves the repo root with `git rev-parse --show-toplevel`.
-- **Template *version* selection is limited.** Only the current template version is
-  supported today. `_template` is excluded from release automation, so past
-  versions aren't reachable via a tag; resolving an older version from the git
-  history of `plugins/_template/` is a roadmap follow-up. When a user requests a
-  specific version, `/forge` says so and proceeds with the current one only after
-  they agree.
-- **Provenance is inherited.** Because scaffolding goes through `new-plugin.sh`,
-  every forged plugin gets `.claude-plugin/scaffold.json` recording the template
-  and version, which `scripts/scaffold-report.sh` later uses for drift.
+- **Components only from the template.** The scaffolder copies the template's
+  `commands/agents/skills/scripts`, but generates docs/manifest from inline
+  scaffolds. A custom `--template-repo` therefore contributes *components*, not
+  docs — honoring custom-template docs is tracked in
+  [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6).
+- **Portable needs git + network** for the tag/repo/default sources; a local
+  `./<template>/` works offline. Resolution fails with a clear message otherwise.
+- **Provenance.** Every forged plugin gets `.claude-plugin/scaffold.json` with the
+  template, resolved `source`, and `mode`.
 - **Ask, don't invent.** The planner emits `questions[]` for anything ambiguous;
   `/forge` must resolve them with the user before creating files.
 
 ## References
 
-- Issue: <https://github.com/DarcStar-Technologies/claude-plugins/issues/2>
-- Deterministic scaffolder: `../../scripts/new-plugin.sh`
+- Issues: [#2](https://github.com/DarcStar-Technologies/claude-plugins/issues/2)
+  (marketplace), [#5](https://github.com/DarcStar-Technologies/claude-plugins/issues/5)
+  (portable mode), [#6](https://github.com/DarcStar-Technologies/claude-plugins/issues/6)
+  (multiple templates)
+- Scaffolder: `scripts/forge-scaffold.sh`
 - Repo conventions: `../../CONTRIBUTING.md`
