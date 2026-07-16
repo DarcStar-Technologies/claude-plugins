@@ -28,6 +28,11 @@
       "name": "plugin-editor",
       "source": "./plugins/plugin-editor",
       "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, updates its changelog and version, and flags a stale active install."
+    },
+    {
+      "name": "template-forge",
+      "source": "./plugins/template-forge",
+      "description": "Scaffold a new reference template under templates/ for this marketplace, from a natural-language description, guided prompts, or the components of an existing plugin."
     }
   ]
 }

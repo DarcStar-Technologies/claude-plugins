@@ -1,0 +1,13 @@
+{
+  "name": "template-forge",
+  "version": "0.1.0",
+  "description": "Scaffold a new reference template under templates/ for this marketplace, from a natural-language description, guided prompts, or the components of an existing plugin.",
+  "license": "MIT",
+  "keywords": [
+    "template",
+    "scaffold",
+    "archetype",
+    "marketplace",
+    "plugin-development"
+  ]
+}
