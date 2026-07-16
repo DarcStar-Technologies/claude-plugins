@@ -31,6 +31,29 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   [[ "$output" == *"missing README.md"* ]]
 }
 
+@test "validates only the target plugin, not the whole repo" {
+  # An ancestor with a check-all.sh that would fail loudly if it were run.
+  mkdir -p "$FIX/scripts" "$FIX/plugins/target/.claude-plugin"
+  printf '#!/usr/bin/env bash\necho WHOLE_REPO_CHECK_RAN\nexit 1\n' >"$FIX/scripts/check-all.sh"
+  chmod +x "$FIX/scripts/check-all.sh"
+  printf '{"name":"target","version":"0.1.0","description":"t"}\n' \
+    >"$FIX/plugins/target/.claude-plugin/plugin.json"
+  : >"$FIX/plugins/target/CONTEXT.md"
+  : >"$FIX/plugins/target/README.md"
+  printf '# Changelog\n\n## [Unreleased]\n' >"$FIX/plugins/target/CHANGELOG.md"
+  run "$CT" "$FIX/plugins/target"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"WHOLE_REPO_CHECK_RAN"* ]] # the repo-wide check-all was NOT invoked
+  [[ "$output" == *"structure OK (target plugin)"* ]]
+}
+
+@test "fails structure on a non-semver version" {
+  jq '.version = "1.0"' "$FIX/p/.claude-plugin/plugin.json" >"$FIX/t" && mv "$FIX/t" "$FIX/p/.claude-plugin/plugin.json"
+  run "$CT" "$FIX/p"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"not valid semver"* ]]
+}
+
 @test "runs the drift check via check-upgrade when provenance exists" {
   printf '{"template":"default","templateVersion":"0.1.0","source":"repo:."}\n' \
     >"$FIX/p/.claude-plugin/scaffold.json"
