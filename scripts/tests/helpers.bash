@@ -113,7 +113,15 @@ add_template() {
   local d="$FIX/templates/$name"
   mkdir -p "$d/.claude-plugin"
   cat >"$d/.claude-plugin/plugin.json" <<JSON
-{ "name": "$name", "version": "$version", "description": "test template" }
+{ "name": "$name", "version": "$version", "description": "test template",
+  "author": { "name": "t" }, "license": "MIT", "keywords": ["template"] }
+JSON
+  # template.json: identity fields kept consistent with plugin.json (the validator
+  # enforces this) plus the cross-kind dependency list.
+  cat >"$d/template.json" <<JSON
+{ "name": "$name", "description": "test template",
+  "author": { "name": "t" }, "license": "MIT", "keywords": ["template"],
+  "dependencies": [] }
 JSON
   cat >"$d/CHANGELOG.md" <<'MD'
 # Changelog

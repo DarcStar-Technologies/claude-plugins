@@ -81,6 +81,16 @@ There is no build step; plugins are Markdown, JSON, and shell.
   template is a major version ahead of what a plugin recorded) unless that plugin
   is listed with a reason in `.scaffold-exceptions.json`. Minor/patch drift is
   informational and never fails.
+- **Templates carry a `template.json` manifest.** Each `templates/<name>/` has a
+  `template.json` (the template's authoritative metadata: name, description, author,
+  license, keywords) whose **`dependencies`** array uses dep-doctor's descriptor
+  vocabulary (`{kind, name, version?, reason?}`, `kind` ∈ `plugin`/`cli`/`library`/`mcp`)
+  — the one place a template's *cross-kind* deps live, since `plugin.json` `dependencies`
+  is plugin-only. `validate-manifests.sh` requires it, checks the descriptors, and
+  enforces that its shared identity fields match `plugin.json` (no drift). `version` stays
+  out of it (release-please owns that in `plugin.json`). The scaffolder propagates these
+  deps into scaffolded plugins (plugin-kind → their `plugin.json`; other kinds → their
+  CONTEXT.md).
 - **Minimum capable model.** Subagents/commands set `model:` frontmatter to the
   smallest model that is correct (`haiku` → `sonnet` → `opus`). Anything fully
   deterministic goes in a `scripts/` shell script (with a bats test), not a model.

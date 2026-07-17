@@ -14,6 +14,18 @@ scaffolder copies into new plugins, substituting `{{NAME}}`/`{{DESC}}`. It diffe
 from a published plugin only by living under `templates/` (never in
 `marketplace.json`) — so keep the components archetype-shaped and generic.
 
+## Dependencies
+
+Declared in [`template.json`](./template.json) (the template manifest's cross-kind
+`dependencies` list):
+
+- **`jq`** (CLI tool) — `scripts/discover-targets.sh` parses `plugin.json` / marketplace
+  metadata with it, and guards at start-up (`command -v jq || die`). A plugin scaffolded
+  from this template inherits that script, so it inherits the `jq` requirement.
+
+The template needs no *plugin* dependencies — its components resolve nothing from a sibling
+plugin (unlike `plugin-editor`, whose edit-kit coupling was deliberately dropped here).
+
 ## Challenging concepts & gotchas
 
 - **The confirm-before-edit gate is the whole point.** The command must present the
