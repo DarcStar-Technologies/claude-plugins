@@ -1,13 +1,13 @@
 {
   "templates/default": "0.4.0",
   "templates/command-suite": "0.2.0",
-  "plugins/plugin-forge": "0.6.0",
+  "plugins/plugin-forge": "0.7.0",
   "plugins/semver": "0.2.0",
   "plugins/scaffold-upgrade": "0.4.0",
   "plugins/plugin-editor": "0.10.0",
   "plugins/template-forge": "0.2.0",
   "templates/plan-confirm-apply": "0.2.0",
   "plugins/edit-kit": "0.3.0",
-  "plugins/template-editor": "0.4.0",
+  "plugins/template-editor": "0.5.0",
   "plugins/dep-doctor": "0.2.0"
 }

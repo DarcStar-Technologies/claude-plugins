@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Entries below `[Unreleased]` are generated automatically from
 [Conventional Commits](https://www.conventionalcommits.org/) by release-please.
 
+## [0.7.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge--v0.6.0...plugin-forge--v0.7.0) (2026-07-17)
+
+
+### Features
+
+* **plugin-forge:** propagate template.json deps into scaffolded plugins (part 2 of [#79](https://github.com/DarcStar-Technologies/claude-plugins/issues/79)) ([#84](https://github.com/DarcStar-Technologies/claude-plugins/issues/84)) ([fba12d8](https://github.com/DarcStar-Technologies/claude-plugins/commit/fba12d8e8fef1c5aa4b5bd367c267e69bc82188f))
+
 ## [0.6.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge-v0.5.0...plugin-forge--v0.6.0) (2026-07-17)
 
 
