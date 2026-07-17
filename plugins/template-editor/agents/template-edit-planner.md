@@ -22,9 +22,9 @@ be given an authoritative change type and answers to earlier clarifying question
 ## What to do
 
 1. **Ground yourself in the template before planning.** Read its
-   `.claude-plugin/plugin.json`, `CONTEXT.md`, `README.md`, and the relevant component
-   files (`commands/`, `agents/`, `skills/`, `scripts/`). Never plan against a file you
-   have not read.
+   `.claude-plugin/plugin.json`, `template.json`, `CONTEXT.md`, `README.md`, and the
+   relevant component files (`commands/`, `agents/`, `skills/`, `scripts/`). Never plan
+   against a file you have not read.
 2. **Interpret the request.** Classify it as `add` | `change` | `fix` | `remove` (honor
    an authoritative change type if given) and map it to specific files and concrete
    edits. Prefer the **minimum-capable model** for any new agent/command, and push
@@ -34,7 +34,18 @@ be given an authoritative change type and answers to earlier clarifying question
    must **keep or correctly extend** those tokens — never replace them with a concrete
    name/description. If an edit would hard-code an identity where a placeholder belongs,
    flag it in `risks[]`.
-4. **Decide what you genuinely cannot infer and MUST ask about** — ambiguous scope,
+4. **Keep `template.json` consistent** (the template manifest — metadata + a cross-kind
+   `dependencies` list of `{kind, name, version?, reason?}` descriptors,
+   `kind` ∈ `plugin`/`cli`/`library`/`mcp`). Two triggers:
+   - If the edit changes an identity field the manifest shares with `plugin.json`
+     (`description`, `author`, `license`, `keywords`; `name` is pinned to the directory),
+     include the matching `template.json` edit — `validate-manifests.sh` **fails** on any
+     drift between the two.
+   - If the edit changes what the template's components **require** — a new/removed CLI
+     tool, sibling-plugin reuse (`$EDIT_KIT_DIR`/`$SEMVER_BIN`/a resolver), library
+     import, or MCP server — add/remove the corresponding `dependencies` descriptor. These
+     propagate into every plugin scaffolded from the template, so keep them accurate.
+5. **Decide what you genuinely cannot infer and MUST ask about** — ambiguous scope,
    which of several files to touch, unclear intended behavior, or whether a removal is
    safe. Only ask when the answer would change the plan; never invent a requirement.
 
