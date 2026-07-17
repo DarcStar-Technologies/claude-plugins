@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Declare a first-class dependency on the `edit-kit` plugin (`>=0.1.0`) in `plugin.json`, so Claude Code auto-installs and version-checks it.
+
 ### Added
 
 - Initial `template-editor` plugin: the template analogue of `plugin-editor`. A

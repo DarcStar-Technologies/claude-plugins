@@ -74,7 +74,10 @@ model cost.
   `sync-version.sh`, `scaffold-test.sh`, `verify-repo.sh`, `check-structure.sh`) live in
   the `edit-kit` provider plugin and are resolved via `edit-kit-path.sh`
   (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). `template-editor` uses the same
-  toolkit, so there is one canonical implementation.
+  toolkit, so there is one canonical implementation. edit-kit is a **first-class
+  `dependencies` entry in `plugin.json`** (`>=0.1.0`), so Claude Code auto-installs it
+  and validates the version at load — the run-time resolver is the fallback / dev-tree
+  path.
 - **`semver`** — `edit-kit`'s `sync-version.sh` bumps standalone plugins with `semver.sh`.
 - **`scaffold-upgrade`** — `check-template.sh` calls `check-upgrade.sh` for drift.
 - **the repo's own checks** — `edit-kit`'s `verify-repo.sh` shells out to the

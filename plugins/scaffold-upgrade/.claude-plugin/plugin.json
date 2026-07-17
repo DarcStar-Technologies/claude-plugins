@@ -16,5 +16,11 @@
     "provenance",
     "drift",
     "semver"
+  ],
+  "dependencies": [
+    {
+      "name": "semver",
+      "version": ">=0.2.0"
+    }
   ]
 }

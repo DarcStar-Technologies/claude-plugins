@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Declare a first-class dependency on the `edit-kit` plugin (`>=0.1.0`) in `plugin.json`, so Claude Code auto-installs it and validates the version at load time instead of failing at run time when it is absent.
 - Reuse the shared `edit-kit` toolkit: the generic edit-flow scripts (changelog, versioning, structure check, repo verification, test-stub scaffolding) now resolve from the `edit-kit` provider plugin at run time instead of being vendored here; `check-template.sh` delegates structure to edit-kit's `check-structure.sh` and keeps only the template-drift check. Adds a runtime dependency on the `edit-kit` plugin.
 - check-template.sh now validates only the target plugin (manifest fields, semver version, name/dir, docs, changelog structure, and scripts) instead of running check-all across the whole repository.
 
