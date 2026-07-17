@@ -25,8 +25,17 @@ status_of() { # <deps-json> <name> -> prints that dep's status
 }
 
 @test "cli version pattern: match -> OK, mismatch -> WRONG-VERSION" {
-  [ "$(status_of '[{"kind":"cli","name":"bash","versionProbe":["--version"],"versionPattern":"version [0-9]"}]' bash)" = "OK" ]
-  [ "$(status_of '[{"kind":"cli","name":"bash","versionProbe":["--version"],"versionPattern":"version 999"}]' bash)" = "WRONG-VERSION" ]
+  [ "$(status_of '[{"kind":"cli","name":"bash","versionFlag":"--version","versionPattern":"version [0-9]"}]' bash)" = "OK" ]
+  [ "$(status_of '[{"kind":"cli","name":"bash","versionFlag":"--version","versionPattern":"version 999"}]' bash)" = "WRONG-VERSION" ]
+}
+
+@test "a non-allow-listed versionFlag is NOT executed (UNKNOWN, no code run)" {
+  rm -f "$FIX/pwned"
+  local out
+  out="$(printf '[{"kind":"cli","name":"bash","versionFlag":"-c","versionPattern":".","x":"touch %s/pwned"}]' "$FIX" | "$CD" || true)"
+  [ "$(jq -r '.[0].status' <<<"$out")" = "UNKNOWN" ]
+  [[ "$(jq -r '.[0].detail' <<<"$out")" == *"not allow-listed"* ]]
+  [ ! -e "$FIX/pwned" ]
 }
 
 @test "library via python3: importable -> OK, missing -> MISSING" {
@@ -50,8 +59,22 @@ status_of() { # <deps-json> <name> -> prints that dep's status
   [ "$(jq -r '.[1].status' <<<"$output")" = "MISSING" ]
 }
 
+@test "plugin with only a stale/empty record -> MISSING, not OK" {
+  printf '{"plugins":{"empty@m":[],"real@m":[{"scope":"project"}]}}\n' >"$FIX/ip.json"
+  INSTALLED_PLUGINS_JSON="$FIX/ip.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"empty\"},{\"kind\":\"plugin\",\"name\":\"real\"}]" | "$0"' "$CD"
+  [ "$(jq -r '.[] | select(.name=="empty") | .status' <<<"$output")" = "MISSING" ]
+  [ "$(jq -r '.[] | select(.name=="real") | .status' <<<"$output")" = "OK" ]
+}
+
 @test "unknown kind -> UNKNOWN" {
   [ "$(status_of '[{"kind":"widget","name":"x"}]' x)" = "UNKNOWN" ]
+}
+
+@test "a non-object array element is rejected cleanly (no jq crash)" {
+  run bash -c 'printf "%s" "[\"jq\"]" | "$0"' "$CD"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must be a JSON object"* ]]
 }
 
 @test "exit 0 when all OK, exit 1 when any MISSING" {

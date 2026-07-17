@@ -33,6 +33,34 @@ setup() { AR="$(repo_root_dir)/plugins/dep-doctor/scripts/apply-remediation.sh";
   [[ "$output" == *"not a plain package name"* ]]
 }
 
+@test "refuses a flag-shaped package (argument injection)" {
+  run bash -c 'printf "%s" "[{\"installer\":\"npm\",\"package\":\"--force\"}]" | "$0" --dry-run' "$AR"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"not a plain package name"* ]]
+  run bash -c 'printf "%s" "[{\"installer\":\"npm\",\"package\":\"-g\"}]" | "$0" --dry-run' "$AR"
+  [ "$status" -eq 1 ]
+}
+
+@test "refuses a path-shaped package (local-dir install / traversal)" {
+  run bash -c 'printf "%s" "[{\"installer\":\"npm\",\"package\":\"../../evil\"}]" | "$0" --dry-run' "$AR"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"not a plain package name"* ]]
+  run bash -c 'printf "%s" "[{\"installer\":\"npm\",\"package\":\"/abs/evil\"}]" | "$0" --dry-run' "$AR"
+  [ "$status" -eq 1 ]
+}
+
+@test "allows a legit scoped npm package and a go module path" {
+  run bash -c 'printf "%s" "[{\"installer\":\"npm\",\"package\":\"@babel/core\"},{\"installer\":\"go\",\"package\":\"github.com/x/y@v1.2.0\"}]" | "$0" --dry-run' "$AR"
+  [[ "$output" == *"@babel/core"* ]]
+  [[ "$output" == *"github.com/x/y@v1.2.0"* ]]
+}
+
+@test "a non-object action is rejected cleanly" {
+  run bash -c 'printf "%s" "[\"oops\"]" | "$0" --dry-run' "$AR"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must be a JSON object"* ]]
+}
+
 @test "an empty action list succeeds and does nothing" {
   run bash -c 'printf "%s" "[]" | "$0" --dry-run' "$AR"
   [ "$status" -eq 0 ]

@@ -33,7 +33,9 @@ The path to the target plugin directory.
 2. **Check them.** Build a JSON array of descriptors (see the shape below) and run
    `"${CLAUDE_PLUGIN_ROOT}/scripts/check-deps.sh"` (piping the array on stdin) to get each
    one's deterministic `status` (OK / MISSING / WRONG-VERSION / UNKNOWN). Do not guess a
-   status — use the script's output.
+   status — use the script's output. **`check-deps.sh` exits non-zero whenever any
+   dependency is MISSING or WRONG-VERSION — that is the EXPECTED signal, not a failure:
+   read the JSON report it prints on stdout regardless of the exit code.**
 3. **Plan remediation** for every non-OK dependency. Mark each action:
    - **auto** — only when it is a non-privileged, user-scoped install via an allow-listed
      installer (`npm`, `pip`, `pip3`, `pipx`, `cargo`, `go`): give `{installer, package}`.
@@ -47,7 +49,7 @@ The path to the target plugin directory.
 
 ```json
 [
-  {"kind":"cli", "name":"rg", "versionProbe":["--version"], "versionPattern":"1\\.[0-9]"},
+  {"kind":"cli", "name":"rg", "versionFlag":"--version", "versionPattern":"1\\.[0-9]"},
   {"kind":"library", "name":"requests", "runtime":"python3", "module":"requests"},
   {"kind":"mcp", "name":"github"},
   {"kind":"plugin", "name":"semver"}

@@ -34,10 +34,22 @@ done
 input="$(cat -- "${file:-/dev/stdin}")"
 jq -e 'type == "array"' >/dev/null 2>&1 <<<"$input" ||
   die "input must be a JSON array of {installer, package} actions"
+jq -e 'all(.[]; type == "object")' >/dev/null 2>&1 <<<"$input" ||
+  die "every action must be a JSON object with an installer and package"
 
-# A package name must be a plain package token — no whitespace or shell metacharacters —
-# so it can only ever be a single argument to the installer.
-safe_pkg() { [[ "$1" =~ ^[A-Za-z0-9@._/+-]+$ ]]; }
+# A package name must be a plain package token. Beyond the allowed character set it must
+# NOT: start with '-' (else it is an installer FLAG — argument injection like
+# `npm install -g --foo`), start with '/' or './' or contain '..' (else it is a local
+# PATH — installing a local dir runs its lifecycle scripts, i.e. arbitrary code). Scoped
+# npm (`@scope/pkg`) and Go module paths (`host/mod@ver`) keep an internal '/' legitimately.
+safe_pkg() {
+  local p="$1"
+  [[ -n "$p" ]] || return 1
+  [[ "$p" == -* ]] && return 1
+  [[ "$p" == /* || "$p" == ./* ]] && return 1
+  [[ "$p" == *".."* ]] && return 1
+  [[ "$p" =~ ^[A-Za-z0-9@._/+-]+$ ]]
+}
 
 # Build the argv for an allow-listed installer (echoed NUL-separated). Refused installers
 # return non-zero and print nothing.

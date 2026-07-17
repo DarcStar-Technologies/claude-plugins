@@ -38,8 +38,10 @@ point: **checking is read-only; installing is a confirmed mutation, tightly cons
 
 ## Dependency kinds & how they are checked
 
-- **cli** — `command -v <name>`; an optional `versionProbe` + `versionPattern` (ERE)
-  distinguishes OK from WRONG-VERSION.
+- **cli** — `command -v <name>`; an optional **allow-listed** `versionFlag` (default
+  `--version`) + `versionPattern` (ERE) distinguishes OK from WRONG-VERSION. The flag is
+  never a free-form argument array, so a descriptor can't smuggle arbitrary arguments into
+  the probed command.
 - **library** — a bounded interpreter probe (`python -c "import <module>"`,
   `node -e "require('<module>')"`, `ruby -e "require '<module>'"`); the module name must be
   a plain identifier or it is not probed.

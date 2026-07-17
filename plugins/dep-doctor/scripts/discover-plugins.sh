@@ -41,17 +41,25 @@ root="$(find_marketplace "$root_arg")" || exit 2 # no marketplace -> caller fall
   exit 0
 }
 
-out='[]'
+# Collect one tab-separated row per plugin, then assemble the JSON in a single final jq
+# (one jq per manifest to validate+extract, instead of re-serializing the array each time).
+entries=()
 while IFS= read -r dir; do
   [[ -n "$dir" ]] || continue
   manifest="$dir/.claude-plugin/plugin.json"
   [[ -f "$manifest" ]] || continue
-  jq empty "$manifest" 2>/dev/null || continue # skip an unparseable manifest, don't abort
-  name="$(jq -r '.name // empty' "$manifest")"
+  # Validate + extract name and description in one jq; an unparseable/non-object manifest
+  # fails here and is skipped.
+  line="$(jq -r 'select(type == "object") | [.name // "", .description // ""] | @tsv' "$manifest" 2>/dev/null)" || continue
+  name="${line%%$'\t'*}"
   [[ -n "$name" ]] || continue
-  desc="$(jq -r '.description // ""' "$manifest")"
-  out="$(jq --arg n "$name" --arg p "$dir" --arg d "$desc" \
-    '. += [{name: $n, path: $p, description: $d}]' <<<"$out")"
+  desc="${line#*$'\t'}"
+  entries+=("$(printf '%s\t%s\t%s' "$name" "$desc" "$dir")")
 done < <(find "$root/plugins" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
 
-printf '%s\n' "$out"
+[[ "${#entries[@]}" -gt 0 ]] || {
+  printf '[]\n'
+  exit 0
+}
+printf '%s\n' "${entries[@]}" |
+  jq -R -s 'split("\n") | map(select(length > 0) | split("\t") | {name: .[0], path: .[2], description: .[1]})'
