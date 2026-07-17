@@ -14,9 +14,10 @@ read-only; installing is a mutation that never happens without a go-ahead.**
 
 Omit the plugin and it lists the marketplace's plugins to pick from. It then:
 
-1. **infers** the target's dependencies (from its manifest, docs, and scripts — e.g.
-   `command -v <tool>`, named MCP servers, sibling-plugin reuse — plus an optional
-   `.claude-plugin/dependencies.json`),
+1. **reads** the target's declared `dependencies` (the first-class `plugin.json` field) as
+   authoritative plugin deps, and **infers** the rest (CLI tools, libraries, MCP servers)
+   from its manifest, docs, and scripts — e.g. `command -v <tool>`, named MCP servers,
+   sibling-plugin reuse,
 2. **checks** each with the read-only `check-deps.sh` (OK / MISSING / WRONG-VERSION /
    UNKNOWN),
 3. **plans** remediation for the rest, then **confirms** with you and **applies** only the
@@ -36,11 +37,18 @@ Omit the plugin and it lists the marketplace's plugins to pick from. It then:
   with the exact command for you to run.
 - It only ever touches the **environment**, never the target plugin's own files.
 
-## Declaring dependencies (optional)
+## Declaring dependencies
 
-A plugin author can add `.claude-plugin/dependencies.json` — a JSON array of
-`{kind, name, …}` descriptors (see `scripts/check-deps.sh`) — and dep-doctor will use
-those explicit entries in preference to what it infers.
+The best signal is the first-class **`dependencies` array in `plugin.json`** — Claude
+Code's own plugin-dependency manifest. dep-doctor reads it as the **authoritative** source
+of plugin-kind dependencies: a bare string `"foo"` is checked for presence, and an object
+`{"name":"foo","version":">=1.2.0"}` is checked against the installed version (ranges:
+`>=`, `>`, `<=`, `<`, `=`/exact, `^`, `~`). CLI tools, libraries, and MCP servers aren't
+expressible there, so dep-doctor still infers those from the plugin's files.
+
+A plugin author may also add a legacy `.claude-plugin/dependencies.json` — a JSON array of
+`{kind, name, …}` descriptors (see `scripts/check-deps.sh`) — whose entries take
+precedence over inference.
 
 ## How it works
 

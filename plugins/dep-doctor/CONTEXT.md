@@ -47,7 +47,10 @@ point: **checking is read-only; installing is a confirmed mutation, tightly cons
   a plain identifier or it is not probed.
 - **mcp** — presence in `claude mcp list` when the `claude` CLI is available, else UNKNOWN.
 - **plugin** — a record in `installed_plugins.json` (the same lookup plugin-editor's
-  `check-install-status.sh` uses; path overridable via `$INSTALLED_PLUGINS_JSON`).
+  `check-install-status.sh` uses; path overridable via `$INSTALLED_PLUGINS_JSON`). The
+  installed version is reported in `detail`; when a descriptor carries a `version` range,
+  `check-deps.sh` evaluates it (`>=`, `>`, `<=`, `<`, `=`/exact, `^`, `~`) via the `semver`
+  engine → OK / WRONG-VERSION, degrading to UNKNOWN when `semver` can't be resolved.
 
 ## Challenging concepts & gotchas
 
@@ -62,9 +65,12 @@ point: **checking is read-only; installing is a confirmed mutation, tightly cons
 - **It never edits the target plugin.** dep-doctor inspects a plugin and installs *its
   dependencies into the environment* — it does not modify the plugin's files (that's
   `/edit-plugin`'s job).
-- **Dependencies are inferred, not declared.** There is no required manifest field, so the
-  planner infers deps from the plugin's own files; an author can add an explicit
-  `.claude-plugin/dependencies.json`, whose entries win over inference.
+- **Declared deps are authoritative; inference fills the gaps.** The planner reads the
+  first-class `dependencies` array in `plugin.json` — Claude Code's own plugin-dependency
+  manifest — as the authoritative source of **plugin**-kind deps (bare string → presence
+  check; `{name, version}` → range check), and *infers* the rest (CLI/library/MCP, which
+  the field never carries) from the plugin's own files. Declared entries win over inference;
+  a legacy `.claude-plugin/dependencies.json`, if present, still overrides inference too.
 - **`UNKNOWN` is honest, not a failure.** When a check can't be made deterministically
   (no runtime for a library, no `claude` CLI for an MCP), the status is UNKNOWN with a note
   to verify manually — it never guesses OK.

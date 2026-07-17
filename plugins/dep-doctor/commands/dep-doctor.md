@@ -30,9 +30,11 @@ flags (`--check-only`, `--dry-run`), then resolve the target:
 
 ## 2. Plan (delegate to the planner)
 
-Invoke the `dep-planner` agent (Task tool) with the target plugin directory. It infers the
-plugin's dependencies (from its manifest, docs, and scripts, plus an optional
-`.claude-plugin/dependencies.json`), runs the read-only `check-deps.sh` to classify each,
+Invoke the `dep-planner` agent (Task tool) with the target plugin directory. It reads the
+plugin's declared `dependencies` (the first-class `plugin.json` field) as authoritative
+plugin deps and infers the rest (CLI/library/MCP) from its docs and scripts (plus a legacy
+`.claude-plugin/dependencies.json` if present), runs the read-only `check-deps.sh` to
+classify each,
 and returns a JSON plan: `summary`, `dependencies[]` (each `kind`, `name`, `status` of
 OK/MISSING/WRONG-VERSION/UNKNOWN, `detail`), `remediation[]` (each targets a non-OK
 dependency and is either **auto** — an allow-listed `installer` + `package` — or

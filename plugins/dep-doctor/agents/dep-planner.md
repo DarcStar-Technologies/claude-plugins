@@ -19,16 +19,27 @@ The path to the target plugin directory.
 
 ## What to do
 
-1. **Infer the plugin's dependencies.** There is no required declared-dependency manifest,
-   so gather them from the plugin itself:
-   - Read `<plugin>/.claude-plugin/plugin.json`, `CONTEXT.md`, `README.md`.
-   - `grep` its `commands/`, `agents/`, `scripts/` for required tools: `command -v <tool>`
+1. **Gather the plugin's dependencies — declared first, then inferred.**
+   - **Read the official `dependencies` field first (authoritative).** In
+     `<plugin>/.claude-plugin/plugin.json`, the first-class `dependencies` array is Claude
+     Code's own plugin-dependency manifest. Each entry is an **authoritative plugin
+     dependency**: a **bare string** `"foo"` → `{"kind":"plugin","name":"foo"}`; an
+     **object** `{"name":"foo","version":">=1.2.0","marketplace":"…"}` →
+     `{"kind":"plugin","name":"foo","version":">=1.2.0"}` — **pass the `version` range
+     through** so `check-deps.sh` evaluates it against the installed version. These are
+     declared facts: never drop or second-guess one, and let them **take precedence** over
+     an inferred entry for the same plugin.
+   - **Then infer the rest** (the field only covers *plugin* deps — CLI tools, libraries,
+     and MCP servers are never in it). Read `CONTEXT.md`, `README.md`, and `grep` the
+     plugin's `commands/`, `agents/`, `scripts/` for required tools: `command -v <tool>`
      / `command -v … || die`, hard-coded binary invocations, `jq`/language interpreters,
      named CLI tools or **MCP servers** in prose, and **sibling-plugin reuse** (e.g.
      `$SEMVER_BIN`, `$CHECK_UPGRADE_BIN`, `$EDIT_KIT_DIR`, resolver scripts → the plugin
-     depends on `semver` / `scaffold-upgrade` / `edit-kit`).
-   - If `<plugin>/.claude-plugin/dependencies.json` exists, read it and let its explicit
-     entries take precedence over anything you inferred.
+     depends on `semver` / `scaffold-upgrade` / `edit-kit`). An inferred plugin dep that is
+     *also* declared is already covered — don't duplicate it.
+   - If a legacy `<plugin>/.claude-plugin/dependencies.json` exists, read it too and let
+     its explicit entries take precedence over inference (the official `dependencies` field
+     still wins for plugin-kind entries).
    - Classify each dependency by `kind`: `cli`, `library`, `mcp`, or `plugin`.
 2. **Check them.** Build a JSON array of descriptors (see the shape below) and run
    `"${CLAUDE_PLUGIN_ROOT}/scripts/check-deps.sh"` (piping the array on stdin) to get each
@@ -52,9 +63,16 @@ The path to the target plugin directory.
   {"kind":"cli", "name":"rg", "versionFlag":"--version", "versionPattern":"1\\.[0-9]"},
   {"kind":"library", "name":"requests", "runtime":"python3", "module":"requests"},
   {"kind":"mcp", "name":"github"},
-  {"kind":"plugin", "name":"semver"}
+  {"kind":"plugin", "name":"semver"},
+  {"kind":"plugin", "name":"edit-kit", "version":">=0.2.0"}
 ]
 ```
+
+For a `plugin` descriptor, an optional `version` is a Claude Code dependency range
+(`>=`, `>`, `<=`, `<`, `=`/exact, `^`, `~`); `check-deps.sh` reports the installed version
+and marks it `WRONG-VERSION` if no installed record satisfies the range (and `UNKNOWN` if
+it can't evaluate — e.g. the `semver` engine isn't resolvable). Omit `version` for a
+bare-string dependency to check presence only.
 
 ## Output
 
