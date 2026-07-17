@@ -14,7 +14,8 @@
 #
 # Template resolution (highest precedence first):
 #   0. --register <root>        -> <root>/templates/<template> (marketplace)
-#   1. --template-version VER   -> tag <template>-vVER from the default repo
+#   1. --template-version VER   -> tag <template>--vVER (or legacy <template>-vVER)
+#                                  from the default repo (override: $FORGE_DEFAULT_REPO)
 #   2. --template-repo REPO     -> owner/repo, a git URL, or a local path (+@ref)
 #   3. ./templates/<template> or ./<template>  -> a local template directory
 #   4. (default)                -> latest <template> from the default repo
@@ -26,7 +27,7 @@
 # A custom template therefore contributes components, not docs.
 set -euo pipefail
 
-DEFAULT_REPO="https://github.com/DarcStar-Technologies/claude-plugins.git"
+DEFAULT_REPO="${FORGE_DEFAULT_REPO:-https://github.com/DarcStar-Technologies/claude-plugins.git}"
 
 die() {
   printf 'forge-scaffold: %s\n' "$*" >&2
@@ -96,14 +97,38 @@ clone_template() {
   printf '%s/templates/%s' "$tmp_clone" "$template"
 }
 
+# Attempt a shallow clone of <url> at <ref> into a fresh $tmp_clone; 0 on success,
+# 1 (leaving no clone) on failure — lets a caller try candidate tag schemes without
+# dying on the first miss.
+try_clone_ref() {
+  local url="$1" ref="$2"
+  tmp_clone="$(mktemp -d)"
+  git clone --depth 1 --branch "$ref" -- "$url" "$tmp_clone" >/dev/null 2>&1 && return 0
+  rm -rf "$tmp_clone"
+  tmp_clone=""
+  return 1
+}
+
 tpl_source=""
 tpl_dir=""
 if [[ -n "$register_root" ]]; then
   tpl_dir="$register_root/templates/$template"
   tpl_source="repo:$register_root"
 elif [[ -n "$tpl_version" ]]; then
-  tpl_dir="$(clone_template "$DEFAULT_REPO" "${template}-v${tpl_version}")"
-  tpl_source="tag:${template}-v${tpl_version}"
+  # A released template version is tagged `<name>--v<ver>` (current double-hyphen
+  # scheme — release-please's tag-separator) or `<name>-v<ver>` for versions released
+  # before that change. Try the current scheme first, then fall back to the legacy one.
+  tpl_dir=""
+  for _sep in -- -; do
+    _ref="${template}${_sep}v${tpl_version}"
+    if try_clone_ref "$DEFAULT_REPO" "$_ref"; then
+      tpl_dir="$tmp_clone/templates/$template"
+      tpl_source="tag:${_ref}"
+      break
+    fi
+  done
+  [[ -n "$tpl_dir" ]] ||
+    die "could not fetch template '$template' version '$tpl_version' (tried ${template}--v${tpl_version} and ${template}-v${tpl_version}) from '$DEFAULT_REPO'"
 elif [[ -n "$tpl_repo" ]]; then
   ref=""
   url="$tpl_repo"

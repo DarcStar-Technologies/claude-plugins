@@ -58,9 +58,11 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
   exact tag scheme Claude Code's plugin-dependency resolver matches for **versioned**
   `plugin.json` dependencies (the `--v` is a prefix match, so hyphenated plugin names
   resolve unambiguously). Applies to every component including the internal templates.
-  Legacy single-hyphen `<name>-v*` tags remain valid history; `scaffold-upgrade`'s
-  `check-upgrade.sh` resolves both formats. Unblocks versioned plugin dependencies
-  (issue #74); the first release after this change is what mints the new tags.
+  Legacy single-hyphen `<name>-v*` tags remain valid history; both `scaffold-upgrade`'s
+  `check-upgrade.sh` and plugin-forge's `forge-scaffold.sh --template-version` resolve
+  either format (the scaffolder's `$FORGE_DEFAULT_REPO` is now overridable, mirroring
+  `check-upgrade.sh`). Unblocks versioned plugin dependencies (issue #74); the first
+  release after this change is what mints the new tags.
 - Scaffolding is unified into plugin-forge's `forge-scaffold.sh` (one engine;
   `--register` toggles marketplace registration, and it also scaffolds standalone
   plugins in portable mode). Removed the separate `scripts/new-plugin.sh` and the

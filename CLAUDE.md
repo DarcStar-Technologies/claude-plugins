@@ -66,8 +66,9 @@ There is no build step; plugins are Markdown, JSON, and shell.
   `<name>--v<version>` (e.g. `edit-kit--v0.2.0`). This is exactly the tag scheme Claude
   Code's plugin-dependency resolver matches when a `plugin.json` `dependencies` entry
   carries a version range — the `--v` is a prefix match, so hyphenated plugin names
-  resolve unambiguously. Legacy single-hyphen `<name>-v*` tags (pre-2026-07-17) remain
-  valid history; `scaffold-upgrade` reads both.
+  resolve unambiguously. Legacy single-hyphen `<name>-v*` tags (releases from before this
+  change) remain valid history; both `scaffold-upgrade`'s `check-upgrade.sh` and
+  plugin-forge's `forge-scaffold.sh --template-version` resolve either format.
 - **Registering a plugin is three files.** A new plugin must be added to
   `marketplace.json`, `release-please-config.json`, and
   `.release-please-manifest.json`. `forge-scaffold.sh --register` does all three

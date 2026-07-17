@@ -70,6 +70,35 @@ make_template_repo() {
   [ "$output" = "local:./default" ]
 }
 
+@test "--template-version resolves a NEW double-hyphen tag from the default repo" {
+  local src
+  src="$(make_template_repo)"
+  git -C "$src" tag default--v0.5.0
+  run env FORGE_DEFAULT_REPO="$src" bash "$SCAFFOLDER" vtool --template-version 0.5.0 --out "$WORK"
+  [ "$status" -eq 0 ]
+  [ -f "$WORK/vtool/.claude-plugin/plugin.json" ]
+  run jq -r '.source' "$WORK/vtool/.claude-plugin/scaffold.json"
+  [ "$output" = "tag:default--v0.5.0" ]
+}
+
+@test "--template-version falls back to a legacy single-hyphen tag" {
+  local src
+  src="$(make_template_repo)"
+  git -C "$src" tag default-v0.4.0 # only the legacy scheme exists for this version
+  run env FORGE_DEFAULT_REPO="$src" bash "$SCAFFOLDER" ltool --template-version 0.4.0 --out "$WORK"
+  [ "$status" -eq 0 ]
+  run jq -r '.source' "$WORK/ltool/.claude-plugin/scaffold.json"
+  [ "$output" = "tag:default-v0.4.0" ]
+}
+
+@test "--template-version dies clearly when neither tag scheme exists" {
+  local src
+  src="$(make_template_repo)" # no tag at all for 9.9.9
+  run env FORGE_DEFAULT_REPO="$src" bash "$SCAFFOLDER" xtool --template-version 9.9.9 --out "$WORK"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"9.9.9"* ]]
+}
+
 @test "does not inherit the template's release history (clean [Unreleased])" {
   run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool"
   [ "$status" -eq 0 ]
