@@ -67,6 +67,63 @@ status_of() { # <deps-json> <name> -> prints that dep's status
   [ "$(jq -r '.[] | select(.name=="real") | .status' <<<"$output")" = "OK" ]
 }
 
+@test "plugin bare (no version range) reports the installed version in detail" {
+  INSTALLED_PLUGINS_JSON="$FIX/installed.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"semver\"}]" | "$0"' "$CD"
+  [ "$status" -eq 0 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "OK" ]
+  [[ "$(jq -r '.[0].detail' <<<"$output")" == *"v0.2.0"* ]]
+}
+
+@test "plugin version range: satisfied -> OK, unsatisfied -> WRONG-VERSION (exit 1)" {
+  INSTALLED_PLUGINS_JSON="$FIX/installed.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"semver\",\"version\":\">=0.1.0\"}]" | "$0"' "$CD"
+  [ "$status" -eq 0 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "OK" ]
+  INSTALLED_PLUGINS_JSON="$FIX/installed.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"semver\",\"version\":\">=0.3.0\"}]" | "$0"' "$CD"
+  [ "$status" -eq 1 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "WRONG-VERSION" ]
+}
+
+plugin_range_status() { # <range> -> prints the status for semver@0.2.0 vs <range>
+  INSTALLED_PLUGINS_JSON="$FIX/installed.json" bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"semver\",\"version\":\"'"$1"'\"}]" | "$0"' "$CD" |
+    jq -r '.[0].status'
+}
+
+@test "plugin caret satisfied: ^0.2.0 vs installed 0.2.0 -> OK" {
+  [ "$(plugin_range_status '^0.2.0')" = "OK" ]
+}
+
+@test "plugin caret unsatisfied: ^0.1.0 vs installed 0.2.0 -> WRONG-VERSION" {
+  [ "$(plugin_range_status '^0.1.0')" = "WRONG-VERSION" ]
+}
+
+@test "plugin tilde satisfied: ~0.2.0 vs installed 0.2.0 -> OK" {
+  [ "$(plugin_range_status '~0.2.0')" = "OK" ]
+}
+
+@test "plugin installed without a recorded version + a range -> UNKNOWN (not a false WRONG-VERSION)" {
+  printf '{"plugins":{"nover@m":[{"scope":"project"}]}}\n' >"$FIX/nv.json"
+  INSTALLED_PLUGINS_JSON="$FIX/nv.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"nover\",\"version\":\">=1.0.0\"}]" | "$0"' "$CD"
+  [ "$status" -eq 0 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "UNKNOWN" ]
+}
+
+@test "plugin range degrades to UNKNOWN when the semver engine cannot be resolved" {
+  # Run a COPY from an isolated dir (no marketplace ancestor) with SEMVER_BIN unset, so the
+  # engine resolver finds nothing (semver.sh is not on PATH) and range evaluation has no
+  # engine — it must degrade to UNKNOWN, never a false WRONG-VERSION.
+  cp "$CD" "$FIX/check-deps.sh"
+  printf '{"plugins":{"semver@m":[{"scope":"project","version":"0.2.0"}]}}\n' >"$FIX/ip.json"
+  INSTALLED_PLUGINS_JSON="$FIX/ip.json" run bash -c \
+    'unset SEMVER_BIN; printf "%s" "[{\"kind\":\"plugin\",\"name\":\"semver\",\"version\":\">=0.3.0\"}]" | "$0"' "$FIX/check-deps.sh"
+  [ "$status" -eq 0 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "UNKNOWN" ]
+}
+
 @test "unknown kind -> UNKNOWN" {
   [ "$(status_of '[{"kind":"widget","name":"x"}]' x)" = "UNKNOWN" ]
 }

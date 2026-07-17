@@ -10,7 +10,10 @@
 #             else means the version is not probed. It is NEVER a free-form arg array.
 #   library : {kind:"library", name, runtime:"python|python3|node|ruby", module}
 #   mcp     : {kind:"mcp", name}     (checked via `claude mcp list` when available)
-#   plugin  : {kind:"plugin", name}  (checked via installed_plugins.json)
+#   plugin  : {kind:"plugin", name, version?:"<range>"}  (checked via installed_plugins.json)
+#             version is an optional Claude Code dependency range (>=, >, <=, <, =/exact,
+#             ^, ~) evaluated against the installed version via the semver engine; omit it
+#             to check presence only. Evaluation degrades to UNKNOWN when semver is absent.
 #
 # Exit: 0 when every dependency is OK or UNKNOWN; 1 when any is MISSING or WRONG-VERSION.
 #
@@ -34,6 +37,104 @@ installed_json="${INSTALLED_PLUGINS_JSON:-$HOME/.claude/plugins/installed_plugin
 # A module/runtime name we will interpolate into an interpreter probe must be a plain
 # identifier, so a descriptor can't smuggle code into `python -c "import <module>"`.
 safe_id() { [[ "$1" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Resolve the semver engine used to evaluate a declared plugin `version` range.
+# semver is a SOFT dependency: absent it, range checks degrade to UNKNOWN rather than
+# failing — dep-doctor must still verify CLI/library/MCP/plugin-presence without it.
+# Resolution mirrors the other consumers: $SEMVER_BIN -> marketplace ancestor -> PATH.
+find_semver() {
+  if [[ -n "${SEMVER_BIN:-}" && -x "${SEMVER_BIN:-}" ]]; then
+    printf '%s' "$SEMVER_BIN"
+    return 0
+  fi
+  local d
+  d="$SCRIPT_DIR"
+  while [[ -n "$d" && "$d" != "/" ]]; do
+    [[ -x "$d/plugins/semver/scripts/semver.sh" ]] && {
+      printf '%s' "$d/plugins/semver/scripts/semver.sh"
+      return 0
+    }
+    d="$(dirname "$d")"
+  done
+  command -v semver.sh 2>/dev/null && return 0
+  return 1
+}
+SEMVER="$(find_semver || true)"
+
+# range_satisfied <installed> <range> — is <installed> within the constraint <range>?
+# Supports the operator forms Claude Code plugin dependencies use: >=, >, <=, <,
+# = / bare-exact, ^ (caret), ~ (tilde). Returns 0 = satisfied, 1 = not, 2 = cannot
+# evaluate (no semver engine, or an unparseable version/range — the caller reports
+# UNKNOWN, never a false WRONG-VERSION).
+range_satisfied() {
+  local v="$1" r="$2" op base cmp maj min ceil
+  [[ -n "$SEMVER" ]] || return 2
+  case "$r" in
+    ">="*)
+      op=">="
+      base="${r#>=}"
+      ;;
+    "<="*)
+      op="<="
+      base="${r#<=}"
+      ;;
+    ">"*)
+      op=">"
+      base="${r#>}"
+      ;;
+    "<"*)
+      op="<"
+      base="${r#<}"
+      ;;
+    "="*)
+      op="="
+      base="${r#=}"
+      ;;
+    "^"*)
+      op="^"
+      base="${r#^}"
+      ;;
+    "~"*)
+      op="~"
+      base="${r#\~}"
+      ;; # quote ~ so it isn't tilde-EXPANDED to $HOME
+    *)
+      op="="
+      base="$r"
+      ;;
+  esac
+  base="${base# }"
+  "$SEMVER" validate "$base" >/dev/null 2>&1 || return 2
+  "$SEMVER" validate "$v" >/dev/null 2>&1 || return 2
+  cmp="$("$SEMVER" compare "$v" "$base")" || return 2
+  case "$op" in
+    ">=") [[ "$cmp" -ge 0 ]] ;;
+    ">") [[ "$cmp" -gt 0 ]] ;;
+    "<=") [[ "$cmp" -le 0 ]] ;;
+    "<") [[ "$cmp" -lt 0 ]] ;;
+    "=") [[ "$cmp" -eq 0 ]] ;;
+    "^")
+      # npm caret: >= base and < next non-zero-leftmost boundary. For 0.y.z the
+      # left-most non-zero is the minor, so ^0.2.1 => >=0.2.1 <0.3.0.
+      [[ "$cmp" -ge 0 ]] || return 1
+      maj="$("$SEMVER" major "$base")"
+      min="$("$SEMVER" minor "$base")"
+      if [[ "$maj" -eq 0 ]]; then ceil="0.$((min + 1)).0"; else ceil="$((maj + 1)).0.0"; fi
+      [[ "$("$SEMVER" compare "$v" "$ceil")" -lt 0 ]]
+      ;;
+    "~")
+      # tilde: >= base and < next minor (~1.2.3 => >=1.2.3 <1.3.0).
+      [[ "$cmp" -ge 0 ]] || return 1
+      maj="$("$SEMVER" major "$base")"
+      min="$("$SEMVER" minor "$base")"
+      ceil="$maj.$((min + 1)).0"
+      [[ "$("$SEMVER" compare "$v" "$ceil")" -lt 0 ]]
+      ;;
+    *) return 2 ;;
+  esac
+}
 
 # Split the input once; build each augmented row independently and slurp once at the
 # end (avoids re-parsing the input and re-serializing a growing result per iteration).
@@ -130,23 +231,58 @@ for el in ${els[@]+"${els[@]}"}; do
       fi
       ;;
     plugin)
-      if [[ -f "$installed_json" ]]; then
-        # Require an actual install RECORD, not merely a key — a stale `"<name>@mkt": []`
-        # left by a partial uninstall must not read as installed (matches
-        # check-install-status.sh, which iterates .value[]).
-        if jq -e --arg n "$name" \
-          '(.plugins // {}) | to_entries
-             | any((.key | startswith($n + "@")) and (.value | type == "array") and (.value | length > 0))' \
-          "$installed_json" >/dev/null 2>&1; then
-          status="OK"
-          detail="installed"
-        else
-          status="MISSING"
-          detail="not present in installed_plugins.json"
-        fi
-      else
+      if [[ ! -f "$installed_json" ]]; then
         status="UNKNOWN"
         detail="no installed_plugins.json — cannot verify plugin '$name'"
+      else
+        # Collect every recorded install version for this plugin. An actual RECORD is
+        # required, not merely a key — a stale `"<name>@mkt": []` left by a partial
+        # uninstall must not read as installed (matches check-install-status.sh, which
+        # iterates .value[]). A record without a `.version` still counts as installed.
+        mapfile -t ivs < <(jq -r --arg n "$name" \
+          '(.plugins // {}) | to_entries
+             | map(select((.key | startswith($n + "@")) and (.value | type == "array")))
+             | [.[].value[] | .version // empty] | unique[]' \
+          "$installed_json" 2>/dev/null)
+        installed_any="$(jq -e --arg n "$name" \
+          '(.plugins // {}) | to_entries
+             | any((.key | startswith($n + "@")) and (.value | type == "array") and (.value | length > 0))' \
+          "$installed_json" >/dev/null 2>&1 && echo yes || echo no)"
+        range="$(jq -r '.version // ""' <<<"$el")"
+        shown="${ivs[0]:-}"
+        if [[ "$installed_any" != "yes" ]]; then
+          status="MISSING"
+          detail="not present in installed_plugins.json"
+        elif [[ -z "$range" ]]; then
+          status="OK"
+          detail="installed${shown:+ (v$shown)}"
+        else
+          # OK if ANY recorded version satisfies the range; UNKNOWN only if we could
+          # evaluate none (no semver engine, or all versions/range unparseable).
+          sat=1
+          unk=0
+          for iv in ${ivs[@]+"${ivs[@]}"}; do
+            # `|| rc=$?` keeps a non-zero range_satisfied from tripping `set -e`
+            # before we can read its result.
+            rc=0
+            range_satisfied "$iv" "$range" || rc=$?
+            [[ "$rc" -eq 0 ]] && {
+              sat=0
+              break
+            }
+            [[ "$rc" -eq 2 ]] && unk=1
+          done
+          if [[ "$sat" -eq 0 ]]; then
+            status="OK"
+            detail="installed${shown:+ (v$shown)} — satisfies $range"
+          elif [[ "$unk" -eq 1 || "${#ivs[@]}" -eq 0 ]]; then
+            status="UNKNOWN"
+            detail="installed${shown:+ (v$shown)} but could not evaluate range $range (semver engine unavailable or version unparseable)"
+          else
+            status="WRONG-VERSION"
+            detail="installed${shown:+ (v$shown)} does not satisfy $range"
+          fi
+        fi
       fi
       ;;
     *)
