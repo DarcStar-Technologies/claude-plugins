@@ -5,6 +5,13 @@ All notable changes to the `plugin-editor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.7.0...plugin-editor-v0.8.0) (2026-07-17)
+
+
+### Features
+
+* **plugin-editor:** consume the shared edit-kit toolkit (complete the DRY arc) ([#60](https://github.com/DarcStar-Technologies/claude-plugins/issues/60)) ([209c2e4](https://github.com/DarcStar-Technologies/claude-plugins/commit/209c2e424a7f7d9d54be5d60cfd7673263872b92))
+
 ## [0.7.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-editor-v0.6.0...plugin-editor-v0.7.0) (2026-07-16)
 
 
