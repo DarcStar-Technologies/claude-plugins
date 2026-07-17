@@ -59,8 +59,11 @@ re-asking what a flag/text already answered):
   grounded in this template (keeping the built-in "Other"). Fold everything into one
   change description.
 
-When the plan touches `template.json`, apply those edits like any other file (step 6) and
-let `verify-repo.sh` (step 8) catch any identity drift or malformed dependency descriptor.
+When the plan touches `template.json`, apply those edits like any other file (step 6).
+`verify-repo.sh` (step 8) runs `validate-manifests.sh` **advisory** (repo-wide checks are
+relayed as `WARNING:` lines, not hard blocks), so **treat any template.json drift or
+malformed-descriptor warning it surfaces as a must-fix before finishing** — otherwise
+pre-commit/CI hard-fail on it later.
 
 ## 3. Plan (delegate to the planner)
 

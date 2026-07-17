@@ -171,15 +171,23 @@ plugin_deps='[]'
 env_deps_md=''
 tpl_manifest="$tpl_dir/template.json"
 if [[ -f "$tpl_manifest" ]] && jq empty "$tpl_manifest" 2>/dev/null; then
-  plugin_deps="$(jq -c '[.dependencies[]? | select(.kind == "plugin")
-      | if (.version // .marketplace)
-        then ({name}
-              + (if .version then {version} else {} end)
-              + (if .marketplace then {marketplace} else {} end))
-        else .name end]' "$tpl_manifest")"
-  env_deps_md="$(jq -r '[.dependencies[]? | select(.kind != "plugin")]
-      | map("- **\(.name)** (\(.kind))\(if .reason then " — \(.reason)" else "" end)")
-      | join("\n")' "$tpl_manifest")"
+  # One jq pass: line 1 is the plugin-kind deps as compact JSON; the remaining lines
+  # (possibly empty) are the cli/library/mcp deps as markdown bullets. Only well-formed
+  # descriptors survive (a recognized kind + a non-empty string name), so a malformed
+  # template.json — e.g. from an unvalidated remote template fetched via
+  # --template-repo/--template-version — can't inject null-valued entries into the new
+  # plugin.json or CONTEXT.md.
+  {
+    IFS= read -r plugin_deps
+    env_deps_md="$(cat)"
+  } < <(jq -r '
+    ([.dependencies[]? | select(.kind == "plugin" and (.name | type == "string") and (.name | length > 0))
+       | if (.version // .marketplace)
+         then ({name} + (if .version then {version} else {} end) + (if .marketplace then {marketplace} else {} end))
+         else .name end] | tojson),
+    ([.dependencies[]? | select((.kind | IN("cli","library","mcp")) and (.name | type == "string") and (.name | length > 0))
+       | "- **\(.name)** (\(.kind))\(if .reason then " — \(.reason)" else "" end)"] | join("\n"))
+  ' "$tpl_manifest")
 fi
 
 # --- scaffold --------------------------------------------------------------
@@ -290,7 +298,10 @@ $env_deps_md
 
 "
 fi
-context_md="${context_md//@@DEPS@@/$deps_section}"
+# Split on the single @@DEPS@@ token and concatenate — NOT `${context_md//.../$deps_section}`,
+# whose replacement string treats `&` specially under bash 5.2 patsub_replacement (a `&`
+# in a dependency reason would otherwise expand to the matched token).
+context_md="${context_md%%@@DEPS@@*}${deps_section}${context_md#*@@DEPS@@}"
 render "$context_md" >"$dest/CONTEXT.md"
 
 render "$(

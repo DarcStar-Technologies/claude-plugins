@@ -57,13 +57,34 @@ make_dep_template() {
 }
 
 @test "a template with no template.json propagates nothing (no deps, no Dependencies section)" {
-  # $WORK/default (copied in setup) has no template.json
+  # default now ships a template.json; remove it so this exercises the missing-file branch.
+  rm -f "$WORK/default/template.json"
   run bash -c "cd '$WORK' && '$SCAFFOLDER' plain --description 'X.' --template default"
   [ "$status" -eq 0 ]
   run jq 'has("dependencies")' "$WORK/plain/.claude-plugin/plugin.json"
   [ "$output" = "false" ]
   run grep -c '## Dependencies' "$WORK/plain/CONTEXT.md"
   [ "$output" = "0" ]
+}
+
+@test "a dependency reason containing '&' is preserved verbatim (no bash patsub corruption)" {
+  make_dep_template deptmpl '[{"kind":"cli","name":"make","reason":"build & release"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  grep -q -- '- \*\*make\*\* (cli) — build & release' "$WORK/mytool/CONTEXT.md"
+  run grep -q '@@DEPS@@' "$WORK/mytool/CONTEXT.md"
+  [ "$status" -ne 0 ] # no leftover token
+}
+
+@test "a malformed template.json dependency (missing name/kind) is dropped, not propagated" {
+  make_dep_template deptmpl '[{"kind":"plugin","version":">=1.0.0"},{"name":"orphan"},{"kind":"cli"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  # no null-valued garbage in either output
+  run jq 'has("dependencies")' "$WORK/mytool/.claude-plugin/plugin.json"
+  [ "$output" = "false" ]
+  run grep -q 'null' "$WORK/mytool/CONTEXT.md"
+  [ "$status" -ne 0 ] # no null-valued garbage
 }
 
 # Make a throwaway git repo containing templates/default; echoes its path.

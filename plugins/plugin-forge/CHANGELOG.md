@@ -51,6 +51,10 @@ Entries below `[Unreleased]` are generated automatically from
 
 ## [Unreleased]
 
+### Changed
+
+- `/forge`'s no-description guided intake now asks which **template** to use **first** (grounded in the real reference templates, carried forward as the authoritative `--template`), then the plugin's purpose, then concrete component-set suggestions — previously it asked the purpose first. The given-description flow is unchanged.
+
 ### Added
 
 - `forge-scaffold.sh` now **propagates a template's declared dependencies** (from its
@@ -58,13 +62,6 @@ Entries below `[Unreleased]` are generated automatically from
   `plugin.json` `dependencies` (bare string or `{name, version}`), and `cli`/`library`/`mcp`
   deps are documented in a "Dependencies" section of the new `CONTEXT.md` (those kinds have
   no manifest field). A template with no `template.json` propagates nothing.
-
-### Changed
-
-- `/forge`'s no-description guided intake now asks which **template** to use **first** (grounded in the real reference templates, carried forward as the authoritative `--template`), then the plugin's purpose, then concrete component-set suggestions — previously it asked the purpose first. The given-description flow is unchanged.
-
-### Added
-
 - Named-template selection: `/forge` and the `plugin-planner` agent choose among
   the marketplace's reference templates (the plugins under `templates/`) and pass
   `--template <name>` (default `default`) to the scaffolder. The planner returns a
