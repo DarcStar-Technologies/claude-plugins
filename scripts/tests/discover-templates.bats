@@ -40,6 +40,13 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
 @test "exits 2 with no output when no marketplace ancestor is found" {
   local solo
   solo="$(mktemp -d)"
+  # Hermeticity guard: skip if the scratch dir happens to sit under a real
+  # marketplace (e.g. TMPDIR inside a checkout), which would give a valid listing.
+  local d="$solo"
+  while [[ "$d" != "/" ]]; do
+    [[ -f "$d/.claude-plugin/marketplace.json" ]] && skip "scratch dir has a marketplace ancestor"
+    d="$(dirname "$d")"
+  done
   run "$DT" "$solo"
   [ "$status" -eq 2 ]
   [ -z "$output" ]

@@ -43,7 +43,11 @@ lt="$root/scripts/list-templates.sh"
 }
 
 # list-templates.sh --json emits [{name, version, description}]; add an absolute path.
-out="$("$lt" --json 2>/dev/null || true)"
+# A genuine FAILURE of list-templates.sh is surfaced (exit 1, stderr) rather than
+# masked as the benign `[]` "no templates" signal.
+if ! out="$("$lt" --json 2>/dev/null)"; then
+  die "the marketplace's list-templates.sh failed — run it directly to see why"
+fi
 [[ -n "$out" ]] || {
   printf '[]\n'
   exit 0

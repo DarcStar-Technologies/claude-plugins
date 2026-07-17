@@ -18,22 +18,30 @@ description.
 ## 1. Require a marketplace repo, then locate the template
 
 Each Bash call runs in a **fresh shell**, so recompute paths every time. Templates only
-exist inside the marketplace repo — find the root
-`ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"`; if
-`"$ROOT/.claude-plugin/marketplace.json"` is absent, stop and say this command runs
-inside the marketplace repo.
+exist inside the marketplace repo — find the root **git-independently** by walking up
+from the current directory to the nearest ancestor containing
+`.claude-plugin/marketplace.json` (do **not** use `git rev-parse` — the checkout may be
+vendored inside a larger repo or not a git worktree). If there is no such ancestor, stop
+and say this command runs inside the marketplace repo.
 
-- **Split off the change description at the `—` separator** (everything after it is the
-  literal change text — never scanned for flags), then parse the **directive segment**:
-  `--dry-run` (preview and stop, step 5), `--template=<dir>` (authoritative target dir),
-  `--type=<...>` (authoritative change type, carried to step 2 and the planner). A
-  flag-looking token inside the change text stays literal.
-- **Resolve the target template:** `--template=<dir>` wins; else a positional
-  `<template-dir>`; else the current directory if it is itself a template; else offer a
-  **picker** — run `"${CLAUDE_PLUGIN_ROOT}/scripts/discover-templates.sh"`; if it prints
-  a non-empty JSON array, choose with `AskUserQuestion` (≤4 options — label = `name`,
-  description = `description`; use the entry's absolute `path`; the built-in "Other" is
-  added for you). Only if it exits non-zero or returns `[]` fall back to free text.
+- **Split off the change description, then parse flags.** Everything after the `—`
+  change-description separator is the **literal change text** — never scanned for flags.
+  What precedes it is the **directive segment**: the flags `--dry-run` (preview and stop,
+  step 5), `--template=<dir>` (authoritative target dir), `--type=<...>` (authoritative
+  change type, carried to step 2 and the planner), in any order, plus an optional
+  positional `<template-dir>`. **If there is no `—` separator,** recognize flags only as
+  **leading** tokens (before `<template-dir>`) and treat everything after `<template-dir>`
+  as the change text — so a flag-looking token in the change text stays literal.
+- **Resolve the target template:** `--template=<dir>` is authoritative and wins; if a
+  positional `<template-dir>` was **also** given, drop that redundant token so it can't
+  leak into the change text. Otherwise use a positional `<template-dir>`; else the current
+  directory if it is itself a template; else offer a **picker** — run
+  `"${CLAUDE_PLUGIN_ROOT}/scripts/discover-templates.sh"`; if it prints a non-empty JSON
+  array, choose with `AskUserQuestion` (≤4 options — label = `name`, description =
+  `description`; use the entry's absolute `path`; the built-in "Other" is added for you).
+  If it **exits 2 or returns `[]`** (not a marketplace / no templates), fall back to free
+  text; if it fails otherwise (a non-zero exit with an error on stderr), **relay that
+  error** rather than silently falling back.
 - **The target MUST be under `templates/`** (a dir with its own `.claude-plugin/plugin.json`).
   If the resolved path isn't a template under `templates/`, stop — this command never
   edits `plugins/` (that's `/edit-plugin`'s job).
