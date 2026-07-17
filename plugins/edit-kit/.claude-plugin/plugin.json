@@ -9,5 +9,8 @@
     "changelog",
     "versioning",
     "reuse"
+  ],
+  "dependencies": [
+    "semver"
   ]
 }

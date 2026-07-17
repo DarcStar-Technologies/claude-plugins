@@ -9,5 +9,8 @@
     "changelog",
     "versioning",
     "marketplace"
+  ],
+  "dependencies": [
+    "edit-kit"
   ]
 }

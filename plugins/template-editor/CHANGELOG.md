@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Declare a bare-string dependency on the `edit-kit` plugin in `plugin.json`, so Claude Code auto-installs it (and transitively `semver`).
+
 ### Added
 
 - Initial `template-editor` plugin: the template analogue of `plugin-editor`. A

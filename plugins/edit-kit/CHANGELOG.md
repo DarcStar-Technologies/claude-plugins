@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Declare a bare-string dependency on the `semver` plugin in `plugin.json` (its `sync-version.sh` needs the semver engine to hand-bump a standalone plugin).
+
 ### Added
 
 - Initial `edit-kit` provider plugin: the shared, deterministic edit-flow toolkit

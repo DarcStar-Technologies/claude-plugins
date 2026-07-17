@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Declare a bare-string dependency on the `semver` plugin in `plugin.json` (its version math reuses the semver engine).
+
 ### Added
 
 - `/scaffold-upgrade` command and `scripts/check-upgrade.sh`: report whether a

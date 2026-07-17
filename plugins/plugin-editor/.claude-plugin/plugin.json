@@ -16,5 +16,8 @@
     "changelog",
     "template",
     "reload"
+  ],
+  "dependencies": [
+    "edit-kit"
   ]
 }

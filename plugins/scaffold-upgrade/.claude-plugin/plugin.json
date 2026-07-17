@@ -16,5 +16,8 @@
     "provenance",
     "drift",
     "semver"
+  ],
+  "dependencies": [
+    "semver"
   ]
 }
