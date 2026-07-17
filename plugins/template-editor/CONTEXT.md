@@ -66,11 +66,12 @@ needed. All mechanical work is in shell scripts (this plugin's two, plus edit-ki
 - **edit-kit is resolved, not vendored.** `edit-kit-path.sh` finds edit-kit's scripts
   (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`); if edit-kit isn't installed the
   command says so. This is the same run-time-reuse pattern `sync-version.sh` uses for
-  `semver`. A copy here would be drift waiting to happen. edit-kit is also a bare-string
-  **`dependencies` entry in `plugin.json`** so Claude Code auto-installs it (and
-  transitively `semver`) when template-editor is installed — and disables template-editor
-  if it can't; `edit-kit-path.sh` then just *locates* the installed toolkit at run time
-  (and finds the sibling `plugins/edit-kit` in the repo checkout).
+  `semver`. A copy here would be drift waiting to happen. edit-kit is also a versioned
+  **`dependencies` entry in `plugin.json`** (`edit-kit >=0.1.0`) so Claude Code auto-installs
+  it (and transitively `semver`) when template-editor is installed, resolving the range
+  against the marketplace's `edit-kit--v*` tags — and disables template-editor if it can't;
+  `edit-kit-path.sh` then just *locates* the installed toolkit at run time (and finds the
+  sibling `plugins/edit-kit` in the repo checkout).
 - **No install/reload step.** Unlike `plugin-editor`, there is no `check-install-status`
   — a template is a scaffolding *source*, never installed.
 - **No template drift.** `check-structure.sh` (edit-kit) validates structure only; a

@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Declare a bare-string dependency on the `semver` plugin in `plugin.json` (its `sync-version.sh` needs the semver engine to hand-bump a standalone plugin).
+- Declare a versioned dependency on the `semver` plugin (`>=0.1.0`) in `plugin.json` (its `sync-version.sh` needs the semver engine to hand-bump a standalone plugin). Enabled by the `<name>--v<version>` release tags (issue #74).
 
 ### Added
 
