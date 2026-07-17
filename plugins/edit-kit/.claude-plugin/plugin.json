@@ -1,6 +1,6 @@
 {
   "name": "edit-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared deterministic edit-flow scripts (changelog, versioning, structure check, repo verification, test scaffolding) that plugin-editor and template-editor resolve at run time; a provider plugin with no command of its own.",
   "license": "MIT",
   "keywords": [
