@@ -36,27 +36,30 @@ Tell the user which mode you're in.
 free-text ask (mirroring `/forge-template` and `/edit-plugin`). Skip this entirely
 when a description was given — that flow is unchanged.
 
-- **What should the plugin do?** First capture its **purpose** — the one thing `/forge`
-  most needs and cannot infer. Ask the user in free text (this is the essential domain
-  input the planner builds the name, description, and components from, so never skip
-  it). The two questions below only refine the *shape*.
-- **What kind of plugin?** Ask one single-select `AskUserQuestion`, grounded in the
-  real reference templates: run `"$ROOT/scripts/list-templates.sh"` and skim each so
+- **Which template?** Ask this **first** — a single-select `AskUserQuestion` grounded in
+  the real reference templates: run `"$ROOT/scripts/list-templates.sh"` and skim each so
   the archetype options are concrete — e.g. a command-only suite (`command-suite`), a
-  command + planner-agent + script mix (`default`), or a plan → confirm → apply
-  workflow (`plan-confirm-apply`). `AskUserQuestion` allows at most **4** options, so
-  present the 4 most relevant archetypes (the built-in **"Other"** free-form option is
-  added for you — do not add your own). If the script isn't available (portable mode
-  without this repo checked out), describe those same archetypes from general
-  knowledge. **Record the chosen archetype as the authoritative template** — a
-  deliberate pick is an explicit template request, so pass it to the planner in step 3
-  and as `--template <name>` in step 5 rather than letting the planner re-infer one.
+  command + planner-agent + script mix (`default`), or a plan → confirm → apply workflow
+  (`plan-confirm-apply`). `AskUserQuestion` allows at most **4** options — present all
+  the templates when there are ≤4 (three today); if `templates/` ever holds more, offer
+  a representative spread (there is no purpose captured yet to rank by) and let the
+  built-in **"Other"** free-form option cover the rest (it is added for you — do not add
+  your own). If the script isn't available (portable mode without this repo checked out),
+  describe those same archetypes from general knowledge. **Record the
+  chosen archetype as the authoritative template** — a deliberate pick is an explicit
+  template request, so pass it to the planner in step 3 and as `--template <name>` in
+  step 5 rather than letting the planner re-infer one.
+- **What should the plugin do?** Then capture its **purpose** — the domain input `/forge`
+  can't infer, which the planner builds the name, description, and components from. Ask
+  the user in free text; never skip it.
 - **Which components?** Optionally ask a second single-select `AskUserQuestion` with up
-  to **4** concrete component-set suggestions for the chosen kind (its built-in
+  to **4** concrete component-set suggestions for the chosen template (its built-in
   **"Other"** is likewise added for you).
-- **Combine.** Fold the purpose, the chosen archetype, and the component set into one
-  clear description, then continue with the normal flow (template selection in step 2,
-  the planner in step 3), carrying the authoritative template forward.
+- **Combine.** Fold the answers into one clear description **centered on the purpose**
+  (the domain intent the planner names and shapes the plugin from) — the template and
+  component set refine that purpose, they do not replace it. Then continue with the
+  normal flow (template selection in step 2, the planner in step 3), carrying the
+  authoritative template forward.
 
 ## 2. Template source
 
