@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Declare a first-class dependency on the `semver` plugin (`>=0.2.0`) in `plugin.json` (its `sync-version.sh` needs the semver engine to hand-bump a standalone plugin).
+- Declare a bare-string dependency on the `semver` plugin in `plugin.json` (its `sync-version.sh` needs the semver engine to hand-bump a standalone plugin).
 
 ### Added
 

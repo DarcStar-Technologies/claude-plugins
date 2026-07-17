@@ -11,9 +11,6 @@
     "marketplace"
   ],
   "dependencies": [
-    {
-      "name": "edit-kit",
-      "version": ">=0.1.0"
-    }
+    "edit-kit"
   ]
 }
