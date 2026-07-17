@@ -14,12 +14,17 @@
 #   delete    — base==current, absent in target         (template removed it; you didn't touch it) -> delete
 #   keep      — target==base but current differs         (only you changed it)                     -> keep yours
 #   unchanged — current already equals target                                                      -> nothing
-#   conflict  — base, current, and target all differ, OR you edited a file the template removed    -> ASK
+#   conflict  — all three differ; OR you edited a file the template removed (conflict-removed);
+#               OR you deleted a file the target still ships (conflict-deleted)               -> ASK
 #   local-add — only in current (you added it)                                                     -> keep
 # The command/planner decide what to do with a `conflict`; this script never picks a winner.
 #
 # Usage: diff-components.sh --base <dir> --current <plugin-dir> --target <dir> --name <n> --desc <d>
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=plugins/scaffold-retarget/scripts/lib/common.sh
+. "$SCRIPT_DIR/lib/common.sh"
 
 die() {
   printf 'diff-components: %s\n' "$*" >&2
@@ -44,28 +49,17 @@ done
 
 COMPONENTS=(commands agents skills scripts)
 
-# Render {{NAME}}/{{DESC}} the same way the scaffolder does, but WITHOUT bash pattern
-# substitution for the free-text description (a `&` in it would corrupt `${x//p/r}`
-# under bash 5.2 patsub_replacement). Split-and-concat is literal.
-render() {
-  local c="$1" before after
-  c="${c//\{\{NAME\}\}/$name}" # name is a validated kebab token — safe for //
-  while [[ "$c" == *'{{DESC}}'* ]]; do
-    before="${c%%\{\{DESC\}\}*}"
-    after="${c#*\{\{DESC\}\}}"
-    c="${before}${desc}${after}"
-  done
-  printf '%s' "$c"
-}
-
-# Content of <root>/<relpath>, rendered if it lives in a template ($2 = "tmpl"|"plugin");
-# prints nothing and returns 1 when the file is absent.
+# Content of <root>/<relpath> for comparison. Template files ($2 = "tmpl") are rendered
+# with the plugin's identity via sr_render (lib/common.sh); the plugin's own files ($2 =
+# "plugin") are read as-is. Both are captured in $(...), which strips a trailing newline,
+# so comparison is newline-insensitive at EOF. Returns 1 when the file is absent (so an
+# absent file is distinguishable from an empty one).
 content() {
   local root="$1" kind="$2" rel="$3"
-  local f="$root/$rel" # separate decl: $f must see $root/$rel assigned above
+  local f="$root/$rel"
   [[ -f "$f" ]] || return 1
   if [[ "$kind" == "tmpl" ]]; then
-    render "$(cat "$f")"
+    sr_render "$(cat "$f")" "$name" "$desc"
   else
     cat "$f"
   fi
@@ -96,8 +90,14 @@ for rel in ${rels[@]+"${rels[@]}"}; do
 
   class="" action=""
   if [[ "$hc" -eq 0 && "$ht" -eq 1 ]]; then
-    class="added-in-target"
-    action="add"
+    if [[ "$hb" -eq 1 ]]; then
+      # You deleted a file the target template still ships — don't silently resurrect it.
+      class="conflict-deleted"
+      action="conflict"
+    else
+      class="added-in-target"
+      action="add"
+    fi
   elif [[ "$hc" -eq 1 && "$ht" -eq 0 ]]; then
     if [[ "$hb" -eq 1 && "$cb" == "$cc" ]]; then
       class="removed-in-target"

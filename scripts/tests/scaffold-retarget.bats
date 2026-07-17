@@ -165,6 +165,97 @@ build_upstream() {
   [[ "$output" == *"unsafe or out-of-scope"* ]]
 }
 
+@test "render terminates and is literal when the description contains {{DESC}}" {
+  # Regression: a naive re-scanning loop would spin forever on a desc that is the token.
+  local repo tgt tdir
+  repo="$(build_upstream)"
+  tgt="$("$SR/resolve-template-version.sh" demo 0.2.0 --from "$W" --source "repo:$repo")"
+  tdir="$(jq -r .dir <<<"$tgt")"
+  add_plugin_with_provenance mytool
+  local pd="$MP/plugins/mytool"
+  mkdir -p "$pd/commands"
+  printf '# Changelog\n\n## [Unreleased]\n' >"$pd/CHANGELOG.md"
+  run timeout 20 "$SR/apply-retarget.sh" --plugin "$pd" --target "$tdir" --name mytool \
+    --desc '{{DESC}}' --to-version 0.2.0 --from-version 0.1.0 \
+    --decisions '[{"path":"commands/go.md","action":"add"}]'
+  [ "$status" -eq 0 ]                      # did not hang / time out
+  grep -qF '{{DESC}}' "$pd/commands/go.md" # the literal desc landed exactly once
+  rm -rf "$(jq -r '.cleanupPath' <<<"$tgt")"
+}
+
+@test "resolve with a local: source does NOT fall back to cloning the default repo" {
+  # Even though the default repo HAS the version, a local: source that can't resolve
+  # must fail — never silently pull same-named content from the public upstream.
+  local repo
+  repo="$(build_upstream)"
+  SCAFFOLD_RETARGET_DEFAULT_REPO="$repo" run "$SR/resolve-template-version.sh" demo 0.2.0 \
+    --from "$W" --source "local:$W/does-not-exist"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"could not resolve"* ]]
+}
+
+@test "apply refuses to write through a symlink escaping the plugin dir" {
+  local repo tgt tdir
+  repo="$(build_upstream)"
+  tgt="$("$SR/resolve-template-version.sh" demo 0.2.0 --from "$W" --source "repo:$repo")"
+  tdir="$(jq -r .dir <<<"$tgt")"
+  add_plugin_with_provenance mytool
+  local pd="$MP/plugins/mytool"
+  mkdir -p "$pd/commands"
+  printf 'SECRET\n' >"$W/outside.md"
+  ln -s "$W/outside.md" "$pd/commands/go.md" # a symlink escaping the plugin
+  run "$SR/apply-retarget.sh" --plugin "$pd" --target "$tdir" --name mytool --desc d \
+    --to-version 0.2.0 --decisions '[{"path":"commands/go.md","action":"update"}]'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"symlink"* ]]
+  [ "$(cat "$W/outside.md")" = "SECRET" ] # the external file was NOT overwritten
+  rm -rf "$(jq -r '.cleanupPath' <<<"$tgt")"
+}
+
+@test "3-way diff: a locally-deleted file the target still ships is a conflict, not an add" {
+  local repo bdir tdir base tgt
+  repo="$(build_upstream)"
+  base="$("$SR/resolve-template-version.sh" demo 0.1.0 --from "$W" --source "repo:$repo")"
+  tgt="$("$SR/resolve-template-version.sh" demo 0.2.0 --from "$W" --source "repo:$repo")"
+  bdir="$(jq -r .dir <<<"$base")"
+  tdir="$(jq -r .dir <<<"$tgt")"
+  add_plugin_with_provenance mytool
+  local pd="$MP/plugins/mytool"
+  mkdir -p "$pd/commands" # go.md exists in base+target but NOT in the plugin (deleted)
+  run "$SR/diff-components.sh" --base "$bdir" --current "$pd" --target "$tdir" --name mytool --desc d
+  [ "$(jq -r '.[] | select(.path=="commands/go.md") | .action' <<<"$output")" = "conflict" ]
+  rm -rf "$(jq -r '.cleanupPath' <<<"$base")" "$(jq -r '.cleanupPath' <<<"$tgt")"
+}
+
+@test "updated files keep a trailing newline (end-of-file-fixer clean)" {
+  local repo tgt tdir
+  repo="$(build_upstream)"
+  tgt="$("$SR/resolve-template-version.sh" demo 0.2.0 --from "$W" --source "repo:$repo")"
+  tdir="$(jq -r .dir <<<"$tgt")"
+  add_plugin_with_provenance mytool
+  local pd="$MP/plugins/mytool"
+  mkdir -p "$pd/commands"
+  printf '# mytool v1\n\ndesc\n' >"$pd/commands/go.md"
+  "$SR/apply-retarget.sh" --plugin "$pd" --target "$tdir" --name mytool --desc desc \
+    --to-version 0.2.0 --decisions '[{"path":"commands/go.md","action":"update"}]' >/dev/null
+  [ -z "$(tail -c1 "$pd/commands/go.md")" ] # last byte is a newline
+  rm -rf "$(jq -r '.cleanupPath' <<<"$tgt")"
+}
+
+@test "CHANGELOG bullet is written even when ### Changed is the final line" {
+  local repo tgt tdir
+  repo="$(build_upstream)"
+  tgt="$("$SR/resolve-template-version.sh" demo 0.2.0 --from "$W" --source "repo:$repo")"
+  tdir="$(jq -r .dir <<<"$tgt")"
+  add_plugin_with_provenance mytool
+  local pd="$MP/plugins/mytool"
+  printf '# Changelog\n\n## [Unreleased]\n\n### Changed\n' >"$pd/CHANGELOG.md" # heading is last line
+  "$SR/apply-retarget.sh" --plugin "$pd" --target "$tdir" --name mytool --desc d \
+    --to-version 0.2.0 --from-version 0.1.0 --decisions '[]' >/dev/null
+  grep -q 'Retarget from demo' "$pd/CHANGELOG.md"
+  rm -rf "$(jq -r '.cleanupPath' <<<"$tgt")"
+}
+
 @test "apply does NOT create a duplicate ### Changed when one already exists" {
   local repo tgt tdir
   repo="$(build_upstream)"

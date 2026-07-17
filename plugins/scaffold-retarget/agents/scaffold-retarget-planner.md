@@ -27,9 +27,10 @@ edit files — you return a plan.
    deterministic — take its `update`/`add`/`delete`/`keep`/`unchanged` recommendations as
    the decision for those files (read a file only when you need to describe *what* changed
    in the summary/risks).
-2. **Never silently resolve a `conflict`.** A `conflict` (or `conflict-removed`) means the
-   plugin's file diverged from the template AND the template also changed it (or removed a
-   file the user had customized). For each, add a **question** offering the real choices —
+2. **Never silently resolve a `conflict`.** Any `action: "conflict"` (class `conflict`,
+   `conflict-removed` — you customized a file the template deleted — or `conflict-deleted`
+   — you deleted a file the target still ships) means the plugin and the template diverged
+   on that file. For each, add a **question** offering the real choices —
    *keep the plugin's version* (`keep`) or *take the target template's version*
    (`update`/`delete`) — and, when useful, note in `risks[]` what each side changed. Do not
    pick a winner yourself.

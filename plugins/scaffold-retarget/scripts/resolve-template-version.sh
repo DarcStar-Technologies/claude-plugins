@@ -130,7 +130,9 @@ case "$source_str" in
       url="$spec"
     fi
     ;;
-  *) url="$DEFAULT_REPO" ;;
+  "") url="$DEFAULT_REPO" ;; # no source recorded: try the default upstream
+    # NOTE: no catch-all. A `local:` source must NOT fall back to cloning the public
+    # default repo — a same-named public template would be the WRONG content for a fork.
 esac
 
 if [[ -n "$url" ]]; then
