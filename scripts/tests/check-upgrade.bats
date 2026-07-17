@@ -2,7 +2,7 @@
 #
 # Tests for the scaffold-upgrade plugin (plugins/scaffold-upgrade/scripts/check-upgrade.sh).
 # Every case resolves templates LOCALLY — an ancestor-marketplace fixture or a
-# local git repo carrying <name>-v* tags — so the suite never touches the network.
+# local git repo carrying <name>--v*/<name>-v* tags — so the suite never touches the network.
 # The network-only paths (a bare `tag:`/`default:` source against the real GitHub
 # repo) are exercised manually, matching the convention in forge-scaffold.bats.
 
@@ -160,5 +160,57 @@ MD
   [ "$status" -eq 0 ]
   [[ "$output" == *"UPGRADE AVAILABLE"* ]]
   [[ "$output" == *"v0.4.0"* ]]
+  rm -rf "$work"
+}
+
+@test "resolves latest from <name>--v* (double-hyphen) release tags" {
+  local work repo pdir
+  work="$(mktemp -d)"
+  repo="$work/upstream"
+  mkdir -p "$repo/templates/default/.claude-plugin"
+  git -C "$repo" init -q
+  printf '{ "name":"default","version":"0.5.0","description":"t" }\n' >"$repo/templates/default/.claude-plugin/plugin.json"
+  git -C "$repo" -c user.email=t@t -c user.name=t add -A
+  git -C "$repo" -c user.email=t@t -c user.name=t commit -qm v05
+  git -C "$repo" tag default--v0.5.0
+
+  pdir="$work/mytool"
+  mkdir -p "$pdir/.claude-plugin"
+  printf '{ "name":"mytool","version":"0.1.0","description":"t" }\n' >"$pdir/.claude-plugin/plugin.json"
+  jq -n --arg s "default:$repo" \
+    '{template:"default",templateVersion:"0.1.0",source:$s,mode:"portable"}' \
+    >"$pdir/.claude-plugin/scaffold.json"
+
+  run "$CHECK" "$pdir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"UPGRADE AVAILABLE"* ]]
+  [[ "$output" == *"v0.5.0"* ]]
+  rm -rf "$work"
+}
+
+@test "resolves the highest across MIXED legacy <name>-v* and new <name>--v* tags" {
+  local work repo pdir
+  work="$(mktemp -d)"
+  repo="$work/upstream"
+  mkdir -p "$repo/templates/default/.claude-plugin"
+  git -C "$repo" init -q
+  printf '{ "name":"default","version":"0.9.0","description":"t" }\n' >"$repo/templates/default/.claude-plugin/plugin.json"
+  git -C "$repo" -c user.email=t@t -c user.name=t add -A
+  git -C "$repo" -c user.email=t@t -c user.name=t commit -qm base
+  # legacy single-hyphen (older) + new double-hyphen (newer) on the same repo
+  git -C "$repo" tag default-v0.4.0
+  git -C "$repo" tag default--v0.9.0
+
+  pdir="$work/mytool"
+  mkdir -p "$pdir/.claude-plugin"
+  printf '{ "name":"mytool","version":"0.1.0","description":"t" }\n' >"$pdir/.claude-plugin/plugin.json"
+  jq -n --arg s "default:$repo" \
+    '{template:"default",templateVersion:"0.1.0",source:$s,mode:"portable"}' \
+    >"$pdir/.claude-plugin/scaffold.json"
+
+  run "$CHECK" "$pdir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"UPGRADE AVAILABLE"* ]]
+  [[ "$output" == *"v0.9.0"* ]] # the double-hyphen 0.9.0 wins over legacy 0.4.0
   rm -rf "$work"
 }

@@ -41,7 +41,7 @@ There is no build step; plugins are Markdown, JSON, and shell.
   general-purpose base; `command-suite` is an archetype for command-only plugins.
   Living under `templates/` — not any name prefix — marks them internal: validators
   skip them for marketplace membership, so they are never published, but they
-  **are** release-managed and tagged (`<name>-v*`), for drift comparison and
+  **are** release-managed and tagged (`<name>--v*`), for drift comparison and
   `--template-version` fetches. List them with `scripts/list-templates.sh`; select
   one with `forge-scaffold.sh --template <name>` (default `default`). See
   `CONTRIBUTING.md` → "Adding a template" to add more.
@@ -61,6 +61,13 @@ There is no build step; plugins are Markdown, JSON, and shell.
   `.release-please-manifest.json`) bumps `plugin.json` versions and generates each
   plugin's `CHANGELOG.md` from Conventional Commits on merge to `main`. The
   repo-root `CHANGELOG.md` is curated by hand and covers tooling/structure only.
+- **Release tags are `<name>--v<version>` (double hyphen).** `release-please-config.json`
+  sets `tag-separator: "--"`, so a release of component `<name>` is tagged
+  `<name>--v<version>` (e.g. `edit-kit--v0.2.0`). This is exactly the tag scheme Claude
+  Code's plugin-dependency resolver matches when a `plugin.json` `dependencies` entry
+  carries a version range — the `--v` is a prefix match, so hyphenated plugin names
+  resolve unambiguously. Legacy single-hyphen `<name>-v*` tags (pre-2026-07-17) remain
+  valid history; `scaffold-upgrade` reads both.
 - **Registering a plugin is three files.** A new plugin must be added to
   `marketplace.json`, `release-please-config.json`, and
   `.release-please-manifest.json`. `forge-scaffold.sh --register` does all three
