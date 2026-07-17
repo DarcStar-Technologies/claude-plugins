@@ -80,25 +80,33 @@ teardown() { teardown_fixture; }
   [[ "$output" == *"missing template.json"* ]]
 }
 
-@test "fails when template.json identity drifts from plugin.json" {
+@test "fails when template.json identity drifts from plugin.json (and names the field)" {
   add_template default 0.1.0
   jq '.description = "DRIFTED"' "$FIX/templates/default/template.json" >"$FIX/t" &&
     mv "$FIX/t" "$FIX/templates/default/template.json"
   run "$FIX/scripts/validate-manifests.sh"
   [ "$status" -ne 0 ]
-  [[ "$output" == *"does not match plugin.json"* ]]
+  [[ "$output" == *"[description] do not match plugin.json"* ]]
 }
 
-@test "fails when template.json name does not match its directory" {
+@test "drift check covers keywords too" {
   add_template default 0.1.0
-  # keep plugin.json in sync so the failure is specifically the dir mismatch
-  jq '.name = "wrong"' "$FIX/templates/default/template.json" >"$FIX/t" &&
+  jq '.keywords = ["different"]' "$FIX/templates/default/template.json" >"$FIX/t" &&
     mv "$FIX/t" "$FIX/templates/default/template.json"
-  jq '.name = "wrong"' "$FIX/templates/default/.claude-plugin/plugin.json" >"$FIX/t" &&
-    mv "$FIX/t" "$FIX/templates/default/.claude-plugin/plugin.json"
   run "$FIX/scripts/validate-manifests.sh"
   [ "$status" -ne 0 ]
-  [[ "$output" == *"does not match directory"* ]]
+  [[ "$output" == *"[keywords] do not match plugin.json"* ]]
+}
+
+@test "fails specifically on the template.json name-vs-directory check" {
+  add_template default 0.1.0
+  # Only template.json.name is wrong; plugin.json.name stays == dir, so the sole error
+  # is the template.json name-vs-directory check (not plugin.json's, and not drift).
+  jq '.name = "wrong"' "$FIX/templates/default/template.json" >"$FIX/t" &&
+    mv "$FIX/t" "$FIX/templates/default/template.json"
+  run "$FIX/scripts/validate-manifests.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"template.json name 'wrong' does not match directory"* ]]
 }
 
 @test "fails when a template.json dependency has an invalid kind" {

@@ -84,14 +84,16 @@ so to add one:
    and the component dirs (`commands/`, `agents/`, `skills/`, `scripts/`) that
    define the archetype. In components, use the `{{NAME}}`/`{{DESC}}` placeholders
    for anything that should become the new plugin's identity — the scaffolder
-   substitutes them on copy. Also add a **`template.json`** (the template manifest):
+   substitutes them on copy. Also add a **`template.json`** (the template manifest —
+   `template-forge` writes one automatically for a scaffolded template):
    its identity fields (name, description, author, license, keywords) must match
    `plugin.json` — `validate-manifests.sh` enforces this — and its **`dependencies`**
    array lists every dependency the archetype's components carry, as
    `{kind, name, version?, reason?}` descriptors (`kind` ∈ `plugin`/`cli`/`library`/`mcp`).
    This is the one place cross-kind deps live (`plugin.json` `dependencies` is
-   plugin-only), and the scaffolder propagates them into plugins built from the template.
-   Do **not** put a `version` in `template.json` — release-please owns it in `plugin.json`.
+   plugin-only); a follow-up will have the scaffolder propagate them into plugins built
+   from the template. Do **not** put a `version` in `template.json` — release-please owns
+   it in `plugin.json`.
 2. Register it for release management: add a package under
    `templates/your-archetype` in `release-please-config.json` (with
    `component: your-archetype` and the `plugin.json` `extra-files` entry), seed

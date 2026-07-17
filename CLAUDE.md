@@ -87,10 +87,11 @@ There is no build step; plugins are Markdown, JSON, and shell.
   vocabulary (`{kind, name, version?, reason?}`, `kind` ∈ `plugin`/`cli`/`library`/`mcp`)
   — the one place a template's *cross-kind* deps live, since `plugin.json` `dependencies`
   is plugin-only. `validate-manifests.sh` requires it, checks the descriptors, and
-  enforces that its shared identity fields match `plugin.json` (no drift). `version` stays
-  out of it (release-please owns that in `plugin.json`). The scaffolder propagates these
-  deps into scaffolded plugins (plugin-kind → their `plugin.json`; other kinds → their
-  CONTEXT.md).
+  enforces that its shared identity fields (description/author/license/keywords, plus
+  `name` pinned to the directory) match `plugin.json` (no drift). `version` stays out of it
+  (release-please owns that in `plugin.json`). `template-forge` writes it for new templates;
+  a follow-up will have `forge-scaffold.sh` **propagate** these deps into plugins built from
+  a template (plugin-kind → their `plugin.json`; other kinds → their CONTEXT.md).
 - **Minimum capable model.** Subagents/commands set `model:` frontmatter to the
   smallest model that is correct (`haiku` → `sonnet` → `opus`). Anything fully
   deterministic goes in a `scripts/` shell script (with a bats test), not a model.
