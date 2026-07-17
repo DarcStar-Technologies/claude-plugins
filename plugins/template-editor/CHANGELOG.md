@@ -5,6 +5,13 @@ All notable changes to the `template-editor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/template-editor-v0.2.0...template-editor-v0.3.0) (2026-07-17)
+
+
+### Features
+
+* **deps:** declare first-class plugin dependencies in plugin.json ([#69](https://github.com/DarcStar-Technologies/claude-plugins/issues/69)) ([aa1966d](https://github.com/DarcStar-Technologies/claude-plugins/commit/aa1966de21a59eb8bf943ee552b1f435fb6a7270))
+
 ## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/template-editor-v0.1.0...template-editor-v0.2.0) (2026-07-17)
 
 

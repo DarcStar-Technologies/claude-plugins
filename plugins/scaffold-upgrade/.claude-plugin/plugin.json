@@ -1,6 +1,6 @@
 {
   "name": "scaffold-upgrade",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Check whether a plugin scaffolded from a template can be upgraded to the latest version of that template.",
   "author": {
     "name": "DarcStar Technologies",

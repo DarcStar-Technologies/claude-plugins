@@ -3,11 +3,11 @@
   "templates/command-suite": "0.1.0",
   "plugins/plugin-forge": "0.5.0",
   "plugins/semver": "0.2.0",
-  "plugins/scaffold-upgrade": "0.1.0",
-  "plugins/plugin-editor": "0.8.0",
+  "plugins/scaffold-upgrade": "0.2.0",
+  "plugins/plugin-editor": "0.9.0",
   "plugins/template-forge": "0.1.0",
   "templates/plan-confirm-apply": "0.1.0",
-  "plugins/edit-kit": "0.1.0",
-  "plugins/template-editor": "0.2.0",
+  "plugins/edit-kit": "0.2.0",
+  "plugins/template-editor": "0.3.0",
   "plugins/dep-doctor": "0.1.0"
 }

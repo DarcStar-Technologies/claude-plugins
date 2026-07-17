@@ -1,6 +1,6 @@
 {
   "name": "plugin-editor",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Guided assistant that modifies an existing plugin from a natural-language request, then checks template lineage, scaffolds a bundled test stub for any new scripts, cross-checks the repo's own checks and tests, updates its changelog and version, and flags a stale active install.",
   "author": {
     "name": "DarcStar Technologies",
