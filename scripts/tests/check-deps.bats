@@ -104,6 +104,28 @@ plugin_range_status() { # <range> -> prints the status for semver@0.2.0 vs <rang
   [ "$(plugin_range_status '~0.2.0')" = "OK" ]
 }
 
+@test "plugin with multiple install records names the version that actually satisfies" {
+  # Recorded at 0.1.0 and 0.5.0; range >=0.4.0 is satisfied only by 0.5.0. The OK detail
+  # must name 0.5.0, never the lexicographically-first 0.1.0 (which fails the range).
+  printf '{"plugins":{"multi@u":[{"scope":"user","version":"0.1.0"}],"multi@p":[{"scope":"project","version":"0.5.0"}]}}\n' >"$FIX/multi.json"
+  INSTALLED_PLUGINS_JSON="$FIX/multi.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"multi\",\"version\":\">=0.4.0\"}]" | "$0"' "$CD"
+  [ "$status" -eq 0 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "OK" ]
+  [[ "$(jq -r '.[0].detail' <<<"$output")" == *"v0.5.0"* ]]
+  [[ "$(jq -r '.[0].detail' <<<"$output")" != *"v0.1.0"* ]]
+}
+
+@test "plugin WRONG-VERSION lists every recorded version" {
+  printf '{"plugins":{"multi@u":[{"scope":"user","version":"0.1.0"}],"multi@p":[{"scope":"project","version":"0.5.0"}]}}\n' >"$FIX/multi.json"
+  INSTALLED_PLUGINS_JSON="$FIX/multi.json" run bash -c \
+    'printf "%s" "[{\"kind\":\"plugin\",\"name\":\"multi\",\"version\":\">=0.9.0\"}]" | "$0"' "$CD"
+  [ "$status" -eq 1 ]
+  [ "$(jq -r '.[0].status' <<<"$output")" = "WRONG-VERSION" ]
+  [[ "$(jq -r '.[0].detail' <<<"$output")" == *"v0.1.0"* ]]
+  [[ "$(jq -r '.[0].detail' <<<"$output")" == *"v0.5.0"* ]]
+}
+
 @test "plugin installed without a recorded version + a range -> UNKNOWN (not a false WRONG-VERSION)" {
   printf '{"plugins":{"nover@m":[{"scope":"project"}]}}\n' >"$FIX/nv.json"
   INSTALLED_PLUGINS_JSON="$FIX/nv.json" run bash -c \

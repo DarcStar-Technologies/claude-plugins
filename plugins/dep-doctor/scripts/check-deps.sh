@@ -235,32 +235,37 @@ for el in ${els[@]+"${els[@]}"}; do
         status="UNKNOWN"
         detail="no installed_plugins.json — cannot verify plugin '$name'"
       else
-        # Collect every recorded install version for this plugin. An actual RECORD is
-        # required, not merely a key — a stale `"<name>@mkt": []` left by a partial
-        # uninstall must not read as installed (matches check-install-status.sh, which
-        # iterates .value[]). A record without a `.version` still counts as installed.
-        mapfile -t ivs < <(jq -r --arg n "$name" \
+        # One jq pass yields both the presence flag and every recorded install version.
+        # An actual RECORD is required, not merely a key — a stale `"<name>@mkt": []` left
+        # by a partial uninstall must not read as installed (matches check-install-status.sh,
+        # which iterates .value[]). A record without a `.version` still counts as installed.
+        # First output line is the presence flag (yes/no); any further lines are versions.
+        mapfile -t rows < <(jq -r --arg n "$name" \
           '(.plugins // {}) | to_entries
              | map(select((.key | startswith($n + "@")) and (.value | type == "array")))
-             | [.[].value[] | .version // empty] | unique[]' \
+             | (if any(.value | length > 0) then "yes" else "no" end) as $present
+             | [$present] + ([.[].value[] | .version // empty] | unique)
+             | .[]' \
           "$installed_json" 2>/dev/null)
-        installed_any="$(jq -e --arg n "$name" \
-          '(.plugins // {}) | to_entries
-             | any((.key | startswith($n + "@")) and (.value | type == "array") and (.value | length > 0))' \
-          "$installed_json" >/dev/null 2>&1 && echo yes || echo no)"
+        installed_any="${rows[0]:-no}"
+        ivs=("${rows[@]:1}")
         range="$(jq -r '.version // ""' <<<"$el")"
-        shown="${ivs[0]:-}"
+        # A human-readable list of every recorded version, e.g. "0.1.0, v0.5.0" for the
+        # `(v…)` template — so a multi-scope install shows all versions, not just one.
+        allvers=""
+        for iv in ${ivs[@]+"${ivs[@]}"}; do allvers="${allvers:+$allvers, v}$iv"; done
         if [[ "$installed_any" != "yes" ]]; then
           status="MISSING"
           detail="not present in installed_plugins.json"
         elif [[ -z "$range" ]]; then
           status="OK"
-          detail="installed${shown:+ (v$shown)}"
+          detail="installed${allvers:+ (v$allvers)}"
         else
           # OK if ANY recorded version satisfies the range; UNKNOWN only if we could
           # evaluate none (no semver engine, or all versions/range unparseable).
           sat=1
           unk=0
+          satver=""
           for iv in ${ivs[@]+"${ivs[@]}"}; do
             # `|| rc=$?` keeps a non-zero range_satisfied from tripping `set -e`
             # before we can read its result.
@@ -268,19 +273,23 @@ for el in ${els[@]+"${els[@]}"}; do
             range_satisfied "$iv" "$range" || rc=$?
             [[ "$rc" -eq 0 ]] && {
               sat=0
+              satver="$iv"
               break
             }
             [[ "$rc" -eq 2 ]] && unk=1
           done
           if [[ "$sat" -eq 0 ]]; then
+            # Name the version that ACTUALLY satisfied, not an arbitrary recorded one —
+            # otherwise a multi-record install could read "installed (v0.1.0) — satisfies
+            # >=0.4.0" when it was really 0.5.0 that matched.
             status="OK"
-            detail="installed${shown:+ (v$shown)} — satisfies $range"
+            detail="installed (v$satver) — satisfies $range"
           elif [[ "$unk" -eq 1 || "${#ivs[@]}" -eq 0 ]]; then
             status="UNKNOWN"
-            detail="installed${shown:+ (v$shown)} but could not evaluate range $range (semver engine unavailable or version unparseable)"
+            detail="installed${allvers:+ (v$allvers)} but could not evaluate range $range (semver engine unavailable or version unparseable)"
           else
             status="WRONG-VERSION"
-            detail="installed${shown:+ (v$shown)} does not satisfy $range"
+            detail="installed${allvers:+ (v$allvers)} does not satisfy $range"
           fi
         fi
       fi
