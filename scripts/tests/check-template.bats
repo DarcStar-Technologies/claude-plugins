@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 #
-# Tests for plugin-editor/scripts/check-template.sh. Uses standalone plugins (no
-# check-all ancestor -> the standalone structural checks run) and a stub
-# check-upgrade so the drift wiring is tested without the network or a full repo.
+# Tests for plugin-editor/scripts/check-template.sh. Structure is delegated to
+# edit-kit's check-structure.sh (resolved via the sibling edit-kit-path.sh, which
+# finds the real edit-kit by walking up from the script's own location); the
+# template-drift half is exercised with a stub check-upgrade, without the network.
 
 load helpers
 
@@ -43,8 +44,8 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   printf '# Changelog\n\n## [Unreleased]\n' >"$FIX/plugins/target/CHANGELOG.md"
   run "$CT" "$FIX/plugins/target"
   [ "$status" -eq 0 ]
-  [[ "$output" != *"WHOLE_REPO_CHECK_RAN"* ]] # the repo-wide check-all was NOT invoked
-  [[ "$output" == *"structure OK (target plugin)"* ]]
+  [[ "$output" != *"WHOLE_REPO_CHECK_RAN"* ]]  # the repo-wide check-all was NOT invoked
+  [[ "$output" == *"structure OK (target)"* ]] # from edit-kit's check-structure.sh
 }
 
 @test "fails structure on a non-semver version" {
@@ -52,6 +53,35 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   run "$CT" "$FIX/p"
   [ "$status" -ne 0 ]
   [[ "$output" == *"not valid semver"* ]]
+}
+
+@test "when edit-kit is absent, structure is skipped (warned) but drift still runs" {
+  command -v check-structure.sh >/dev/null 2>&1 && skip "check-structure.sh is on PATH"
+  local iso
+  iso="$(mktemp -d)"
+  local d="$iso"
+  while [[ "$d" != "/" ]]; do
+    [[ -d "$d/plugins/edit-kit/scripts" ]] && skip "an ancestor of the scratch dir holds edit-kit"
+    d="$(dirname "$d")"
+  done
+  # Isolated copies of check-template.sh + its sibling resolver, so neither the target
+  # nor the script's own location has an edit-kit ancestor.
+  cp "$CT" "$iso/check-template.sh"
+  cp "$(repo_root_dir)/plugins/plugin-editor/scripts/edit-kit-path.sh" "$iso/edit-kit-path.sh"
+  mkdir -p "$iso/p/.claude-plugin"
+  printf '{"name":"p","version":"0.1.0","description":"t"}\n' >"$iso/p/.claude-plugin/plugin.json"
+  : >"$iso/p/CONTEXT.md"
+  : >"$iso/p/README.md"
+  printf '# Changelog\n\n## [Unreleased]\n' >"$iso/p/CHANGELOG.md"
+  printf '{"template":"default","templateVersion":"0.1.0"}\n' >"$iso/p/.claude-plugin/scaffold.json"
+  local stub="$iso/cu.sh"
+  printf '#!/usr/bin/env bash\necho DRIFT_RAN\n' >"$stub"
+  chmod +x "$stub"
+  CHECK_UPGRADE_BIN="$stub" run bash "$iso/check-template.sh" "$iso/p"
+  [ "$status" -ne 0 ]                            # structure couldn't run -> non-zero
+  [[ "$output" == *"structure check skipped"* ]] # warned, not aborted
+  [[ "$output" == *"DRIFT_RAN"* ]]               # the independent drift check STILL ran
+  rm -rf "$iso"
 }
 
 @test "runs the drift check via check-upgrade when provenance exists" {
