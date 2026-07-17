@@ -27,9 +27,14 @@ plugin_dir="${plugin_dir%/}"
 status=0
 
 # --- (a) structure — delegated to edit-kit's check-structure.sh -----------
-ek="$("$SCRIPT_DIR/edit-kit-path.sh" "$plugin_dir")" ||
-  die "edit-kit not found — install the edit-kit plugin or set EDIT_KIT_DIR (its check-structure.sh performs the structural validation)"
-"$ek/check-structure.sh" "$plugin_dir" || status=1
+# A missing edit-kit doesn't gate the INDEPENDENT drift check below, so warn and
+# continue (marking the run failed) rather than aborting and dropping the drift report.
+if ek="$("$SCRIPT_DIR/edit-kit-path.sh" "$plugin_dir" 2>/dev/null)"; then
+  "$ek/check-structure.sh" "$plugin_dir" || status=1
+else
+  printf 'WARNING: structure check skipped — edit-kit not found (install the edit-kit plugin or set EDIT_KIT_DIR). Continuing with the template-drift check.\n' >&2
+  status=1
+fi
 
 # --- (b) template lineage / drift ----------------------------------------
 printf '\n== template lineage ==\n'

@@ -55,6 +55,35 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   [[ "$output" == *"not valid semver"* ]]
 }
 
+@test "when edit-kit is absent, structure is skipped (warned) but drift still runs" {
+  command -v check-structure.sh >/dev/null 2>&1 && skip "check-structure.sh is on PATH"
+  local iso
+  iso="$(mktemp -d)"
+  local d="$iso"
+  while [[ "$d" != "/" ]]; do
+    [[ -d "$d/plugins/edit-kit/scripts" ]] && skip "an ancestor of the scratch dir holds edit-kit"
+    d="$(dirname "$d")"
+  done
+  # Isolated copies of check-template.sh + its sibling resolver, so neither the target
+  # nor the script's own location has an edit-kit ancestor.
+  cp "$CT" "$iso/check-template.sh"
+  cp "$(repo_root_dir)/plugins/plugin-editor/scripts/edit-kit-path.sh" "$iso/edit-kit-path.sh"
+  mkdir -p "$iso/p/.claude-plugin"
+  printf '{"name":"p","version":"0.1.0","description":"t"}\n' >"$iso/p/.claude-plugin/plugin.json"
+  : >"$iso/p/CONTEXT.md"
+  : >"$iso/p/README.md"
+  printf '# Changelog\n\n## [Unreleased]\n' >"$iso/p/CHANGELOG.md"
+  printf '{"template":"default","templateVersion":"0.1.0"}\n' >"$iso/p/.claude-plugin/scaffold.json"
+  local stub="$iso/cu.sh"
+  printf '#!/usr/bin/env bash\necho DRIFT_RAN\n' >"$stub"
+  chmod +x "$stub"
+  CHECK_UPGRADE_BIN="$stub" run bash "$iso/check-template.sh" "$iso/p"
+  [ "$status" -ne 0 ]                            # structure couldn't run -> non-zero
+  [[ "$output" == *"structure check skipped"* ]] # warned, not aborted
+  [[ "$output" == *"DRIFT_RAN"* ]]               # the independent drift check STILL ran
+  rm -rf "$iso"
+}
+
 @test "runs the drift check via check-upgrade when provenance exists" {
   printf '{"template":"default","templateVersion":"0.1.0","source":"repo:."}\n' \
     >"$FIX/p/.claude-plugin/scaffold.json"

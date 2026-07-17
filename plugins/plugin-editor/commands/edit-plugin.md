@@ -119,9 +119,10 @@ actionable change text (not empty, not a placeholder):
 Run these with Bash and relay each script's output. Each Bash call is a fresh
 shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time. The generic
 edit-flow scripts live in the **`edit-kit`** provider plugin (not here) — resolve its
-scripts dir **once** and reuse it:
-`EK="$("$SCRIPTS/edit-kit-path.sh" <plugin-dir>)"`. If that fails, tell the user to
-install the `edit-kit` plugin (or set `EDIT_KIT_DIR`) and stop.
+scripts dir with `EK="$("$SCRIPTS/edit-kit-path.sh" <plugin-dir>)"` and, since each Bash
+call is a fresh shell, **recompute `EK` (like `SCRIPTS`) in every call that uses it**. If
+resolution fails, tell the user to install the `edit-kit` plugin (or set `EDIT_KIT_DIR`)
+and stop.
 
 1. `"$SCRIPTS/check-template.sh" <plugin-dir>` — structural validation (delegated to
    edit-kit's `check-structure.sh`) **and** template-drift (plugin-editor's own). If the

@@ -19,8 +19,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 start="${1:-.}"
 
-# Every script the command invokes — a candidate dir must contain all of them.
-required=(check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh)
+# Every script the command invokes, plus the shared lib scaffold-test.sh/verify-repo.sh
+# source — a candidate dir must contain all of them (so a partial toolkit can't
+# half-resolve into a mid-run "No such file or directory").
+required=(check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh lib/plan-paths.sh)
 
 has_edit_kit() { # <dir> -> 0 if <dir> holds the whole toolkit
   local dir="$1" s

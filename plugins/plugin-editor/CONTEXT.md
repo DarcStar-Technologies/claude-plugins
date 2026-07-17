@@ -30,12 +30,13 @@ active install — is a tested shell script. The command is the conductor:
    │     └─ --dry-run? show the plan as a preview and STOP here (disk untouched)
    ├─ apply edits (only inside <dir>)
    ├─ verify the edits landed           → re-read + semantic check each planned change
-   ├─ check-template.sh                 → structure + template drift
-   ├─ update-changelog.sh               → [Unreleased] entry
-   ├─ sync-version.sh                   → bump / commit guidance
-   ├─ new scripts/*.sh in the plan?     → scaffold-test.sh writes a bundled bats
+   ├─ resolve edit-kit                  → EK = edit-kit-path.sh (the shared toolkit)
+   ├─ check-template.sh                 → drift (own) + structure via EK/check-structure.sh
+   ├─ EK/update-changelog.sh            → [Unreleased] entry
+   ├─ EK/sync-version.sh                → bump / commit guidance
+   ├─ new scripts/*.sh in the plan?     → EK/scaffold-test.sh writes a bundled bats
    │                                       stub per new script (idempotent)
-   ├─ verify-repo.sh                    → advisory cross-checks: repo check-all.sh +
+   ├─ EK/verify-repo.sh                 → advisory cross-checks: repo check-all.sh +
    │                                       plugin tests (hard only on own bundled tests)
    └─ check-install-status.sh           → reload hint
 ```
@@ -81,7 +82,7 @@ model cost.
   directory; a missing one is skipped with a clear note — never a failure — and check-all
   / centralized-test failures are advisory `WARNING`s (see the gotcha below).
 
-The first two are found at run time (`$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a
+Each is found at run time (`$EDIT_KIT_DIR` / `$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a
 marketplace ancestor → `PATH`), the same pattern the rest of the marketplace uses, so
 there is one source of truth for each.
 
@@ -119,9 +120,9 @@ there is one source of truth for each.
   correct edit. The author replaces it with real assertions and removes the skip; until
   then it is a scaffold, not actual coverage. It fires only for newly **created**
   top-level `scripts/*.sh` (not modified scripts, not a nested `scripts/lib/*` path) and
-  is **idempotent** (an existing or hand-written stub is left untouched). Plan-path
-  normalization is shared with verify-repo.sh via `scripts/lib/plan-paths.sh`, so the two
-  classify the same path identically.
+  is **idempotent** (an existing or hand-written stub is left untouched). Both this and
+  verify-repo.sh live in **edit-kit** and share its `lib/plan-paths.sh` normalizer, so the
+  two classify the same path identically.
 - **Flags live in the "directive segment".** All three flags (`--dry-run`,
   `--plugin=<dir>`, `--type=add|change|fix|remove`) are recognized anywhere **before
   the `—` change-description separator**, alongside the plugin dir, in any order; when

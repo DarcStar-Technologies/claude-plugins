@@ -6,14 +6,16 @@
 
 load helpers
 
-# The full set edit-kit-path.sh requires a candidate dir to contain.
-EK_SCRIPTS="check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh"
+# The full set edit-kit-path.sh requires a candidate dir to contain (incl. the lib).
+EK_SCRIPTS="check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh lib/plan-paths.sh"
 
 # Write a complete stub toolkit into <dir>.
 write_kit() {
   local dir="$1" s
-  mkdir -p "$dir"
-  for s in $EK_SCRIPTS; do printf '#!/usr/bin/env bash\ntrue\n' >"$dir/$s"; done
+  for s in $EK_SCRIPTS; do
+    mkdir -p "$(dirname "$dir/$s")"
+    printf '#!/usr/bin/env bash\ntrue\n' >"$dir/$s"
+  done
 }
 
 setup() {
