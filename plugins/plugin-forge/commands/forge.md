@@ -141,10 +141,12 @@ Add `--template <name>` when the plan chose a template other than the default
       *tok* ]]` loop that reassigns `s` re-finds a token the inserted value contains — an
       infinite loop. Fill a placeholder by consuming the *original* segment-by-segment and
       concatenating (literal), not by repeatedly replacing in place.
-    - **Lexical path checks aren't enough for writes.** Rejecting `..`/absolute paths does
-      not stop a write from following a **symlink**; before writing, skip symlinked
-      destinations (`[[ -L "$f" ]]`) or assert physical containment (`pwd -P` under the
-      target dir). Bundle a `bats` test for every script (the scaffolder wires one up).
+    - **Lexical path checks aren't enough for writes** that take a caller-supplied path.
+      Rejecting `..`/absolute paths doesn't stop a write from following a **symlink** — and
+      a leaf `[[ -L "$dest" ]]` check misses a symlinked *ancestor* directory. Assert
+      **physical containment**: the resolved parent (`cd "$(dirname "$dest")" && pwd -P`)
+      must sit under the target dir's own `pwd -P`. Bundle a `bats` test for every script
+      (the scaffolder wires one up).
 - Update the new plugin's `CONTEXT.md`, `README.md`, and `plugin.json` keywords to
   describe the real plugin (the scaffolded docs are generic placeholders).
 

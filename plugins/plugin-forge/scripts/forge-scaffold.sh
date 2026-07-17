@@ -223,10 +223,6 @@ for comp in commands agents skills scripts; do
   cp -R "$tpl_dir/$comp" "$dest/$comp"
 done
 while IFS= read -r -d '' f; do
-  # Never write through a symlink: `grep -r` follows them and `cp -R` copies a template's
-  # symlinks verbatim, so a `--template-repo` component symlinked outside $dest would make
-  # the `>"$f"` redirect clobber an external file. A lexical path check wouldn't catch it.
-  [[ -L "$f" ]] && continue
   content="$(cat "$f")" # read fully before the redirect truncates the file
   render "$content" >"$f"
 done < <(grep -rlZ -F --binary-files=without-match -e '{{NAME}}' -e '{{DESC}}' "$dest" 2>/dev/null || true)

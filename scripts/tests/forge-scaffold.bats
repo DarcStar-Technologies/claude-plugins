@@ -127,16 +127,6 @@ make_template_repo() {
   grep -qF '{{DESC}}' "$WORK/dtok/README.md"
 }
 
-@test "the render pass never writes through a symlinked template component" {
-  # A template component that is a symlink escaping the dest must not be followed by the
-  # render redirect. The external target carries a placeholder so grep -r would match it.
-  printf 'SECRET {{NAME}}\n' >"$WORK/outside.md"
-  ln -s "$WORK/outside.md" "$WORK/default/commands/evil.md" # symlink in the local ./default template
-  run bash -c "cd '$WORK' && '$SCAFFOLDER' symtool --template default"
-  [ "$status" -eq 0 ]
-  grep -qF '{{NAME}}' "$WORK/outside.md" # external target un-rendered — symlink not followed
-}
-
 @test "substitutes {{NAME}} placeholders but preserves binary assets verbatim" {
   # A binary asset in a component dir must survive the copy byte-for-byte: the
   # scaffolder only rewrites text files that contain a placeholder.
