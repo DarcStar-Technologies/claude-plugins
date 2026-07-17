@@ -6,6 +6,13 @@ file. (Entries tagged `_template-v*` predate its move to `templates/default`.)
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/default-v0.3.0...default--v0.4.0) (2026-07-17)
+
+
+### Features
+
+* **templates:** add a `template.json` manifest with cross-kind dependencies (part 1 of [#79](https://github.com/DarcStar-Technologies/claude-plugins/issues/79)) ([#80](https://github.com/DarcStar-Technologies/claude-plugins/issues/80)) ([8f762bb](https://github.com/DarcStar-Technologies/claude-plugins/commit/8f762bb0237759d66f120b087dd3b373999ef4a6))
+
 ## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/default-v0.2.0...default-v0.3.0) (2026-07-16)
 
 

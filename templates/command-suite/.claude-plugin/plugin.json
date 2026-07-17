@@ -1,6 +1,6 @@
 {
   "name": "command-suite",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reference template for a plugin that exposes several related slash commands backed by one shared, deterministic script. Not published to the public catalog.",
   "author": {
     "name": "DarcStar Technologies",
