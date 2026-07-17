@@ -9,5 +9,5 @@
   "templates/plan-confirm-apply": "0.1.0",
   "plugins/edit-kit": "0.1.0",
   "plugins/template-editor": "0.2.0",
-  "plugins/dep-doctor": "0.0.0"
+  "plugins/dep-doctor": "0.1.0"
 }
