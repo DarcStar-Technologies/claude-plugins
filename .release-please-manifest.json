@@ -7,5 +7,5 @@
   "plugins/plugin-editor": "0.7.0",
   "plugins/template-forge": "0.1.0",
   "templates/plan-confirm-apply": "0.1.0",
-  "plugins/edit-kit": "0.0.0"
+  "plugins/edit-kit": "0.1.0"
 }
