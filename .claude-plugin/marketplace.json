@@ -43,6 +43,11 @@
       "name": "template-editor",
       "source": "./plugins/template-editor",
       "description": "Safely modify an existing reference template under templates/ — add a component, change a behavior, fix a bug, or remove a capability — via a plan-confirm-apply flow with template-appropriate housekeeping (structure check, changelog, version, repo verification) reused from edit-kit."
+    },
+    {
+      "name": "dep-doctor",
+      "source": "./plugins/dep-doctor",
+      "description": "Diagnose a target plugin's dependencies — CLI tools, libraries, MCP servers, and other plugins — and, with explicit confirmation, install or fix what is missing via a plan-confirm-apply flow."
     }
   ]
 }
