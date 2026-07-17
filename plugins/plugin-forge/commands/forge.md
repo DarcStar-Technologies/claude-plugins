@@ -40,10 +40,12 @@ when a description was given — that flow is unchanged.
   the real reference templates: run `"$ROOT/scripts/list-templates.sh"` and skim each so
   the archetype options are concrete — e.g. a command-only suite (`command-suite`), a
   command + planner-agent + script mix (`default`), or a plan → confirm → apply workflow
-  (`plan-confirm-apply`). `AskUserQuestion` allows at most **4** options, so present the
-  4 most relevant archetypes (the built-in **"Other"** free-form option is added for you
-  — do not add your own). If the script isn't available (portable mode without this repo
-  checked out), describe those same archetypes from general knowledge. **Record the
+  (`plan-confirm-apply`). `AskUserQuestion` allows at most **4** options — present all
+  the templates when there are ≤4 (three today); if `templates/` ever holds more, offer
+  a representative spread (there is no purpose captured yet to rank by) and let the
+  built-in **"Other"** free-form option cover the rest (it is added for you — do not add
+  your own). If the script isn't available (portable mode without this repo checked out),
+  describe those same archetypes from general knowledge. **Record the
   chosen archetype as the authoritative template** — a deliberate pick is an explicit
   template request, so pass it to the planner in step 3 and as `--template <name>` in
   step 5 rather than letting the planner re-infer one.
@@ -53,9 +55,11 @@ when a description was given — that flow is unchanged.
 - **Which components?** Optionally ask a second single-select `AskUserQuestion` with up
   to **4** concrete component-set suggestions for the chosen template (its built-in
   **"Other"** is likewise added for you).
-- **Combine.** Fold the chosen template, the purpose, and the component set into one
-  clear description, then continue with the normal flow (template selection in step 2,
-  the planner in step 3), carrying the authoritative template forward.
+- **Combine.** Fold the answers into one clear description **centered on the purpose**
+  (the domain intent the planner names and shapes the plugin from) — the template and
+  component set refine that purpose, they do not replace it. Then continue with the
+  normal flow (template selection in step 2, the planner in step 3), carrying the
+  authoritative template forward.
 
 ## 2. Template source
 
