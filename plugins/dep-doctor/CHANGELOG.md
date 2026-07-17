@@ -5,6 +5,13 @@ All notable changes to the `dep-doctor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/dep-doctor-v0.1.0...dep-doctor-v0.2.0) (2026-07-17)
+
+
+### Features
+
+* **dep-doctor:** read the plugin.json `dependencies` field as authoritative ([#72](https://github.com/DarcStar-Technologies/claude-plugins/issues/72)) ([27ee75d](https://github.com/DarcStar-Technologies/claude-plugins/commit/27ee75db1fcbde654038453f5bc0e8fb6e83d9ad))
+
 ## 0.1.0 (2026-07-17)
 
 
