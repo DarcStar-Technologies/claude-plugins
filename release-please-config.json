@@ -138,6 +138,18 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "plugins/dep-doctor": {
+      "release-type": "simple",
+      "component": "dep-doctor",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }
