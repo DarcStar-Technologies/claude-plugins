@@ -94,6 +94,39 @@ while IFS= read -r dir; do
     elif [[ -z "$(jq -r '.template // empty' "$scaffold")" ]]; then
       fail "$name: scaffold.json missing 'template' field"
     fi
+  else
+    # Templates carry a template.json manifest: identity fields + a cross-kind
+    # `dependencies` list (dep-doctor descriptors). Its shared identity fields must
+    # agree with plugin.json so the two manifests can't drift.
+    tmanifest="$dir/template.json"
+    if [[ ! -f "$tmanifest" ]]; then
+      fail "$name: missing template.json (template manifest: metadata + cross-kind dependencies)"
+    elif ! jq empty "$tmanifest" 2>/dev/null; then
+      fail "$name: template.json is not valid JSON"
+    else
+      for field in name description dependencies; do
+        jq -e "has(\"$field\")" "$tmanifest" >/dev/null 2>&1 ||
+          fail "$name: template.json missing required field '$field'"
+      done
+      tname="$(jq -r '.name // empty' "$tmanifest")"
+      [[ "$tname" == "$name" ]] ||
+        fail "$name: template.json name '$tname' does not match directory '$name'"
+      # No drift: the identity fields template.json shares with plugin.json must be
+      # equal (one pass; a field absent from BOTH counts as equal, and `name` is
+      # already pinned to the directory on both sides so it needs no comparison here).
+      drift="$(jq -rn --slurpfile t "$tmanifest" --slurpfile p "$manifest" \
+        '["description","author","license","keywords"]
+           | map(select($t[0][.] != $p[0][.])) | join(", ")')"
+      [[ -z "$drift" ]] || fail "$name: template.json field(s) [$drift] do not match plugin.json"
+      # dependencies: an array of {kind ∈ plugin|cli|library|mcp, name:<nonempty>} descriptors.
+      if ! jq -e '.dependencies | type == "array"' "$tmanifest" >/dev/null 2>&1; then
+        fail "$name: template.json .dependencies must be an array"
+      elif ! jq -e '.dependencies | all(.[];
+             (.kind | IN("plugin","cli","library","mcp")) and (.name | type == "string") and (.name | length > 0))' \
+        "$tmanifest" >/dev/null 2>&1; then
+        fail "$name: template.json .dependencies has an entry with an invalid 'kind' or missing/empty 'name'"
+      fi
+    fi
   fi
 done < <(list_plugin_dirs all)
 

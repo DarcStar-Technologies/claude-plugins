@@ -204,6 +204,17 @@ jq -n --arg name "$name" --arg desc "$description" --arg author "$author" \
    + {license: "MIT", keywords: []}' \
   >"$dest/.claude-plugin/plugin.json"
 
+# Template manifest: the template's authoritative metadata plus its cross-kind
+# `dependencies` list (dep-doctor descriptors). Its identity fields mirror plugin.json
+# (validate-manifests.sh enforces they can't drift); no `version` (release-please owns
+# that in plugin.json). Starts with an empty dependency list — the author fills it in
+# with what the archetype's components actually require.
+jq -n --arg name "$name" --arg desc "$description" --arg author "$author" \
+  '{name: $name, description: $desc}
+   + (if $author == "" then {} else {author: {name: $author}} end)
+   + {license: "MIT", keywords: [], dependencies: []}' \
+  >"$dest/template.json"
+
 # Docs from inline scaffolds. @@NAME@@/@@DESC@@ are the template's identity;
 # {{NAME}}/{{DESC}} are LITERAL guidance about component placeholders and stay as-is.
 render "$(

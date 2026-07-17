@@ -1,0 +1,15 @@
+{
+  "name": "default",
+  "description": "Reference plugin and scaffolding source for the DarcStar marketplace. Not published to the public catalog.",
+  "author": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "license": "MIT",
+  "keywords": [
+    "template",
+    "reference",
+    "scaffold"
+  ],
+  "dependencies": []
+}

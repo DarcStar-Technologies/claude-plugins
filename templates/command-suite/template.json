@@ -1,0 +1,16 @@
+{
+  "name": "command-suite",
+  "description": "Reference template for a plugin that exposes several related slash commands backed by one shared, deterministic script. Not published to the public catalog.",
+  "author": {
+    "name": "DarcStar Technologies",
+    "url": "https://github.com/DarcStar-Technologies"
+  },
+  "license": "MIT",
+  "keywords": [
+    "template",
+    "reference",
+    "commands",
+    "suite"
+  ],
+  "dependencies": []
+}

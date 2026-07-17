@@ -43,6 +43,21 @@ mkplugin() {
   [ "$output" = "0" ]
 }
 
+@test "default mode writes a template.json consistent with plugin.json (empty deps, no version)" {
+  run "$TF" my-arch --description 'An X archetype.' --author 'Me' --register "$FIX"
+  [ "$status" -eq 0 ]
+  [ -f "$FIX/templates/my-arch/template.json" ]
+  # required shape: name == dir, dependencies == [], and NO version (release-please owns it)
+  run jq -e '.name == "my-arch" and .dependencies == [] and (has("version") | not)' \
+    "$FIX/templates/my-arch/template.json"
+  [ "$status" -eq 0 ]
+  # identity fields match plugin.json — exactly the no-drift invariant validate-manifests enforces
+  local t="$FIX/templates/my-arch/template.json" p="$FIX/templates/my-arch/.claude-plugin/plugin.json"
+  run jq -rn --slurpfile a "$t" --slurpfile b "$p" \
+    '["name","description","author","license","keywords"] | all(.[]; $a[0][.] == $b[0][.])'
+  [ "$output" = "true" ]
+}
+
 @test "registers a release-please package with the template-specific shape" {
   run "$TF" my-arch --description 'An X archetype.' --register "$FIX"
   [ "$status" -eq 0 ]
