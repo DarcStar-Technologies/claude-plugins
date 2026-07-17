@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Declare a bare-string dependency on the `edit-kit` plugin in `plugin.json`, so Claude Code auto-installs it (and transitively `semver`).
+- Declare a versioned dependency on the `edit-kit` plugin (`>=0.1.0`) in `plugin.json`, so Claude Code auto-installs it (and transitively `semver`) and enforces the range at load. Enabled by the `<name>--v<version>` release tags (issue #74).
 
 ### Added
 
