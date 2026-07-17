@@ -117,20 +117,25 @@ actionable change text (not empty, not a placeholder):
 ## 8. Check, record, version, verify — deterministic scripts
 
 Run these with Bash and relay each script's output. Each Bash call is a fresh
-shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
+shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time. The generic
+edit-flow scripts live in the **`edit-kit`** provider plugin (not here) — resolve its
+scripts dir **once** and reuse it:
+`EK="$("$SCRIPTS/edit-kit-path.sh" <plugin-dir>)"`. If that fails, tell the user to
+install the `edit-kit` plugin (or set `EDIT_KIT_DIR`) and stop.
 
-1. `"$SCRIPTS/check-template.sh" <plugin-dir>` — structural validation **and**
-   template-drift. If the structural check fails, fix what it reports (or surface
-   it to the user) before continuing.
-2. `"$SCRIPTS/update-changelog.sh" <plugin-dir> <category> "<bullet>"` — record the
+1. `"$SCRIPTS/check-template.sh" <plugin-dir>` — structural validation (delegated to
+   edit-kit's `check-structure.sh`) **and** template-drift (plugin-editor's own). If the
+   structural check fails, fix what it reports (or surface it to the user) before
+   continuing.
+2. `"$EK/update-changelog.sh" <plugin-dir> <category> "<bullet>"` — record the
    change under `[Unreleased]`, using the plan's `changelog.category` and `bullet`.
-3. `"$SCRIPTS/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
+3. `"$EK/sync-version.sh" <plugin-dir> <bumpLevel>` — advance the version the
    right way. It either hand-bumps a standalone plugin or, for a release-please
    plugin, prints the Conventional Commit to land; relay that guidance verbatim.
 4. **Only if the plan created any new `scripts/*.sh`:** for each `files[]` entry with
    `action: "create"` whose `path` is a new **top-level** `scripts/<name>.sh` (matches
    `scripts/*.sh` with no further `/` — never a nested `scripts/lib/*` path, mirroring
-   verify-repo.sh's own scope), run `"$SCRIPTS/scaffold-test.sh" <plugin-dir> <path...>`
+   verify-repo.sh's own scope), run `"$EK/scaffold-test.sh" <plugin-dir> <path...>`
    (pass every such new-script path in **one** call) to write a bundled
    `scripts/tests/<name>.bats` stub for each. It is **idempotent** — an existing stub is
    left untouched — so relay its output and continue even when every path was already
@@ -141,7 +146,7 @@ shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time.
    verify-repo.sh so that script picks up the new stub(s). Each stub is a **skipped
    placeholder** — it gives the script a bundled test file to flesh out; it does not
    itself exercise the script, so it never blocks a correct edit.
-5. `"$SCRIPTS/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
+5. `"$EK/verify-repo.sh" <plugin-dir> <files...>` — post-apply cross-checks.
    Pass every path from the plan's `files[]` as `<files...>`. On top of
    check-template.sh (which already hard-validates the plugin's own structure and
    shellchecks its scripts), it runs the repo's `scripts/check-all.sh` (in a

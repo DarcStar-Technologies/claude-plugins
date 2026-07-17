@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 #
-# Tests for plugin-editor/scripts/check-template.sh. Uses standalone plugins (no
-# check-all ancestor -> the standalone structural checks run) and a stub
-# check-upgrade so the drift wiring is tested without the network or a full repo.
+# Tests for plugin-editor/scripts/check-template.sh. Structure is delegated to
+# edit-kit's check-structure.sh (resolved via the sibling edit-kit-path.sh, which
+# finds the real edit-kit by walking up from the script's own location); the
+# template-drift half is exercised with a stub check-upgrade, without the network.
 
 load helpers
 
@@ -43,8 +44,8 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   printf '# Changelog\n\n## [Unreleased]\n' >"$FIX/plugins/target/CHANGELOG.md"
   run "$CT" "$FIX/plugins/target"
   [ "$status" -eq 0 ]
-  [[ "$output" != *"WHOLE_REPO_CHECK_RAN"* ]] # the repo-wide check-all was NOT invoked
-  [[ "$output" == *"structure OK (target plugin)"* ]]
+  [[ "$output" != *"WHOLE_REPO_CHECK_RAN"* ]]  # the repo-wide check-all was NOT invoked
+  [[ "$output" == *"structure OK (target)"* ]] # from edit-kit's check-structure.sh
 }
 
 @test "fails structure on a non-semver version" {

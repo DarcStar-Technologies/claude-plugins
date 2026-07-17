@@ -50,13 +50,14 @@ never edits until the user approves.
 | `commands/edit-plugin.md` | Slash command (`sonnet`) | Orchestrates the flow; applies edits; runs the scripts. |
 | `agents/edit-planner.md` | Subagent (`sonnet`, read-only) | Interprets the request; asks clarifying questions; returns the plan. |
 | `scripts/list-plugins.sh` | Shell | Discover the marketplace's plugins for the picker when no target is given. |
-| `scripts/check-template.sh` | Shell | Structural validators + reuse of `scaffold-upgrade` for template drift. |
-| `scripts/update-changelog.sh` | Shell | Insert a bullet under `[Unreleased] > ### <category>`. |
-| `scripts/sync-version.sh` | Shell | Context-aware versioning (release-please vs. standalone). |
-| `scripts/scaffold-test.sh` | Shell | Scaffolds a bundled `scripts/tests/<name>.bats` stub (a skipped placeholder) for each newly created plugin script; idempotent — never overwrites an existing one. |
-| `scripts/verify-repo.sh` | Shell | Post-apply cross-checks — marketplace `check-all.sh` + plugin `bats` tests, scoped & advisory (hard only on the plugin's own bundled tests). |
-| `scripts/lib/plan-paths.sh` | Shell (sourced) | Shared `norm_rel` plan-path normalizer used by both `scaffold-test.sh` and `verify-repo.sh` so they classify a plan's paths identically. |
+| `scripts/check-template.sh` | Shell | Template-drift check (reuse of `scaffold-upgrade`), plus structure **delegated to edit-kit's `check-structure.sh`**. |
+| `scripts/edit-kit-path.sh` | Shell | Resolve the `edit-kit` scripts dir at run time (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). |
 | `scripts/check-install-status.sh` | Shell | Is the plugin installed/stale → reload hint. |
+
+The generic edit-flow scripts — `update-changelog.sh`, `sync-version.sh`,
+`scaffold-test.sh`, `verify-repo.sh`, `check-structure.sh`, `lib/plan-paths.sh` — are
+**not** here: they live in the [`edit-kit`](../edit-kit/) provider plugin and are
+resolved at run time via `edit-kit-path.sh`, shared with `template-editor`.
 
 ## Model selection
 
@@ -68,12 +69,17 @@ model cost.
 
 ## Reuse, resolved at run time (no vendored copies)
 
-- **`semver`** — `sync-version.sh` bumps standalone plugins with `semver.sh`.
+- **`edit-kit`** — the generic edit-flow scripts (`update-changelog.sh`,
+  `sync-version.sh`, `scaffold-test.sh`, `verify-repo.sh`, `check-structure.sh`) live in
+  the `edit-kit` provider plugin and are resolved via `edit-kit-path.sh`
+  (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). `template-editor` uses the same
+  toolkit, so there is one canonical implementation.
+- **`semver`** — `edit-kit`'s `sync-version.sh` bumps standalone plugins with `semver.sh`.
 - **`scaffold-upgrade`** — `check-template.sh` calls `check-upgrade.sh` for drift.
-- **the repo's own checks** — `verify-repo.sh` shells out to the marketplace's
-  `scripts/check-all.sh` and `bats`, located by walking up from the plugin directory; a
-  missing one is skipped with a clear note — never a failure — and check-all /
-  centralized-test failures are advisory `WARNING`s (see the gotcha below).
+- **the repo's own checks** — `edit-kit`'s `verify-repo.sh` shells out to the
+  marketplace's `scripts/check-all.sh` and `bats`, located by walking up from the plugin
+  directory; a missing one is skipped with a clear note — never a failure — and check-all
+  / centralized-test failures are advisory `WARNING`s (see the gotcha below).
 
 The first two are found at run time (`$SEMVER_BIN` / `$CHECK_UPGRADE_BIN` → a
 marketplace ancestor → `PATH`), the same pattern the rest of the marketplace uses, so
