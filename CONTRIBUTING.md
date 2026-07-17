@@ -131,6 +131,15 @@ You therefore **never** manually edit released version numbers or generated
 changelog sections. The repo-level [`CHANGELOG.md`](./CHANGELOG.md) tracks
 tooling/structure changes and is curated by maintainers.
 
+Releases are tagged **`<name>--v<version>`** — a **double** hyphen before the `v`
+(e.g. `edit-kit--v0.2.0`), set via `tag-separator: "--"` in
+`release-please-config.json`. This is the exact tag scheme Claude Code's
+plugin-dependency resolver matches when a plugin declares a **versioned** dependency
+(`{"name":"edit-kit","version":">=0.2.0"}`) in its `plugin.json` `dependencies`; the
+`--v` is parsed as a prefix match so hyphenated plugin names resolve unambiguously.
+Legacy `<name>-v*` (single-hyphen) tags from before this change remain valid history
+and are still recognized by `scaffold-upgrade`.
+
 A plugin's `.release-please-manifest.json` entry starts at `0.0.0` (nothing
 released yet) while its `plugin.json` holds the in-development version. The
 repo-level `initial-version` (`0.1.0`) in `release-please-config.json` makes the

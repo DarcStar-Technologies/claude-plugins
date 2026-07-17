@@ -18,7 +18,7 @@
 # The template's latest version is resolved from the recorded `source`:
 #   1. an ancestor marketplace checkout (templates/<name>) — the in-repo case,
 #   2. a local path embedded in the source,
-#   3. the <name>-v* release tags of the recorded (or default) repo.
+#   3. the <name>--v* (or legacy <name>-v*) release tags of the recorded (or default) repo.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -141,7 +141,7 @@ if [[ -z "$latest" ]]; then
   esac
 fi
 
-# 3. remote <name>-v* tags of the recorded (or default) repo.
+# 3. remote <name>--v* (or legacy <name>-v*) tags of the recorded (or default) repo.
 if [[ -z "$latest" ]]; then
   url=""
   case "$source_str" in
@@ -161,17 +161,32 @@ if [[ -z "$latest" ]]; then
 
   if [[ -n "$url" && "$url" != /* && ! -d "$url" ]] || [[ -d "$url" ]]; then
     best=""
-    while IFS= read -r v; do
-      [[ -n "$v" ]] || continue
+    best_tag=""
+    # Accept BOTH the current `<name>--v<ver>` (double-hyphen — release-please's
+    # tag-separator, and what Claude Code's dependency resolver matches) and the
+    # legacy `<name>-v<ver>` (single-hyphen) tags, so version history spanning the
+    # scheme change still resolves. Track the exact tag name — the two schemes are
+    # disjoint, so the winning version's tag must be cloned by its real name.
+    while IFS= read -r line; do
+      ref="${line#*$'\t'}"                    # "<sha>\trefs/tags/<tag>" -> "refs/tags/<tag>"
+      case "$ref" in *'^{}') continue ;; esac # skip peeled annotated-tag entries
+      tag="${ref#refs/tags/}"
+      case "$tag" in
+        "${tmpl}--v"*) v="${tag#"${tmpl}--v"}" ;;
+        "${tmpl}-v"*) v="${tag#"${tmpl}-v"}" ;;
+        *) continue ;;
+      esac
       "$semver" validate "$v" >/dev/null 2>&1 || continue
-      if [[ -z "$best" || "$("$semver" compare "$v" "$best")" == "1" ]]; then best="$v"; fi
-    done < <(git ls-remote --tags "$url" "refs/tags/${tmpl}-v*" 2>/dev/null |
-      sed -E "s#.*refs/tags/${tmpl}-v##; s/\\^\\{\\}\$//" | sort -u)
+      if [[ -z "$best" || "$("$semver" compare "$v" "$best")" == "1" ]]; then
+        best="$v"
+        best_tag="$tag"
+      fi
+    done < <(git ls-remote --tags "$url" "refs/tags/${tmpl}--v*" "refs/tags/${tmpl}-v*" 2>/dev/null)
     if [[ -n "$best" ]]; then
       latest="$best"
       resolved_from="tags:$url"
       tmp_clone="$(mktemp -d)"
-      if git clone --depth 1 --branch "${tmpl}-v${best}" -- "$url" "$tmp_clone" >/dev/null 2>&1; then
+      if git clone --depth 1 --branch "$best_tag" -- "$url" "$tmp_clone" >/dev/null 2>&1; then
         template_dir="$(template_dir_in "$tmp_clone" || true)"
       fi
     fi
