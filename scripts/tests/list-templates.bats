@@ -26,5 +26,8 @@ teardown() { teardown_fixture; }
   [ "$status" -eq 0 ]
   [ "$(jq -r 'type' <<<"$output")" = "array" ]
   [ "$(jq -r 'all(.[]; has("name") and has("version") and has("description"))' <<<"$output")" = "true" ]
-  [ "$(jq -r 'any(.[]; .name == "command-suite" and .version == "0.1.0")' <<<"$output")" = "true" ]
+  # command-suite is listed; assert a valid semver version rather than a pinned value
+  # (the real templates are read, so a pinned version goes stale every time it releases).
+  [ "$(jq -r 'any(.[]; .name == "command-suite")' <<<"$output")" = "true" ]
+  [ "$(jq -r 'all(.[]; .version | test("^[0-9]+\\.[0-9]+\\.[0-9]+"))' <<<"$output")" = "true" ]
 }
