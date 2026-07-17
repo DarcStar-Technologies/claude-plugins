@@ -39,6 +39,7 @@ Entries below `[Unreleased]` are generated automatically from
 
 ### Changed
 
+- `/forge`'s guided intake now asks which template to use **first**, then the plugin's purpose, then the components (previously it asked the purpose first). The chosen template is still carried forward as the authoritative `--template`.
 - `/forge` invoked with no description now runs a guided intake instead of a bare free-text ask: it captures the plugin's purpose, then refines the shape via `AskUserQuestion` (the kind of plugin — grounded in the real reference templates and carried forward as the authoritative `--template` — then concrete component-set suggestions). The given-description flow is unchanged.
 
 ### Added
