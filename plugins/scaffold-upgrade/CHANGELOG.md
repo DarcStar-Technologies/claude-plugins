@@ -5,6 +5,13 @@ All notable changes to the `scaffold-upgrade` plugin are documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/scaffold-upgrade-v0.2.0...scaffold-upgrade--v0.3.0) (2026-07-17)
+
+
+### Features
+
+* **release:** tag releases as `{name}--v{version}` (part 1 of [#74](https://github.com/DarcStar-Technologies/claude-plugins/issues/74)) ([#75](https://github.com/DarcStar-Technologies/claude-plugins/issues/75)) ([fab0456](https://github.com/DarcStar-Technologies/claude-plugins/commit/fab045661f3ecd5ff60d6e6ffa653d6230aa5346))
+
 ## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/scaffold-upgrade-v0.1.0...scaffold-upgrade-v0.2.0) (2026-07-17)
 
 
