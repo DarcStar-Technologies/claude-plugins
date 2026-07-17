@@ -1,0 +1,13 @@
+{
+  "name": "template-editor",
+  "version": "0.1.0",
+  "description": "Safely modify an existing reference template under templates/ — add a component, change a behavior, fix a bug, or remove a capability — via a plan-confirm-apply flow with template-appropriate housekeeping (structure check, changelog, version, repo verification) reused from edit-kit.",
+  "license": "MIT",
+  "keywords": [
+    "templates",
+    "editing",
+    "changelog",
+    "versioning",
+    "marketplace"
+  ]
+}
