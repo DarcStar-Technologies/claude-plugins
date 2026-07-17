@@ -1,0 +1,20 @@
+{
+  "name": "scaffold-retarget",
+  "version": "0.1.0",
+  "description": "Upgrade or downgrade an already-scaffolded plugin to a different version of the reference template it was created from, via a plan-confirm-apply flow.",
+  "license": "MIT",
+  "keywords": [
+    "scaffold",
+    "template",
+    "retarget",
+    "provenance",
+    "upgrade",
+    "downgrade"
+  ],
+  "dependencies": [
+    {
+      "name": "semver",
+      "version": ">=0.1.0"
+    }
+  ]
+}
