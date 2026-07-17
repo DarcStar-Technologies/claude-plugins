@@ -114,6 +114,18 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "plugins/edit-kit": {
+      "release-type": "simple",
+      "component": "edit-kit",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }

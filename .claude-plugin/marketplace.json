@@ -33,6 +33,11 @@
       "name": "template-forge",
       "source": "./plugins/template-forge",
       "description": "Scaffold a new reference template under templates/ for this marketplace, from a natural-language description, guided prompts, or the components of an existing plugin."
+    },
+    {
+      "name": "edit-kit",
+      "source": "./plugins/edit-kit",
+      "description": "Shared deterministic edit-flow scripts (changelog, versioning, structure check, repo verification, test scaffolding) that plugin-editor and template-editor resolve at run time; a provider plugin with no command of its own."
     }
   ]
 }
