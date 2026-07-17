@@ -134,7 +134,17 @@ Add `--template <name>` when the plan chose a template other than the default
 - Write each component from the description and plan:
   - Set the planned **minimum-capable `model:`** on every agent/command.
   - Give each a least-privilege `tools` / `allowed-tools` list.
-  - Put anything fully deterministic in a `scripts/*.sh` shell step, not a model.
+  - Put anything fully deterministic in a `scripts/*.sh` shell step, not a model. When you
+    write shell, keep two hard-won pitfalls in mind:
+    - **Never re-scan text you just inserted** in a string substitution. `${s//pat/repl}`
+      treats `&` in `repl` specially (bash 5.2 `patsub_replacement`), and a `while [[ $s ==
+      *tok* ]]` loop that reassigns `s` re-finds a token the inserted value contains — an
+      infinite loop. Fill a placeholder by consuming the *original* segment-by-segment and
+      concatenating (literal), not by repeatedly replacing in place.
+    - **Lexical path checks aren't enough for writes.** Rejecting `..`/absolute paths does
+      not stop a write from following a **symlink**; before writing, skip symlinked
+      destinations (`[[ -L "$f" ]]`) or assert physical containment (`pwd -P` under the
+      target dir). Bundle a `bats` test for every script (the scaffolder wires one up).
 - Update the new plugin's `CONTEXT.md`, `README.md`, and `plugin.json` keywords to
   describe the real plugin (the scaffolded docs are generic placeholders).
 

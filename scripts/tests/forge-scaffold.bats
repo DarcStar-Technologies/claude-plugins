@@ -113,6 +113,30 @@ make_template_repo() {
   [ "$output" = "false" ]
 }
 
+@test "a description containing '&' is substituted literally (no bash patsub corruption)" {
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' amp --description 'build & ship'"
+  [ "$status" -eq 0 ]
+  grep -q 'build & ship' "$WORK/amp/README.md"
+  run grep -q '{{DESC}}' "$WORK/amp/README.md" # the '&' did NOT expand to the matched token
+  [ "$status" -ne 0 ]
+}
+
+@test "a description that IS the literal {{DESC}} terminates and substitutes once" {
+  run timeout 20 bash -c "cd '$WORK' && '$SCAFFOLDER' dtok --description '{{DESC}}'"
+  [ "$status" -eq 0 ] # did not hang re-scanning the inserted token
+  grep -qF '{{DESC}}' "$WORK/dtok/README.md"
+}
+
+@test "the render pass never writes through a symlinked template component" {
+  # A template component that is a symlink escaping the dest must not be followed by the
+  # render redirect. The external target carries a placeholder so grep -r would match it.
+  printf 'SECRET {{NAME}}\n' >"$WORK/outside.md"
+  ln -s "$WORK/outside.md" "$WORK/default/commands/evil.md" # symlink in the local ./default template
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' symtool --template default"
+  [ "$status" -eq 0 ]
+  grep -qF '{{NAME}}' "$WORK/outside.md" # external target un-rendered — symlink not followed
+}
+
 @test "substitutes {{NAME}} placeholders but preserves binary assets verbatim" {
   # A binary asset in a component dir must survive the copy byte-for-byte: the
   # scaffolder only rewrites text files that contain a placeholder.

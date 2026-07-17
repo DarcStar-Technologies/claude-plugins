@@ -58,9 +58,20 @@ Entries below `[Unreleased]` are generated automatically from
 
 ## [Unreleased]
 
+### Fixed
+
+- `forge-scaffold.sh`'s `render()` corrupted scaffolded docs when the `--description`
+  contained `&`: under bash 5.2 `patsub_replacement`, the `&` in `${…//{{DESC}}/$description}`
+  expanded to the matched token, so `build & ship` became `build {{DESC}} ship`. It now fills
+  `{{DESC}}` by consuming the original string segment-by-segment (literal concatenation), which
+  is also safe against a description that is itself the literal `{{DESC}}` (previously an
+  infinite-loop risk). The render pass also skips symlinked destinations, so a template
+  component symlinked outside the new plugin can't be written through.
+
 ### Changed
 
 - `/forge`'s no-description guided intake now asks which **template** to use **first** (grounded in the real reference templates, carried forward as the authoritative `--template`), then the plugin's purpose, then concrete component-set suggestions — previously it asked the purpose first. The given-description flow is unchanged.
+- `/forge`'s realize-the-plan step now spells out two shell-authoring pitfalls to avoid when writing a new plugin's scripts (don't re-scan inserted substitution text; guard file writes with symlink/physical-containment checks, not just lexical path checks).
 
 ### Added
 
