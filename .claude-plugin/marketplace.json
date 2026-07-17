@@ -48,6 +48,11 @@
       "name": "dep-doctor",
       "source": "./plugins/dep-doctor",
       "description": "Diagnose a target plugin's dependencies — CLI tools, libraries, MCP servers, and other plugins — and, with explicit confirmation, install or fix what is missing via a plan-confirm-apply flow."
+    },
+    {
+      "name": "scaffold-retarget",
+      "source": "./plugins/scaffold-retarget",
+      "description": "Upgrade or downgrade an already-scaffolded plugin to a different version of the reference template it was created from, via a plan-confirm-apply flow."
     }
   ]
 }
