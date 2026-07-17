@@ -5,6 +5,13 @@ All notable changes to the `edit-kit` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.0 (2026-07-17)
+
+
+### Features
+
+* **edit-kit:** add shared edit-flow toolkit (provider plugin) ([#54](https://github.com/DarcStar-Technologies/claude-plugins/issues/54)) ([45883b3](https://github.com/DarcStar-Technologies/claude-plugins/commit/45883b36c31ada2b359dc1e9d5c0d50e3f907531))
+
 ## [Unreleased]
 
 ### Added
