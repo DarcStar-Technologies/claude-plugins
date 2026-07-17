@@ -15,6 +15,78 @@ setup() {
 }
 teardown() { [[ -n "${WORK:-}" ]] && rm -rf "$WORK"; }
 
+# Make a local template dir <name> in $WORK with the given template.json dependencies
+# JSON. Echoes nothing; the template resolves via forge's local `./<name>` path.
+make_dep_template() {
+  local name="$1" deps_json="$2"
+  local d="$WORK/$name" # separate decl: $d must see the $name assigned above
+  mkdir -p "$d/.claude-plugin" "$d/scripts"
+  printf '{"name":"%s","version":"0.1.0","description":"d","license":"MIT","keywords":["x"]}\n' \
+    "$name" >"$d/.claude-plugin/plugin.json"
+  jq -n --arg n "$name" --argjson deps "$deps_json" \
+    '{name:$n,description:"d",license:"MIT",keywords:["x"],dependencies:$deps}' >"$d/template.json"
+  printf '#!/usr/bin/env bash\necho hi\n' >"$d/scripts/x.sh"
+}
+
+@test "propagates a template's plugin-kind dependency into the scaffolded plugin.json" {
+  make_dep_template deptmpl '[{"kind":"plugin","name":"edit-kit","version":">=0.1.0"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  run jq -c '.dependencies' "$WORK/mytool/.claude-plugin/plugin.json"
+  [ "$output" = '[{"name":"edit-kit","version":">=0.1.0"}]' ]
+}
+
+@test "a bare (no-version) plugin dep propagates as a bare string" {
+  make_dep_template deptmpl '[{"kind":"plugin","name":"semver"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  run jq -c '.dependencies' "$WORK/mytool/.claude-plugin/plugin.json"
+  [ "$output" = '["semver"]' ]
+}
+
+@test "documents cli/library/mcp deps in the scaffolded CONTEXT.md, not plugin.json" {
+  make_dep_template deptmpl '[{"kind":"cli","name":"jq","reason":"parses metadata"},{"kind":"mcp","name":"github"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  # cli/mcp deps are NOT plugin-kind, so plugin.json carries no dependencies field
+  run jq 'has("dependencies")' "$WORK/mytool/.claude-plugin/plugin.json"
+  [ "$output" = "false" ]
+  grep -q '## Dependencies' "$WORK/mytool/CONTEXT.md"
+  grep -q -- '- \*\*jq\*\* (cli) — parses metadata' "$WORK/mytool/CONTEXT.md"
+  grep -q -- '- \*\*github\*\* (mcp)' "$WORK/mytool/CONTEXT.md"
+}
+
+@test "a template with no template.json propagates nothing (no deps, no Dependencies section)" {
+  # default now ships a template.json; remove it so this exercises the missing-file branch.
+  rm -f "$WORK/default/template.json"
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' plain --description 'X.' --template default"
+  [ "$status" -eq 0 ]
+  run jq 'has("dependencies")' "$WORK/plain/.claude-plugin/plugin.json"
+  [ "$output" = "false" ]
+  run grep -c '## Dependencies' "$WORK/plain/CONTEXT.md"
+  [ "$output" = "0" ]
+}
+
+@test "a dependency reason containing '&' is preserved verbatim (no bash patsub corruption)" {
+  make_dep_template deptmpl '[{"kind":"cli","name":"make","reason":"build & release"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  grep -q -- '- \*\*make\*\* (cli) — build & release' "$WORK/mytool/CONTEXT.md"
+  run grep -q '@@DEPS@@' "$WORK/mytool/CONTEXT.md"
+  [ "$status" -ne 0 ] # no leftover token
+}
+
+@test "a malformed template.json dependency (missing name/kind) is dropped, not propagated" {
+  make_dep_template deptmpl '[{"kind":"plugin","version":">=1.0.0"},{"name":"orphan"},{"kind":"cli"}]'
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' mytool --description 'X.' --template deptmpl"
+  [ "$status" -eq 0 ]
+  # no null-valued garbage in either output
+  run jq 'has("dependencies")' "$WORK/mytool/.claude-plugin/plugin.json"
+  [ "$output" = "false" ]
+  run grep -q 'null' "$WORK/mytool/CONTEXT.md"
+  [ "$status" -ne 0 ] # no null-valued garbage
+}
+
 # Make a throwaway git repo containing templates/default; echoes its path.
 make_template_repo() {
   local src="$WORK/src"

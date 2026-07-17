@@ -162,6 +162,34 @@ fi
 tpl_ver="$(jq -r '.version // "unknown"' "$tpl_dir/.claude-plugin/plugin.json")"
 tpl_license="$(jq -r '.license // "MIT"' "$tpl_dir/.claude-plugin/plugin.json")"
 
+# Propagate the template's declared dependencies (template.json) into the new plugin:
+#   - plugin-kind deps  -> the new plugin.json `dependencies` (Claude Code's own field);
+#   - cli/library/mcp   -> a documented "Dependencies" section in the new CONTEXT.md
+#     (those kinds have no manifest field; dep-doctor infers/verifies them).
+# A template with no template.json (e.g. an older tagged one) propagates nothing.
+plugin_deps='[]'
+env_deps_md=''
+tpl_manifest="$tpl_dir/template.json"
+if [[ -f "$tpl_manifest" ]] && jq empty "$tpl_manifest" 2>/dev/null; then
+  # One jq pass: line 1 is the plugin-kind deps as compact JSON; the remaining lines
+  # (possibly empty) are the cli/library/mcp deps as markdown bullets. Only well-formed
+  # descriptors survive (a recognized kind + a non-empty string name), so a malformed
+  # template.json — e.g. from an unvalidated remote template fetched via
+  # --template-repo/--template-version — can't inject null-valued entries into the new
+  # plugin.json or CONTEXT.md.
+  {
+    IFS= read -r plugin_deps
+    env_deps_md="$(cat)"
+  } < <(jq -r '
+    ([.dependencies[]? | select(.kind == "plugin" and (.name | type == "string") and (.name | length > 0))
+       | if (.version // .marketplace)
+         then ({name} + (if .version then {version} else {} end) + (if .marketplace then {marketplace} else {} end))
+         else .name end] | tojson),
+    ([.dependencies[]? | select((.kind | IN("cli","library","mcp")) and (.name | type == "string") and (.name | length > 0))
+       | "- **\(.name)** (\(.kind))\(if .reason then " — \(.reason)" else "" end)"] | join("\n"))
+  ' "$tpl_manifest")
+fi
+
 # --- scaffold --------------------------------------------------------------
 mode="portable"
 [[ -n "$register_root" ]] && mode="marketplace"
@@ -191,11 +219,14 @@ while IFS= read -r -d '' f; do
   render "$content" >"$f"
 done < <(grep -rlZ -F --binary-files=without-match -e '{{NAME}}' -e '{{DESC}}' "$dest" 2>/dev/null || true)
 
-# Manifest: identity only; the license is inherited from the template.
+# Manifest: identity + the license inherited from the template + any plugin-kind
+# dependencies the template declares (propagated so the new plugin auto-installs them).
 jq -n --arg name "$name" --arg desc "$description" --arg author "$author" --arg license "$tpl_license" \
+  --argjson deps "$plugin_deps" \
   '{name: $name, version: "0.1.0", description: $desc}
    + (if $author == "" then {} else {author: {name: $author}} end)
-   + {license: $license, keywords: []}' \
+   + {license: $license, keywords: []}
+   + (if ($deps | length) > 0 then {dependencies: $deps} else {} end)' \
   >"$dest/.claude-plugin/plugin.json"
 
 # Docs from inline scaffolds.
@@ -215,7 +246,7 @@ See `CONTEXT.md` for design notes and `CHANGELOG.md` for release history.
 EOF
 )" >"$dest/README.md"
 
-render "$(
+context_md="$(
   cat <<'EOF'
 # {{NAME}} — Context
 
@@ -247,12 +278,31 @@ frontmatter): `haiku` for mechanical/bounded work, `sonnet` for moderate
 reasoning, `opus` for deep or ambiguous problems. Push anything fully
 deterministic into `scripts/` so no model is spent on it.
 
-## Challenging concepts & gotchas
+@@DEPS@@## Challenging concepts & gotchas
 
 _Document ordering constraints, external dependencies, environment assumptions,
 and known failure modes here._
 EOF
-)" >"$dest/CONTEXT.md"
+)"
+# Inherited-dependency section (cli/library/mcp from the template's template.json), or
+# nothing — @@DEPS@@ is dropped when the template declares no non-plugin dependencies.
+deps_section=""
+if [[ -n "$env_deps_md" ]]; then
+  deps_section="## Dependencies
+
+External tools/servers this plugin's components require, inherited from the \`$template\`
+template. Not expressible in \`plugin.json\` (its \`dependencies\` are plugin-only), so they
+live here; \`dep-doctor\` can verify them.
+
+$env_deps_md
+
+"
+fi
+# Split on the single @@DEPS@@ token and concatenate — NOT `${context_md//.../$deps_section}`,
+# whose replacement string treats `&` specially under bash 5.2 patsub_replacement (a `&`
+# in a dependency reason would otherwise expand to the matched token).
+context_md="${context_md%%@@DEPS@@*}${deps_section}${context_md#*@@DEPS@@}"
+render "$context_md" >"$dest/CONTEXT.md"
 
 render "$(
   cat <<'EOF'

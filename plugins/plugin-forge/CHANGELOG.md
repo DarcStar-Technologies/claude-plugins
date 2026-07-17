@@ -57,6 +57,11 @@ Entries below `[Unreleased]` are generated automatically from
 
 ### Added
 
+- `forge-scaffold.sh` now **propagates a template's declared dependencies** (from its
+  `template.json`) into every scaffolded plugin: `kind:"plugin"` deps become the new
+  `plugin.json` `dependencies` (bare string or `{name, version}`), and `cli`/`library`/`mcp`
+  deps are documented in a "Dependencies" section of the new `CONTEXT.md` (those kinds have
+  no manifest field). A template with no `template.json` propagates nothing.
 - Named-template selection: `/forge` and the `plugin-planner` agent choose among
   the marketplace's reference templates (the plugins under `templates/`) and pass
   `--template <name>` (default `default`) to the scaffolder. The planner returns a

@@ -54,9 +54,16 @@ re-asking what a flag/text already answered):
 
 - **Change type** (skip if `--type=` given): Add a component / Change a behavior / Fix a
   bug / Remove a capability.
-- **Specific suggestions:** read the target template's own `plugin.json`, `CONTEXT.md`,
-  `README.md`, and its components, then offer 3–4 concrete suggestions grounded in this
-  template (keeping the built-in "Other"). Fold everything into one change description.
+- **Specific suggestions:** read the target template's own `plugin.json`, `template.json`,
+  `CONTEXT.md`, `README.md`, and its components, then offer 3–4 concrete suggestions
+  grounded in this template (keeping the built-in "Other"). Fold everything into one
+  change description.
+
+When the plan touches `template.json`, apply those edits like any other file (step 6).
+`verify-repo.sh` (step 8) runs `validate-manifests.sh` **advisory** (repo-wide checks are
+relayed as `WARNING:` lines, not hard blocks), so **treat any template.json drift or
+malformed-descriptor warning it surfaces as a must-fix before finishing** — otherwise
+pre-commit/CI hard-fail on it later.
 
 ## 3. Plan (delegate to the planner)
 

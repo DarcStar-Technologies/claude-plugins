@@ -37,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `/edit-template` and the `template-edit-planner` agent now treat `template.json` as a
+  first-class manifest: they read it during intake/planning and keep it consistent when an
+  edit changes the template's identity (kept in sync with `plugin.json` — the validator
+  fails on drift) or its dependencies (a new/removed CLI tool, sibling-plugin reuse,
+  library, or MCP server updates the manifest's cross-kind `dependencies`).
 - Declare a versioned dependency on the `edit-kit` plugin (`>=0.1.0`) in `plugin.json`, so Claude Code auto-installs it (and transitively `semver`) and enforces the range at load. Enabled by the `<name>--v<version>` release tags (issue #74).
 
 ### Added
