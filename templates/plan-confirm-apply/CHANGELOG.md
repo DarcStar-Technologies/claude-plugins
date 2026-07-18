@@ -5,6 +5,13 @@ All notable changes to the `plan-confirm-apply` template are documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plan-confirm-apply--v0.3.0...plan-confirm-apply--v0.4.0) (2026-07-18)
+
+
+### Features
+
+* **plan-confirm-apply:** validate plans via the shared plan-kit provider ([#97](https://github.com/DarcStar-Technologies/claude-plugins/issues/97)) ([cb1f1f5](https://github.com/DarcStar-Technologies/claude-plugins/commit/cb1f1f5731e219ab824ecabf601bf59923ba7444))
+
 ## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plan-confirm-apply--v0.2.0...plan-confirm-apply--v0.3.0) (2026-07-18)
 
 
