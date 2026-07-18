@@ -115,6 +115,16 @@ setup() {
   [[ "$output" == *"--field must be a non-empty name"* ]]
 }
 
+@test "--field rejects the reserved sibling names (summary/questions)" {
+  # Selecting a fixed-check field would contradict itself and reject every plan.
+  run "$SCRIPT" --field summary <<<'{"summary":"s","actions":[],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"reserved for the plan's own fields"* ]]
+  run "$SCRIPT" --field questions <<<'{"summary":"s","actions":[],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"reserved for the plan's own fields"* ]]
+}
+
 @test "the default field remains 'actions' (a files-only plan is rejected)" {
   run "$SCRIPT" <<<'{"summary":"s","files":[{"path":"a","action":"create"}],"questions":[]}'
   [ "$status" -ne 0 ]

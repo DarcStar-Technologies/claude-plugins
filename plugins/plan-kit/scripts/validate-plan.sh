@@ -74,6 +74,13 @@ allowed_json="$(printf '%s' "$allowed" |
   jq -R 'split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0))')"
 [[ "$(jq 'length' <<<"$allowed_json")" -gt 0 ]] || die "--actions must list at least one action"
 [[ -n "$field" ]] || die "--field must be a non-empty name"
+# summary/questions are validated by their own fixed checks below; selecting either as the
+# change array is self-contradictory (it can never validate any plan), so reject it up front.
+case "$field" in
+  summary | questions)
+    die "--field cannot be '$field' — that name is reserved for the plan's own fields"
+    ;;
+esac
 
 if [[ -n "$plan_file" ]]; then
   [[ -f "$plan_file" ]] || die "no such file: $plan_file"
