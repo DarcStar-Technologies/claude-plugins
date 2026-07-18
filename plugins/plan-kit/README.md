@@ -15,10 +15,13 @@ canonical implementation, no vendored copies.
 ### `validate-plan.sh`
 
 ```text
-validate-plan.sh [--actions a,b,c] [plan-file]
+validate-plan.sh [--field name] [--actions a,b,c] [plan-file]
 ```
 
-- `--actions` — comma-separated allowed values for each `actions[].action`
+- `--field` — the top-level array of change items to validate (default `actions`).
+  A consumer whose planner names it differently passes it, e.g. `--field files` for the
+  edit-flow plan shape.
+- `--actions` — comma-separated allowed values for each `<field>[].action`
   (default `create,modify,delete`). A consumer whose plans use a different vocabulary
   passes its own, e.g. `--actions add,keep,update,delete`.
 - `plan-file` — read the plan JSON from this file (default: stdin).
