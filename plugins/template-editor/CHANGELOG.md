@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The plan step now validates the planner's JSON plan via the shared plan-kit provider — scripts/plan-kit-path.sh resolves plan-kit and the command runs validate-plan.sh --field files --actions create,modify,delete before the confirm gate (this planner's change array is files[], not the archetype's actions[]). Adds a plan-kit >=0.2.0 dependency; under --dry-run an unresolvable plan-kit is a non-fatal skip.
+- The plan step now validates the planner's JSON plan via the shared plan-kit provider — scripts/plan-kit-path.sh resolves plan-kit and the command runs validate-plan.sh --field files --actions create,modify,delete before the confirm gate (this planner's change array is files[], not the archetype's actions[]). Adds a plan-kit >=0.2.0 dependency; under --dry-run validation is advisory (an unresolvable plan-kit or a failing plan still shows the preview), and a plan regenerated in step 4 is re-validated.
 - Initial `template-editor` plugin: the template analogue of `plugin-editor`. A
   `/edit-template` command and read-only `template-edit-planner` agent that modify a
   reference template under `templates/` via a plan→confirm→apply flow, plus

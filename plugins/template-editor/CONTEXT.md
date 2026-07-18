@@ -80,8 +80,10 @@ needed. All mechanical work is in shell scripts (this plugin's two, plus edit-ki
   before the confirm gate. This planner's change array is `files[]` (not the archetype's
   `actions[]`), which the shared validator's `--field` option accommodates — one validator,
   no fork. plan-kit is a versioned `dependencies` entry (`plan-kit >=0.2.0`, the release
-  that added `--field`), auto-installed like edit-kit; under `--dry-run` an unresolvable
-  plan-kit is a **non-fatal skip** (a preview mutates nothing).
+  that added `--field`), auto-installed like edit-kit; under `--dry-run` validation is
+  **advisory** — an unresolvable plan-kit or a plan that fails validation still shows the
+  preview (a dry run mutates nothing), while a real apply hard-gates on it. A plan
+  regenerated in step 4 is re-validated, not trusted from step 3.
 - **No install/reload step.** Unlike `plugin-editor`, there is no `check-install-status`
   — a template is a scaffolding *source*, never installed.
 - **No template drift.** `check-structure.sh` (edit-kit) validates structure only; a
