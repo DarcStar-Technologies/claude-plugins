@@ -20,12 +20,13 @@ Declared in [`template.json`](./template.json) (the template manifest's cross-ki
 `dependencies` list):
 
 - **`jq`** (CLI tool) — `scripts/discover-targets.sh` parses `plugin.json` / marketplace
-  metadata with it, and `scripts/validate-plan.sh` uses it to validate the planner's JSON
-  plan shape; both guard at start-up (`command -v jq || die`). A plugin scaffolded from
-  this template inherits both scripts, so it inherits the `jq` requirement.
-
-The template needs no *plugin* dependencies — its components resolve nothing from a sibling
-plugin (unlike `plugin-editor`, whose edit-kit coupling was deliberately dropped here).
+  metadata with it and guards at start-up (`command -v jq || die`). A plugin scaffolded
+  from this template inherits that script, so it inherits the `jq` requirement.
+- **`plan-kit`** (plugin) — the shared plan-shape validator. `guided-change.md` resolves
+  it via `scripts/plan-kit-path.sh` and runs its `validate-plan.sh` to gate the planner's
+  JSON plan; the check is **not** vendored here. `forge-scaffold.sh` propagates this
+  plugin-kind dependency into every scaffolded plugin's `plugin.json` `dependencies`, so
+  Claude Code auto-installs `plan-kit` alongside the consumer.
 
 ## Challenging concepts & gotchas
 
@@ -33,12 +34,15 @@ plugin (unlike `plugin-editor`, whose edit-kit coupling was deliberately dropped
   planner's plan and get an explicit go-ahead **before** any Edit/Write. Preserve that
   ordering (plan → confirm → apply) when adapting the command; a `--dry-run` path stops
   right after the preview.
-- **The plan is validated before it's ever shown.** `scripts/validate-plan.sh` gates the
-  planner's JSON output in step 3 of `guided-change.md` — before step 4 (unknowns) or
-  step 5 (confirm) ever runs — and retries at most 3 times, sending a malformed or
-  ill-shaped plan back to the planner instead of presenting or acting on it. It checks
-  only the archetype-shared shape (`summary` / `actions[]` / `questions[]`), so it needs
-  no adaptation after scaffolding.
+- **The plan is validated before it's ever shown — by the shared `plan-kit` provider.**
+  `guided-change.md` step 3 resolves plan-kit (`scripts/plan-kit-path.sh`) and runs its
+  `validate-plan.sh` on the planner's JSON — before step 4 (unknowns) or step 5 (confirm)
+  ever runs — retrying at most 3 times, sending a malformed or ill-shaped plan back to the
+  planner instead of presenting or acting on it. The check is **not** vendored here (it
+  used to be; it was extracted so a fix propagates to every consumer). It checks only the
+  archetype-shared shape (`summary` / `actions[]` / `questions[]`) against a `--actions`
+  vocabulary that defaults to `create,modify,delete`; a consumer whose planner uses a
+  different verb set passes `--actions <its,verbs>` rather than forking the script.
 - **The planner is read-only.** `agents/planner.md` (`name: {{NAME}}-planner`) plans and
   asks clarifying questions — it never writes files. Keep its tool list read-only.
 - **`discover-targets.sh` is domain-parameterized.** It ships with generic
