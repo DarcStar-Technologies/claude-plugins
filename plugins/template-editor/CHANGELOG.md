@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the two vendored resolvers (edit-kit-path.sh, plan-kit-path.sh) with a single generic provider-path.sh <name> <required-files...> [--from] — one implementation for both edit-kit and plan-kit. Behavior unchanged (env-override → marketplace-ancestor → PATH; env var derived from the provider name).
 - Retargeted provenance to plan-confirm-apply template v0.4.0 — the version that moved plan-shape validation into the shared plan-kit provider.
 - `/edit-template` and the `template-edit-planner` agent now treat `template.json` as a
   first-class manifest: they read it during intake/planning and keep it consistent when an

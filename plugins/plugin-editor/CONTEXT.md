@@ -30,7 +30,7 @@ active install — is a tested shell script. The command is the conductor:
    │     └─ --dry-run? show the plan as a preview and STOP here (disk untouched)
    ├─ apply edits (only inside <dir>)
    ├─ verify the edits landed           → re-read + semantic check each planned change
-   ├─ resolve edit-kit                  → EK = edit-kit-path.sh (the shared toolkit)
+   ├─ resolve edit-kit                  → EK = provider-path.sh (the shared toolkit)
    ├─ check-template.sh                 → drift (own) + structure via EK/check-structure.sh
    ├─ EK/update-changelog.sh            → [Unreleased] entry
    ├─ EK/sync-version.sh                → bump / commit guidance
@@ -52,13 +52,13 @@ never edits until the user approves.
 | `agents/edit-planner.md` | Subagent (`sonnet`, read-only) | Interprets the request; asks clarifying questions; returns the plan. |
 | `scripts/list-plugins.sh` | Shell | Discover the marketplace's plugins for the picker when no target is given. |
 | `scripts/check-template.sh` | Shell | Template-drift check (reuse of `scaffold-upgrade`), plus structure **delegated to edit-kit's `check-structure.sh`**. |
-| `scripts/edit-kit-path.sh` | Shell | Resolve the `edit-kit` scripts dir at run time (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). |
+| `scripts/provider-path.sh` | Shell | Resolve the `edit-kit` scripts dir at run time (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). |
 | `scripts/check-install-status.sh` | Shell | Is the plugin installed/stale → reload hint. |
 
 The generic edit-flow scripts — `update-changelog.sh`, `sync-version.sh`,
 `scaffold-test.sh`, `verify-repo.sh`, `check-structure.sh`, `lib/plan-paths.sh` — are
 **not** here: they live in the [`edit-kit`](../edit-kit/) provider plugin and are
-resolved at run time via `edit-kit-path.sh`, shared with `template-editor`.
+resolved at run time via `provider-path.sh`, shared with `template-editor`.
 
 ## Model selection
 
@@ -72,13 +72,13 @@ model cost.
 
 - **`edit-kit`** — the generic edit-flow scripts (`update-changelog.sh`,
   `sync-version.sh`, `scaffold-test.sh`, `verify-repo.sh`, `check-structure.sh`) live in
-  the `edit-kit` provider plugin and are resolved via `edit-kit-path.sh`
+  the `edit-kit` provider plugin and are resolved via `provider-path.sh`
   (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). `template-editor` uses the same
   toolkit, so there is one canonical implementation. edit-kit is also a **versioned
   `dependencies` entry in `plugin.json`** (`edit-kit >=0.1.0`), so Claude Code auto-installs
   it (and, transitively, `semver`) when plugin-editor is installed, resolving the range
   against the marketplace's `edit-kit--v*` tags — and disables plugin-editor if it can't;
-  `edit-kit-path.sh` then just *locates* the installed toolkit at run time (and finds the
+  `provider-path.sh` then just *locates* the installed toolkit at run time (and finds the
   sibling `plugins/edit-kit` when running from the repo checkout).
 - **`semver`** — `edit-kit`'s `sync-version.sh` bumps standalone plugins with `semver.sh`.
 - **`scaffold-upgrade`** — `check-template.sh` calls `check-upgrade.sh` for drift.

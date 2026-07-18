@@ -23,7 +23,7 @@ Declared in [`template.json`](./template.json) (the template manifest's cross-ki
   metadata with it and guards at start-up (`command -v jq || die`). A plugin scaffolded
   from this template inherits that script, so it inherits the `jq` requirement.
 - **`plan-kit`** (plugin) — the shared plan-shape validator. `guided-change.md` resolves
-  it via `scripts/plan-kit-path.sh` and runs its `validate-plan.sh` to gate the planner's
+  it via `scripts/provider-path.sh` and runs its `validate-plan.sh` to gate the planner's
   JSON plan; the check is **not** vendored here. `forge-scaffold.sh` propagates this
   plugin-kind dependency into every scaffolded plugin's `plugin.json` `dependencies`, so
   Claude Code auto-installs `plan-kit` alongside the consumer.
@@ -35,7 +35,7 @@ Declared in [`template.json`](./template.json) (the template manifest's cross-ki
   ordering (plan → confirm → apply) when adapting the command; a `--dry-run` path stops
   right after the preview.
 - **The plan is validated before it's ever shown — by the shared `plan-kit` provider.**
-  `guided-change.md` step 3 resolves plan-kit (`scripts/plan-kit-path.sh`) and runs its
+  `guided-change.md` step 3 resolves plan-kit (`scripts/provider-path.sh`) and runs its
   `validate-plan.sh` on the planner's JSON — before step 4 (unknowns) or step 5 (confirm)
   ever runs — retrying at most 3 times, sending a malformed or ill-shaped plan back to the
   planner instead of presenting or acting on it. A plan the planner regenerates in step 4

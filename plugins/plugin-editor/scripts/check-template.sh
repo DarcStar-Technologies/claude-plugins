@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-template.sh — after editing a plugin, verify it still holds up:
 #   (a) STRUCTURE — delegated to the edit-kit toolkit's check-structure.sh (resolved
-#       via the sibling edit-kit-path.sh), so the structural rules live in ONE place
+#       via the sibling provider-path.sh), so the structural rules live in ONE place
 #       shared with template-editor rather than being duplicated here.
 #   (b) TEMPLATE LINEAGE — if the plugin was scaffolded from a template, reuse the
 #       scaffold-upgrade plugin's check-upgrade.sh to report drift vs that template.
@@ -29,7 +29,7 @@ status=0
 # --- (a) structure — delegated to edit-kit's check-structure.sh -----------
 # A missing edit-kit doesn't gate the INDEPENDENT drift check below, so warn and
 # continue (marking the run failed) rather than aborting and dropping the drift report.
-if ek="$("$SCRIPT_DIR/edit-kit-path.sh" "$plugin_dir" 2>/dev/null)"; then
+if ek="$("$SCRIPT_DIR/provider-path.sh" edit-kit check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh lib/plan-paths.sh --from "$plugin_dir" 2>/dev/null)"; then
   "$ek/check-structure.sh" "$plugin_dir" || status=1
 else
   printf 'WARNING: structure check skipped — edit-kit not found (install the edit-kit plugin or set EDIT_KIT_DIR). Continuing with the template-drift check.\n' >&2

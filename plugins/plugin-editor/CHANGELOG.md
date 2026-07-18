@@ -79,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the vendored edit-kit-path.sh resolver with the generic provider-path.sh (called `provider-path.sh edit-kit <required-files> --from <dir>`) — one resolver implementation shared across all provider consumers. Behavior is unchanged: same $EDIT_KIT_DIR → marketplace-ancestor → PATH precedence (the env var is derived from the provider name).
 - Declare a versioned dependency on the `edit-kit` plugin (`>=0.1.0`) in `plugin.json`, so Claude Code auto-installs it (and transitively `semver`) and enforces the range at load instead of the edit flow only discovering it missing at run time. The marketplace now emits the `<name>--v<version>` release tags the resolver matches (see issue #74), so the dependency carries a semver range rather than a bare string.
 - Reuse the shared `edit-kit` toolkit: the generic edit-flow scripts (changelog, versioning, structure check, repo verification, test-stub scaffolding) now resolve from the `edit-kit` provider plugin at run time instead of being vendored here; `check-template.sh` delegates structure to edit-kit's `check-structure.sh` and keeps only the template-drift check. Adds a runtime dependency on the `edit-kit` plugin.
 - check-template.sh now validates only the target plugin (manifest fields, semver version, name/dir, docs, changelog structure, and scripts) instead of running check-all across the whole repository.

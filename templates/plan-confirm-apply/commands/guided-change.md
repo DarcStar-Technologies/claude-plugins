@@ -54,7 +54,7 @@ text, not empty or a placeholder):
   raw JSON**: take the JSON object the planner returned and **strip any surrounding fenced
   code block** (the planner wraps it in one) — pass exactly that object, never the fence,
   to the validator. Resolve plan-kit once (recompute in each fresh shell):
-  `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"`, then run
+  `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/provider-path.sh" plan-kit validate-plan.sh)"`, then run
   `"$PK/validate-plan.sh"` on the extracted JSON — the default action vocabulary is
   `create,modify,delete`; pass `--actions <your,verbs>` if your planner uses a different
   set.

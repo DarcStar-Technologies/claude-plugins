@@ -65,7 +65,7 @@ Remember each result's `cleanupPath`; `rm -rf` any non-null ones once you're don
   **`plan-kit`** provider. First **extract the plan as raw JSON**: take the JSON object the
   planner returned and **strip any surrounding fenced code block** (the planner wraps it in
   one) — pass exactly that object, never the fence, to the validator. Resolve plan-kit once
-  (recompute in each fresh shell): `PK="$("$S/plan-kit-path.sh")"`, then run
+  (recompute in each fresh shell): `PK="$("$S/provider-path.sh" plan-kit validate-plan.sh)"`, then run
   `"$PK/validate-plan.sh" --actions add,keep,update,delete` on the extracted JSON (this
   plugin's plans use that action vocabulary).
   - On a **shape/vocabulary** violation, tell the planner exactly what `validate-plan.sh`

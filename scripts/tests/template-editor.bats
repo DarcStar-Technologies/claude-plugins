@@ -8,9 +8,9 @@
 load helpers
 
 setup() {
-  # A PLAN_KIT_DIR in the runner env would win the resolver's override tier — keep hermetic.
-  unset PLAN_KIT_DIR
-  PKP="$(repo_root_dir)/plugins/template-editor/scripts/plan-kit-path.sh"
+  # An override in the runner env would win the resolver's override tier — keep hermetic.
+  unset PLAN_KIT_DIR EDIT_KIT_DIR
+  PP="$(repo_root_dir)/plugins/template-editor/scripts/provider-path.sh"
   VP="$(repo_root_dir)/plugins/plan-kit/scripts/validate-plan.sh"
   FIX="$(mktemp -d)"
   mkdir -p "$FIX/.claude-plugin" "$FIX/sub/deep" "$FIX/plugins/plan-kit/scripts"
@@ -19,8 +19,8 @@ setup() {
 }
 teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
 
-@test "plan-kit-path.sh resolves the plan-kit provider via a marketplace ancestor" {
-  run "$PKP" "$FIX/sub/deep"
+@test "provider-path.sh resolves the plan-kit provider via a marketplace ancestor" {
+  run "$PP" plan-kit validate-plan.sh --from "$FIX/sub/deep"
   [ "$status" -eq 0 ]
   [ "$output" = "$FIX/plugins/plan-kit/scripts" ]
 }

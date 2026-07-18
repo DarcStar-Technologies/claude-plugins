@@ -39,8 +39,8 @@ to land rather than hand-bumping.
 
 The reasoning (interpreting the request, editing components, preserving placeholders)
 runs on a model; everything deterministic is a tested shell script. Template discovery
-(`discover-templates.sh`) and the provider resolvers (`edit-kit-path.sh`,
-`plan-kit-path.sh`) are this plugin's own; the edit-flow scripts come from `edit-kit`, and
+(`discover-templates.sh`) and the generic provider resolver (`provider-path.sh`, used for
+both edit-kit and plan-kit) are this plugin's own; the edit-flow scripts come from `edit-kit`, and
 the plan-shape validator from [`plan-kit`](../plan-kit/) — before the confirm gate, the
 plan is checked with `validate-plan.sh --field files` (this planner's change array is
 `files[]`). See [`CONTEXT.md`](./CONTEXT.md).
