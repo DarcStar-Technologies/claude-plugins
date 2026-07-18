@@ -61,6 +61,15 @@ Remember each result's `cleanupPath`; `rm -rf` any non-null ones once you're don
   and target versions, and the diff JSON. It returns a plan (`summary`, `actions[]` — each
   a `{path, action}` decision — `risks[]`, `questions[]`). Every `conflict` from the diff
   must come back as a `question` or a `risk`, never a silently-chosen winner.
+- **Validate the plan's shape before acting on it.** The check lives in the shared
+  **`plan-kit`** provider — resolve it once (recompute in each fresh shell):
+  `PK="$("$S/plan-kit-path.sh")"` (if that fails, tell the user to install the `plan-kit`
+  plugin or set `PLAN_KIT_DIR`, then stop). Pipe the planner's JSON plan to
+  `"$PK/validate-plan.sh" --actions add,keep,update,delete` — this plugin's plans use that
+  action vocabulary. If it exits non-zero, do **not** proceed to step 5/6 — tell the
+  planner exactly what `validate-plan.sh` reported on stderr and ask it to return a
+  corrected plan, retrying at most **3** times; if it still fails, stop and tell the user
+  planning failed, quoting the last validation error.
 
 ## 5. Resolve unknowns — ask, don't guess
 

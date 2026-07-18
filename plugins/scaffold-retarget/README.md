@@ -18,7 +18,8 @@ reference template it was created from — the mutating companion to the read-on
   2. runs a **3-way diff** of the component files (base template vs your files vs target),
   3. **plans** the per-file changes — surfacing any conflict (you customized a file the
      template also changed) for you to resolve, never overwriting silently,
-  4. **confirms** with you, then **applies**: re-renders the chosen template files with
+  4. **validates** the plan's shape via the shared [`plan-kit`](../plan-kit/) provider,
+  5. **confirms** with you, then **applies**: re-renders the chosen template files with
      the plugin's own identity, updates `.claude-plugin/scaffold.json`, and records a
      CHANGELOG entry.
 - `--dry-run` shows the plan and changes nothing.

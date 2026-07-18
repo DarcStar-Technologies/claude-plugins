@@ -1,6 +1,6 @@
 {
   "template": "plan-confirm-apply",
-  "templateVersion": "0.2.0",
+  "templateVersion": "0.4.0",
   "source": "repo:/home/mharris/Projects/DarcStar-Technologies/claude-plugins",
   "mode": "marketplace",
   "scaffoldedWith": "forge-scaffold.sh",

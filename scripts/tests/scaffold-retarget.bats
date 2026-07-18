@@ -271,3 +271,14 @@ build_upstream() {
   grep -q 'pre-existing bullet' "$pd/CHANGELOG.md"
   rm -rf "$(jq -r '.cleanupPath' <<<"$tgt")"
 }
+
+@test "plan-kit-path.sh resolves the plan-kit provider via a marketplace ancestor" {
+  # The command resolves plan-kit's validate-plan.sh at run time to gate the planner's
+  # JSON plan; smoke-test that this plugin's bundled resolver finds the provider.
+  unset PLAN_KIT_DIR
+  mkdir -p "$MP/plugins/plan-kit/scripts" "$MP/sub/deep"
+  printf '#!/usr/bin/env bash\ntrue\n' >"$MP/plugins/plan-kit/scripts/validate-plan.sh"
+  run "$SR/plan-kit-path.sh" "$MP/sub/deep"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$MP/plugins/plan-kit/scripts" ]
+}
