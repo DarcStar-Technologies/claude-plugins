@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add scripts/validate-plan.sh, a deterministic jq gate that validates the planner's JSON plan shape (summary / actions[] with a string path and create/modify/delete action / questions[]) before commands/guided-change.md presents or acts on it; guided-change.md step 3 runs it and retries the planner up to 3 times on a malformed plan.
 - Initial `plan-confirm-apply` template: the plan→confirm→apply archetype — a guided
   `guided-change` command, a read-only `{{NAME}}-planner` subagent, and a
   `discover-targets.sh` discovery script. Distilled from the `plugin-editor` plugin.
