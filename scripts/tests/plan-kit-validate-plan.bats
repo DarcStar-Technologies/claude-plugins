@@ -82,6 +82,12 @@ setup() {
   [[ "$output" == *"summary must be a string"* ]]
 }
 
+@test "rejects a non-string summary" {
+  run "$SCRIPT" <<<'{"summary":5,"actions":[],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"summary must be a string"* ]]
+}
+
 @test "rejects a non-array actions" {
   run "$SCRIPT" <<<'{"summary":"x","actions":{},"questions":[]}'
   [ "$status" -ne 0 ]
@@ -114,10 +120,41 @@ setup() {
   [[ "$output" == *'actions[0].path must be a string'* ]]
 }
 
+@test "rejects an array-valued action (index() subsequence-match must not slip through)" {
+  run "$SCRIPT" <<<'{"summary":"x","actions":[{"path":"a","action":["create","modify"]}],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *'actions[0].action must be one of'* ]]
+}
+
+@test "rejects a non-string scalar action (number)" {
+  run "$SCRIPT" <<<'{"summary":"x","actions":[{"path":"a","action":5}],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *'actions[0].action must be one of'* ]]
+}
+
 # --- input handling --------------------------------------------------------
 
 @test "reports malformed JSON as a parse error, not a shape violation" {
   run "$SCRIPT" <<<'{not json'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"malformed JSON"* ]]
+}
+
+@test "reports empty input as malformed JSON, not a raw jq usage dump" {
+  run bash -c 'printf "" | "$1"' _ "$SCRIPT"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"malformed JSON"* ]]
+  [[ "$output" != *"Use jq --help"* ]]
+}
+
+@test "reports whitespace-only input as malformed JSON" {
+  run bash -c 'printf "  \n " | "$1"' _ "$SCRIPT"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"malformed JSON"* ]]
+}
+
+@test "rejects a multi-document JSON stream as malformed" {
+  run "$SCRIPT" <<<'{}{}'
   [ "$status" -ne 0 ]
   [[ "$output" == *"malformed JSON"* ]]
 }

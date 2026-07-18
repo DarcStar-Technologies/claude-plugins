@@ -11,7 +11,8 @@
 # Usage: validate-plan.sh [--actions a,b,c] [plan-file]
 #   --actions   comma-separated allowed values for each actions[].action
 #               (default: create,modify,delete)
-#   plan-file   read the plan JSON from this file (default: stdin)
+#   plan-file   read the plan JSON from this file (default: stdin); pass `--` before a
+#               plan-file path that begins with a dash
 #
 # Exits 0 when the plan is valid. Exits 1 with a message on stderr naming the first
 # violation found (malformed JSON, a missing/mistyped field, or an illegal action).
@@ -67,15 +68,19 @@ else
   plan_json="$(cat)"
 fi
 
-# Malformed JSON is checked separately so its message is a parse error, not a shape
-# violation.
-parse_err="$(jq empty <<<"$plan_json" 2>&1)" && parse_rc=0 || parse_rc=$?
-[[ "$parse_rc" -eq 0 ]] || die "malformed JSON: ${parse_err}"
+# The plan must be exactly ONE well-formed JSON value before it reaches --argjson below,
+# which otherwise rejects empty, whitespace-only, or multi-document input with a cryptic
+# jq usage dump. `jq empty` accepts zero or many documents, so count them explicitly and
+# give every bad-input case the same clean "malformed JSON" message.
+ndocs="$(jq -n 'reduce inputs as $x (0; . + 1)' <<<"$plan_json" 2>&1)" && count_rc=0 || count_rc=$?
+[[ "$count_rc" -eq 0 ]] || die "malformed JSON: ${ndocs}"
+[[ "$ndocs" == "1" ]] || die "malformed JSON: expected exactly one JSON value, got ${ndocs}"
 
 # One jq program walks the shape in order and halts on the first violation (via
 # halt_error, which prints the bare message with no "jq: error" wrapping), so the caller
-# always names a single, specific problem. Each action verb is bound to $a BEFORE piping
-# into $allowed, so the vocabulary array can't shadow the entry being tested.
+# always names a single, specific problem. Action membership is tested with an equality
+# fold over $allowed — NOT index($a), whose array-argument subsequence matching would let
+# a non-string action like ["create","modify"] slip past the vocabulary gate.
 violation="$(jq -n --argjson plan "$plan_json" --argjson allowed "$allowed_json" '
   $plan as $p
   | if ($p | type) != "object" then
@@ -92,7 +97,7 @@ violation="$(jq -n --argjson plan "$plan_json" --argjson allowed "$allowed_json"
           "actions[\(.key)] must be an object" | halt_error(1)
         elif (.value.path | type) != "string" then
           "actions[\(.key)].path must be a string" | halt_error(1)
-        elif (.value.action as $a | $allowed | index($a)) == null then
+        elif ([$allowed[] == .value.action] | any | not) then
           "actions[\(.key)].action must be one of: \($allowed | join(", "))"
           | halt_error(1)
         else empty
