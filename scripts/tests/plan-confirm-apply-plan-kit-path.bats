@@ -16,6 +16,9 @@ write_kit() {
 }
 
 setup() {
+  # A PLAN_KIT_DIR in the runner env would win the resolver's override tier and defeat
+  # the ancestor/not-found assertions below — make the tests hermetic.
+  unset PLAN_KIT_DIR
   PKP="$(repo_root_dir)/templates/plan-confirm-apply/scripts/plan-kit-path.sh"
   FIX="$(mktemp -d)"
   mkdir -p "$FIX/.claude-plugin" "$FIX/sub/deep"
