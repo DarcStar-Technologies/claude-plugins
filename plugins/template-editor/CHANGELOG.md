@@ -5,6 +5,13 @@ All notable changes to the `template-editor` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/template-editor--v0.5.0...template-editor--v0.6.0) (2026-07-18)
+
+
+### Features
+
+* **template-editor:** validate plans via the shared plan-kit provider ([#103](https://github.com/DarcStar-Technologies/claude-plugins/issues/103)) ([2a3c927](https://github.com/DarcStar-Technologies/claude-plugins/commit/2a3c927b449a8d9ee9a7118a7394ffb57e578087))
+
 ## [0.5.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/template-editor--v0.4.0...template-editor--v0.5.0) (2026-07-17)
 
 
