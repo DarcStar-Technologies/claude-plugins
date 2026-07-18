@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The plan-kit validation gate is hardened: validation is advisory under --dry-run (an unresolvable plan-kit or a failing plan still shows the preview, since a dry run mutates nothing), and a malformed-JSON error (the command failing to strip the planner's code fence) is re-extracted locally rather than blamed on the planner and burning retries.
 - Retargeted provenance to plan-confirm-apply template v0.4.0 — the version that moved plan-shape validation into the shared plan-kit provider — so scaffold-retarget adopts that shared validator instead of relying on a vendored check.
 
 ### Added
