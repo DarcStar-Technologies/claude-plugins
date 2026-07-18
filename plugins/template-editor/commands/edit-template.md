@@ -72,6 +72,20 @@ change — plus the authoritative change type when `--type=` was given. It retur
 plan (`summary`, `changeType`, `files[]`, `changelog`, `bumpLevel`, `risks[]`,
 `questions[]`). If it doesn't return one valid JSON object, ask it to try again.
 
+**Validate the plan's shape before acting on it.** The check lives in the shared
+**`plan-kit`** provider — resolve it once (recompute in each fresh shell):
+`PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"`. If resolution fails **under
+`--dry-run` it is non-fatal**: note that validation was skipped (plan-kit unavailable) and
+continue to the preview, since a dry run changes nothing on disk; otherwise tell the user
+to install the `plan-kit` plugin or set `PLAN_KIT_DIR`, then stop. When it resolves, pipe
+the planner's plan — the raw JSON object, with any surrounding fenced code block stripped
+off — to `"$PK/validate-plan.sh" --field files --actions create,modify,delete` (this
+planner names its change array `files[]`, whose actions are `create`/`modify`/`delete`). If
+it exits non-zero, do **not** proceed to step 4/5 — tell the planner exactly what
+`validate-plan.sh` reported on stderr and ask it to return a corrected plan, retrying at
+most **3** times; if it still fails, stop and tell the user planning failed, quoting the
+last validation error.
+
 ## 4. Resolve unknowns — ask, don't guess
 
 If the plan has `questions`, ask them (`AskUserQuestion` for discrete choices) and

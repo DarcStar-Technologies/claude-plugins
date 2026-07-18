@@ -14,6 +14,10 @@
     {
       "name": "edit-kit",
       "version": ">=0.1.0"
+    },
+    {
+      "name": "plan-kit",
+      "version": ">=0.2.0"
     }
   ]
 }
