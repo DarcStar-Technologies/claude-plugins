@@ -1,6 +1,6 @@
 {
   "name": "plan-confirm-apply",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Reference template for the plan-confirm-apply archetype: a guided command that resolves a target, delegates to a read-only planner subagent for a structured change plan, requires explicit confirmation before touching disk, then applies and reverifies.",
   "author": {
     "name": "DarcStar Technologies",
