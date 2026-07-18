@@ -35,6 +35,7 @@ CHANGELOG entry — **never** touching `plugin.json`'s name/description.
    ├─ resolve target version (+ base version) → resolve-template-version.sh ×2
    ├─ 3-way classify → diff-components.sh
    ├─ plan → scaffold-retarget-planner (read-only; surfaces conflicts as questions)
+   ├─ validate plan shape → plan-kit's validate-plan.sh (via plan-kit-path.sh)
    ├─ confirm (nothing changes before this)
    └─ apply-retarget.sh → files + scaffold.json + CHANGELOG, inside the plugin only
 ```
@@ -49,6 +50,7 @@ CHANGELOG entry — **never** touching `plugin.json`'s name/description.
 | `scripts/resolve-template-version.sh` | Shell | — | Materialize an **arbitrary** template version (ancestor / local / `--v`+`-v` tags) via `semver`. |
 | `scripts/diff-components.sh` | Shell | — | 3-way classify (base/current/target), identity-rendered. |
 | `scripts/apply-retarget.sh` | Shell | — | Apply approved decisions + provenance + CHANGELOG, inside the plugin dir only. |
+| `scripts/plan-kit-path.sh` | Shell | — | Run-time locator for the shared `plan-kit` validator (`$PLAN_KIT_DIR` → marketplace ancestor → `PATH`); the plan-shape check itself is not vendored here. |
 
 ## Model selection
 
@@ -61,6 +63,10 @@ math, resolution, diffing, and file mutation are deterministic shell (no model c
 - **`semver`** (plugin, `>=0.1.0`) — declared in `plugin.json`; `resolve-template-version.sh`
   reuses its engine (validate/compare) at run time (`$SEMVER_BIN` → marketplace ancestor →
   `PATH`), never vendored.
+- **`plan-kit`** (plugin, `>=0.1.0`) — declared in `plugin.json`; the command resolves it
+  via `scripts/plan-kit-path.sh` and runs its `validate-plan.sh --actions add,keep,update,delete`
+  to gate the planner's JSON plan (whose actions use that vocabulary) before the confirm
+  step. Shared, never vendored — the same plan-shape check every plan-confirm-apply plugin uses.
 - **`jq`** (cli) — every script parses/writes JSON with it (guarded with `command -v`).
 - **`git`** (cli) — `resolve-template-version.sh` lists and clones template release tags.
 

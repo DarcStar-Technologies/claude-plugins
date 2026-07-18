@@ -271,3 +271,28 @@ build_upstream() {
   grep -q 'pre-existing bullet' "$pd/CHANGELOG.md"
   rm -rf "$(jq -r '.cleanupPath' <<<"$tgt")"
 }
+
+@test "plan-kit-path.sh resolves the plan-kit provider via a marketplace ancestor" {
+  # The command resolves plan-kit's validate-plan.sh at run time to gate the planner's
+  # JSON plan; smoke-test that this plugin's bundled resolver finds the provider.
+  unset PLAN_KIT_DIR
+  mkdir -p "$MP/plugins/plan-kit/scripts" "$MP/sub/deep"
+  printf '#!/usr/bin/env bash\ntrue\n' >"$MP/plugins/plan-kit/scripts/validate-plan.sh"
+  run "$SR/plan-kit-path.sh" "$MP/sub/deep"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$MP/plugins/plan-kit/scripts" ]
+}
+
+@test "the planner's action vocabulary validates against plan-kit's --actions" {
+  # The whole reason validate-plan.sh is parameterized: this plugin's plans use
+  # add/keep/update/delete, which the command wires as --actions. Lock that contract —
+  # the vocabulary must be accepted, and the default create/modify/delete must reject it.
+  local vp
+  vp="$(repo_root_dir)/plugins/plan-kit/scripts/validate-plan.sh"
+  local plan='{"summary":"s","actions":[{"path":"commands/x.md","action":"update"},{"path":"y.md","action":"add"},{"path":"z.sh","action":"keep"},{"path":"w.md","action":"delete"}],"risks":[],"questions":[]}'
+  run bash -c 'printf "%s" "$2" | "$1" --actions add,keep,update,delete' _ "$vp" "$plan"
+  [ "$status" -eq 0 ]
+  run bash -c 'printf "%s" "$2" | "$1"' _ "$vp" "$plan" # default vocabulary
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"must be one of: create, modify, delete"* ]]
+}
