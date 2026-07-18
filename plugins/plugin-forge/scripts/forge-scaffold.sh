@@ -200,10 +200,18 @@ mkdir -p "$dest/.claude-plugin"
 # substitution by writing {{NAME}}/{{DESC}}; anything else is copied verbatim (no
 # blunt rewriting of the template's own name, which the `_` prefix used to guard).
 render() {
-  local c="$1"
-  c="${c//\{\{NAME\}\}/$name}"
-  c="${c//\{\{DESC\}\}/$description}"
-  printf '%s\n' "$c"
+  local c="$1" out="" rest
+  c="${c//\{\{NAME\}\}/$name}" # name is a validated kebab token — no `{{`, no `&`
+  # Fill {{DESC}} by consuming the ORIGINAL segment-by-segment and accumulating into
+  # `out`, so inserted text is never re-scanned and a `&` in $description can't be mangled
+  # by bash 5.2 patsub_replacement (as `${c//…/$description}` would). Literal concatenation.
+  rest="$c"
+  while [[ "$rest" == *'{{DESC}}'* ]]; do
+    out+="${rest%%\{\{DESC\}\}*}$description"
+    rest="${rest#*\{\{DESC\}\}}"
+  done
+  out+="$rest"
+  printf '%s\n' "$out"
 }
 
 # Components come from the template; substitute placeholders only in the text

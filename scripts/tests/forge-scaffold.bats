@@ -113,6 +113,20 @@ make_template_repo() {
   [ "$output" = "false" ]
 }
 
+@test "a description containing '&' is substituted literally (no bash patsub corruption)" {
+  run bash -c "cd '$WORK' && '$SCAFFOLDER' amp --description 'build & ship'"
+  [ "$status" -eq 0 ]
+  grep -q 'build & ship' "$WORK/amp/README.md"
+  run grep -q '{{DESC}}' "$WORK/amp/README.md" # the '&' did NOT expand to the matched token
+  [ "$status" -ne 0 ]
+}
+
+@test "a description that IS the literal {{DESC}} terminates and substitutes once" {
+  run timeout 20 bash -c "cd '$WORK' && '$SCAFFOLDER' dtok --description '{{DESC}}'"
+  [ "$status" -eq 0 ] # did not hang re-scanning the inserted token
+  grep -qF '{{DESC}}' "$WORK/dtok/README.md"
+}
+
 @test "substitutes {{NAME}} placeholders but preserves binary assets verbatim" {
   # A binary asset in a component dir must survive the copy byte-for-byte: the
   # scaffolder only rewrites text files that contain a placeholder.
