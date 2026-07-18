@@ -1,6 +1,6 @@
 {
   "name": "plan-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared deterministic plan-flow scripts for the plan-confirm-apply archetype (plan-shape validation), resolved at run time by plan-confirm-apply plugins; a provider plugin with no command of its own.",
   "license": "MIT",
   "keywords": [
