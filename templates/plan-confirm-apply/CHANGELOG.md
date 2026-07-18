@@ -5,6 +5,13 @@ All notable changes to the `plan-confirm-apply` template are documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plan-confirm-apply--v0.2.0...plan-confirm-apply--v0.3.0) (2026-07-18)
+
+
+### Features
+
+* **plan-confirm-apply:** add validate-plan.sh plan-shape gate to the template ([#92](https://github.com/DarcStar-Technologies/claude-plugins/issues/92)) ([07103bf](https://github.com/DarcStar-Technologies/claude-plugins/commit/07103bf1c41aa99b78cafc71601ce1eff9615fa5))
+
 ## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plan-confirm-apply-v0.1.0...plan-confirm-apply--v0.2.0) (2026-07-17)
 
 
