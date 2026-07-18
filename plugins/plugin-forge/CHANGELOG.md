@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Entries below `[Unreleased]` are generated automatically from
 [Conventional Commits](https://www.conventionalcommits.org/) by release-please.
 
+## [0.7.1](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge--v0.7.0...plugin-forge--v0.7.1) (2026-07-18)
+
+
+### Bug Fixes
+
+* **plugin-forge:** `&`-safe, non-re-scanning render() + symlink-safe write ([#90](https://github.com/DarcStar-Technologies/claude-plugins/issues/90)) ([75ea672](https://github.com/DarcStar-Technologies/claude-plugins/commit/75ea672325ff4b7c5524961c1a5c80440d566d6a))
+
 ## [0.7.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/plugin-forge--v0.6.0...plugin-forge--v0.7.0) (2026-07-17)
 
 
