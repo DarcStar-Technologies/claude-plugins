@@ -18,6 +18,12 @@
       "kind": "cli",
       "name": "jq",
       "reason": "discover-targets.sh parses plugin.json / marketplace metadata"
+    },
+    {
+      "kind": "plugin",
+      "name": "plan-kit",
+      "version": ">=0.1.0",
+      "reason": "guided-change.md resolves plan-kit's validate-plan.sh to gate the planner's JSON plan"
     }
   ]
 }

@@ -49,14 +49,18 @@ text, not empty or a placeholder):
 - Invoke the `{{NAME}}-planner` agent (Task tool) with the target and the requested
   change. It returns a JSON plan (`summary`, `actions[]`, `risks[]`, `questions[]`). If
   it does not return one valid JSON object, ask it to try again.
-- **Validate the plan before doing anything else with it.** Run
-  `"${CLAUDE_PLUGIN_ROOT}/scripts/validate-plan.sh"` (recompute the path in each fresh
-  shell), piping the planner's JSON plan to it. If it exits non-zero, do **not** present
-  or act on the plan — tell the planner exactly what `validate-plan.sh` reported on
-  stderr and ask it to return a corrected plan. Retry at most **3** times; if the plan
-  still fails to validate, stop and tell the user that planning failed, quoting the last
-  validation error. Validation happens inside step 3, strictly before step 4 reads
-  `plan.questions` or step 5 presents anything.
+- **Validate the plan before doing anything else with it.** The plan-shape check lives
+  in the shared **`plan-kit`** provider, not in this plugin — resolve it once (recompute
+  in each fresh shell):
+  `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"` (if that fails, tell the user
+  to install the `plan-kit` plugin or set `PLAN_KIT_DIR`, then stop). Pipe the planner's
+  JSON plan to `"$PK/validate-plan.sh"` — the default action vocabulary is
+  `create,modify,delete`; pass `--actions <your,verbs>` if your planner uses a different
+  set. If it exits non-zero, do **not** present or act on the plan — tell the planner
+  exactly what `validate-plan.sh` reported on stderr and ask it to return a corrected
+  plan. Retry at most **3** times; if the plan still fails to validate, stop and tell the
+  user that planning failed, quoting the last validation error. Validation happens inside
+  step 3, strictly before step 4 reads `plan.questions` or step 5 presents anything.
 
 ## 4. Resolve unknowns — ask, don't guess
 
