@@ -11,5 +11,5 @@
   "plugins/template-editor": "0.5.0",
   "plugins/dep-doctor": "0.2.0",
   "plugins/scaffold-retarget": "0.1.0",
-  "plugins/plan-kit": "0.0.0"
+  "plugins/plan-kit": "0.1.0"
 }
