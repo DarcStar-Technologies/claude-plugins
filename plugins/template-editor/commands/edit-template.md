@@ -72,10 +72,38 @@ change — plus the authoritative change type when `--type=` was given. It retur
 plan (`summary`, `changeType`, `files[]`, `changelog`, `bumpLevel`, `risks[]`,
 `questions[]`). If it doesn't return one valid JSON object, ask it to try again.
 
+**Validate the plan's shape before acting on it.** The check lives in the shared
+**`plan-kit`** provider. First **extract the plan as raw JSON**: take the JSON object the
+planner returned and **strip any surrounding fenced code block** (the planner wraps it in
+one) — pass exactly that object, never the fence, to the validator. Resolve plan-kit once
+(recompute in each fresh shell): `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"`,
+then run `"$PK/validate-plan.sh" --field files --actions create,modify,delete` on the
+extracted JSON (this planner names its change array `files[]`, whose actions are
+`create`/`modify`/`delete`).
+
+- On a **shape/vocabulary** violation (e.g. `files[0].action must be one of: …`), tell the
+  planner exactly what `validate-plan.sh` reported on stderr and ask for a corrected plan,
+  re-checking at most **3** times.
+- On a **`malformed JSON`** error, first re-check your **own** extraction — that error
+  almost always means the fenced code block wasn't stripped, which the planner cannot fix;
+  strip it and re-run before re-prompting the planner.
+- **Under `--dry-run`, validation is advisory:** if plan-kit can't be resolved, or the
+  plan still fails after the retries, note what was skipped/failed and **continue to the
+  preview** — a dry run changes nothing on disk.
+- **Otherwise it is a hard gate:** an unresolvable plan-kit (tell the user to install the
+  `plan-kit` plugin or set `PLAN_KIT_DIR`) or a plan that still fails after the retries
+  (tell the user planning failed, quoting the last error) **stops** the command — never
+  apply an unvalidated plan.
+
+Validate here, strictly before step 4/5 — and **re-validate the same way any plan the
+planner regenerates in step 4.**
+
 ## 4. Resolve unknowns — ask, don't guess
 
 If the plan has `questions`, ask them (`AskUserQuestion` for discrete choices) and
-re-run the planner if the answers change the plan.
+re-run the planner if the answers change the plan. **A regenerated plan is not yet
+gated** — put it back through step 3's plan-kit validation before continuing to the
+confirm step.
 
 ## 5. Confirm the plan — do NOT edit yet
 

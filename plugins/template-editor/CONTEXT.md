@@ -27,6 +27,7 @@ only what is *template-specific*.
    │                                        under templates/ (never plugins/)
    ├─ guided intake (change-type + suggestions grounded in the template)
    ├─ template-edit-planner (agent, read-only) → a concrete plan + questions
+   ├─ validate plan shape → plan-kit's validate-plan.sh --field files (via plan-kit-path.sh)
    ├─ confirm with the user              → NOTHING is edited before this
    ├─ apply (only inside templates/<name>/, preserving {{NAME}}/{{DESC}})
    ├─ verify the edits landed
@@ -43,9 +44,11 @@ only what is *template-specific*.
 | `agents/template-edit-planner.md` | Subagent (`sonnet`, read-only) | Interprets the request; returns the edit plan; preserves placeholders. |
 | `scripts/discover-templates.sh` | Shell | Discover the marketplace's templates for the picker (wraps `list-templates.sh --json`, absolute paths). |
 | `scripts/edit-kit-path.sh` | Shell | Resolve the `edit-kit` scripts dir at run time (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). |
+| `scripts/plan-kit-path.sh` | Shell | Resolve the `plan-kit` scripts dir at run time (`$PLAN_KIT_DIR` → marketplace ancestor → `PATH`) for the shared plan-shape validator. |
 
 The edit-flow scripts (`check-structure.sh`, `update-changelog.sh`, `sync-version.sh`,
-`scaffold-test.sh`, `verify-repo.sh`) live in **`edit-kit`**, not here.
+`scaffold-test.sh`, `verify-repo.sh`) live in **`edit-kit`**, not here; the plan-shape
+validator (`validate-plan.sh`) lives in **`plan-kit`**.
 
 ## Model selection
 
@@ -72,6 +75,15 @@ needed. All mechanical work is in shell scripts (this plugin's two, plus edit-ki
   against the marketplace's `edit-kit--v*` tags — and disables template-editor if it can't;
   `edit-kit-path.sh` then just *locates* the installed toolkit at run time (and finds the
   sibling `plugins/edit-kit` in the repo checkout).
+- **plan-kit gates the plan.** Step 3 resolves plan-kit (`plan-kit-path.sh`) and runs its
+  `validate-plan.sh --field files --actions create,modify,delete` on the planner's JSON
+  before the confirm gate. This planner's change array is `files[]` (not the archetype's
+  `actions[]`), which the shared validator's `--field` option accommodates — one validator,
+  no fork. plan-kit is a versioned `dependencies` entry (`plan-kit >=0.2.0`, the release
+  that added `--field`), auto-installed like edit-kit; under `--dry-run` validation is
+  **advisory** — an unresolvable plan-kit or a plan that fails validation still shows the
+  preview (a dry run mutates nothing), while a real apply hard-gates on it. A plan
+  regenerated in step 4 is re-validated, not trusted from step 3.
 - **No install/reload step.** Unlike `plugin-editor`, there is no `check-install-status`
   — a template is a scaffolding *source*, never installed.
 - **No template drift.** `check-structure.sh` (edit-kit) validates structure only; a
