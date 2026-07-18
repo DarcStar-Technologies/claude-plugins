@@ -5,6 +5,13 @@ All notable changes to the `scaffold-retarget` plugin are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/scaffold-retarget--v0.1.0...scaffold-retarget--v0.2.0) (2026-07-18)
+
+
+### Features
+
+* **scaffold-retarget:** validate plans via the shared plan-kit provider ([#99](https://github.com/DarcStar-Technologies/claude-plugins/issues/99)) ([2e9ff34](https://github.com/DarcStar-Technologies/claude-plugins/commit/2e9ff34c6432df5a6c47c8c4c7180944582512af))
+
 ## 0.1.0 (2026-07-17)
 
 
