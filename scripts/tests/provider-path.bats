@@ -78,6 +78,29 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   rm -rf "$partial"
 }
 
+@test "--from=DIR (equals form) is accepted" {
+  run "$PP" plan-kit validate-plan.sh --from="$FIX/sub/deep"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$FIX/plugins/plan-kit/scripts" ]
+}
+
+@test "--from with no following value is rejected" {
+  run "$PP" plan-kit validate-plan.sh --from
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"--from needs a value"* ]]
+}
+
+@test "all four vendored provider-path.sh copies are byte-identical" {
+  # The bootstrap resolver is vendored per consumer; a divergent copy would resolve
+  # providers by different rules. Pin them to the canonical (template) copy.
+  local canonical rel
+  canonical="$(repo_root_dir)/templates/plan-confirm-apply/scripts/provider-path.sh"
+  for rel in plugins/plugin-editor plugins/template-editor plugins/scaffold-retarget; do
+    run diff "$canonical" "$(repo_root_dir)/$rel/scripts/provider-path.sh"
+    [ "$status" -eq 0 ]
+  done
+}
+
 @test "usage: no provider name" {
   run "$PP"
   [ "$status" -ne 0 ]

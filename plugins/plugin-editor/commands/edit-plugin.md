@@ -119,7 +119,7 @@ actionable change text (not empty, not a placeholder):
 Run these with Bash and relay each script's output. Each Bash call is a fresh
 shell, so recompute `SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"` every time. The generic
 edit-flow scripts live in the **`edit-kit`** provider plugin (not here) — resolve its
-scripts dir with `EK="$("$SCRIPTS/provider-path.sh" edit-kit check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh lib/plan-paths.sh --from <plugin-dir>)"` and, since each Bash
+scripts dir with `EK="$("$SCRIPTS/provider-path.sh" edit-kit check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh lib/plan-paths.sh --from "<plugin-dir>")"` and, since each Bash
 call is a fresh shell, **recompute `EK` (like `SCRIPTS`) in every call that uses it**. If
 resolution fails, tell the user to install the `edit-kit` plugin (or set `EDIT_KIT_DIR`)
 and stop.

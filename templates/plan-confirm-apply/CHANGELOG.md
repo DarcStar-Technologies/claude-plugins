@@ -43,11 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the vendored plan-kit-path.sh resolver with the generic provider-path.sh <name> <required-files...> [--from], parameterized by provider name so one implementation serves every consumer. Scaffolded plugins inherit provider-path.sh. Behavior unchanged (env-override → marketplace-ancestor → PATH).
 - guided-change.md's plan-kit gate is hardened: it now re-validates a plan the planner regenerates in step 4 (not just the initial one), treats validation as advisory under --dry-run (an unresolvable plan-kit or a failing plan still shows the preview), strips the planner's fenced code block before validating, and distinguishes a malformed-JSON error (re-extract locally) from a shape violation (re-prompt the planner).
-- guided-change.md now validates the planner's plan via the shared plan-kit provider — it resolves plan-kit with scripts/plan-kit-path.sh and runs its validate-plan.sh (default vocabulary create,modify,delete; pass --actions for a different set) — instead of a template-local script.
+- guided-change.md now validates the planner's plan via the shared plan-kit provider — it resolves plan-kit with scripts/provider-path.sh and runs its validate-plan.sh (default vocabulary create,modify,delete; pass --actions for a different set) — instead of a template-local script.
 
 ### Added
 
-- scripts/plan-kit-path.sh — a run-time locator for the plan-kit provider ($PLAN_KIT_DIR -> marketplace ancestor -> PATH), plus a plan-kit plugin dependency in template.json that forge-scaffold.sh propagates into every scaffolded plugin's plugin.json.
+- scripts/provider-path.sh — a run-time locator for the plan-kit provider ($PLAN_KIT_DIR -> marketplace ancestor -> PATH), plus a plan-kit plugin dependency in template.json that forge-scaffold.sh propagates into every scaffolded plugin's plugin.json.
 - Initial `plan-confirm-apply` template: the plan→confirm→apply archetype — a guided
   `guided-change` command, a read-only `{{NAME}}-planner` subagent, and a
   `discover-targets.sh` discovery script. Distilled from the `plugin-editor` plugin.
