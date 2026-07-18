@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- validate-plan.sh --field <name> (default actions) selects which top-level change array to validate, so the same item check (path + action-in-vocabulary) covers edit-flow plans that name it files[] as well as the canonical actions[]. Only the array name is configurable; the per-item schema is fixed.
 - Initial `plan-kit` provider plugin: `scripts/validate-plan.sh`, the shared
   deterministic plan-shape gate for the plan-confirm-apply archetype. Validates a
   planner's JSON plan (`summary` string, `actions[]` items with a string `path` and an

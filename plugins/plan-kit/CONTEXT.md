@@ -25,7 +25,7 @@ same across every consumer — so it lives here, once.
 
 | Path | Type | Responsibility |
 | ---- | ---- | -------------- |
-| `scripts/validate-plan.sh` | Shell | Validate a JSON plan's shape (`summary` string, `actions[]` items each with a string `path` and an `action` in a caller-supplied vocabulary, `questions[]` array), naming the first violation. Reads a file arg or stdin. |
+| `scripts/validate-plan.sh` | Shell | Validate a JSON plan's shape (`summary` string, a change array — `actions[]` by default, `--field` names it — whose items each have a string `path` and an `action` in a caller-supplied `--actions` vocabulary, `questions[]` array), naming the first violation. Reads a file arg or stdin. |
 
 ## Challenging concepts & gotchas
 
@@ -37,6 +37,12 @@ same across every consumer — so it lives here, once.
   retargeter uses `add`/`keep`/`update`/`delete`. `validate-plan.sh` takes `--actions
   a,b,c` (default `create,modify,delete`) so one script fits all consumers. Hardcoding a
   vocabulary here was the bug that made this worth extracting.
+- **So is the change array's name.** The canonical archetype names it `actions[]`, but the
+  edit-flow planners (`template-editor`, `plugin-editor`) name theirs `files[]`. `--field`
+  (default `actions`) selects which top-level array to validate, so the same item check
+  (`path` string + `action` in vocabulary) covers `files[]` too — `validate-plan.sh
+  --field files --actions create,modify,delete`. Only the array *name* is configurable;
+  the per-item schema is fixed.
 - **Only the shared shape is checked.** `summary` / `actions[]` / `questions[]` are common
   to every plan-confirm-apply plan; domain-specific extra fields (`risks[]`, per-action
   `detail`, a changelog category) are deliberately **tolerated**, never rejected — so a

@@ -74,6 +74,53 @@ setup() {
   [[ "$output" == *"unknown option"* ]]
 }
 
+# --- array-field parameterization (--field) ---------------------------------
+
+@test "--field validates a differently-named change array (files)" {
+  run "$SCRIPT" --field files <<<'{"summary":"s","changeType":"add","files":[{"path":"commands/x.md","action":"create","edit":"why"},{"path":"y.md","action":"modify"}],"changelog":{"category":"Added"},"bumpLevel":"minor","questions":[]}'
+  [ "$status" -eq 0 ]
+}
+
+@test "--field=VALUE form is accepted" {
+  run "$SCRIPT" --field=files <<<'{"summary":"s","files":[],"questions":[]}'
+  [ "$status" -eq 0 ]
+}
+
+@test "--field reports violations under the configured name" {
+  run "$SCRIPT" --field files <<<'{"summary":"s","files":[{"path":"a","action":"create"},{"path":"b","action":"rename"}],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *'files[1].action must be one of'* ]]
+}
+
+@test "--field: a missing configured array is reported by its name" {
+  run "$SCRIPT" --field files <<<'{"summary":"s","actions":[],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"files must be an array"* ]]
+}
+
+@test "--field: array-valued action is still rejected (no bypass)" {
+  run "$SCRIPT" --field files <<<'{"summary":"s","files":[{"path":"a","action":["create"]}],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *'files[0].action must be one of'* ]]
+}
+
+@test "--field combines with --actions" {
+  run "$SCRIPT" --field files --actions add,keep,update,delete <<<'{"summary":"s","files":[{"path":"a","action":"keep"}],"questions":[]}'
+  [ "$status" -eq 0 ]
+}
+
+@test "an empty --field is rejected" {
+  run "$SCRIPT" --field "" <<<'{"summary":"s","actions":[],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"--field must be a non-empty name"* ]]
+}
+
+@test "the default field remains 'actions' (a files-only plan is rejected)" {
+  run "$SCRIPT" <<<'{"summary":"s","files":[{"path":"a","action":"create"}],"questions":[]}'
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"actions must be an array"* ]]
+}
+
 # --- top-level shape violations --------------------------------------------
 
 @test "rejects a missing summary" {
