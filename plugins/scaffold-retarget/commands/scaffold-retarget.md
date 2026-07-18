@@ -63,13 +63,16 @@ Remember each result's `cleanupPath`; `rm -rf` any non-null ones once you're don
   must come back as a `question` or a `risk`, never a silently-chosen winner.
 - **Validate the plan's shape before acting on it.** The check lives in the shared
   **`plan-kit`** provider — resolve it once (recompute in each fresh shell):
-  `PK="$("$S/plan-kit-path.sh")"` (if that fails, tell the user to install the `plan-kit`
-  plugin or set `PLAN_KIT_DIR`, then stop). Pipe the planner's JSON plan to
-  `"$PK/validate-plan.sh" --actions add,keep,update,delete` — this plugin's plans use that
-  action vocabulary. If it exits non-zero, do **not** proceed to step 5/6 — tell the
-  planner exactly what `validate-plan.sh` reported on stderr and ask it to return a
-  corrected plan, retrying at most **3** times; if it still fails, stop and tell the user
-  planning failed, quoting the last validation error.
+  `PK="$("$S/plan-kit-path.sh")"`. If resolution fails **under `--dry-run` it is
+  non-fatal**: note that validation was skipped (plan-kit unavailable) and continue to the
+  preview, since a dry run mutates nothing; otherwise tell the user to install the
+  `plan-kit` plugin or set `PLAN_KIT_DIR`, then stop. When it resolves, pipe the planner's
+  plan — the raw JSON object, with any surrounding fenced code block the planner wrapped it
+  in stripped off — to `"$PK/validate-plan.sh" --actions add,keep,update,delete` (this
+  plugin's plans use that action vocabulary). If it exits non-zero, do **not** proceed to
+  step 5/6 — tell the planner exactly what `validate-plan.sh` reported on stderr and ask it
+  to return a corrected plan, retrying at most **3** times; if it still fails, stop and
+  tell the user planning failed, quoting the last validation error.
 
 ## 5. Resolve unknowns — ask, don't guess
 
