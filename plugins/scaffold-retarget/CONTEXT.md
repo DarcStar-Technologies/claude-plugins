@@ -66,7 +66,9 @@ math, resolution, diffing, and file mutation are deterministic shell (no model c
 - **`plan-kit`** (plugin, `>=0.1.0`) — declared in `plugin.json`; the command resolves it
   via `scripts/plan-kit-path.sh` and runs its `validate-plan.sh --actions add,keep,update,delete`
   to gate the planner's JSON plan (whose actions use that vocabulary) before the confirm
-  step. Shared, never vendored — the same plan-shape check every plan-confirm-apply plugin uses.
+  step. Under `--dry-run` the gate is advisory (an unresolvable plan-kit or a failing plan
+  still shows the preview, since a dry run mutates nothing). Shared, never vendored — the
+  same plan-shape check every plan-confirm-apply plugin uses.
 - **`jq`** (cli) — every script parses/writes JSON with it (guarded with `command -v`).
 - **`git`** (cli) — `resolve-template-version.sh` lists and clones template release tags.
 

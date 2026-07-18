@@ -50,22 +50,35 @@ text, not empty or a placeholder):
   change. It returns a JSON plan (`summary`, `actions[]`, `risks[]`, `questions[]`). If
   it does not return one valid JSON object, ask it to try again.
 - **Validate the plan before doing anything else with it.** The plan-shape check lives
-  in the shared **`plan-kit`** provider, not in this plugin — resolve it once (recompute
-  in each fresh shell):
-  `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"` (if that fails, tell the user
-  to install the `plan-kit` plugin or set `PLAN_KIT_DIR`, then stop). Pipe the planner's
-  JSON plan to `"$PK/validate-plan.sh"` — the default action vocabulary is
+  in the shared **`plan-kit`** provider, not in this plugin. First **extract the plan as
+  raw JSON**: take the JSON object the planner returned and **strip any surrounding fenced
+  code block** (the planner wraps it in one) — pass exactly that object, never the fence,
+  to the validator. Resolve plan-kit once (recompute in each fresh shell):
+  `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"`, then run
+  `"$PK/validate-plan.sh"` on the extracted JSON — the default action vocabulary is
   `create,modify,delete`; pass `--actions <your,verbs>` if your planner uses a different
-  set. If it exits non-zero, do **not** present or act on the plan — tell the planner
-  exactly what `validate-plan.sh` reported on stderr and ask it to return a corrected
-  plan. Retry at most **3** times; if the plan still fails to validate, stop and tell the
-  user that planning failed, quoting the last validation error. Validation happens inside
-  step 3, strictly before step 4 reads `plan.questions` or step 5 presents anything.
+  set.
+  - On a **shape/vocabulary** violation, tell the planner exactly what `validate-plan.sh`
+    reported on stderr and ask for a corrected plan, re-checking at most **3** times.
+  - On a **`malformed JSON`** error, first re-check your **own** extraction (did you strip
+    the fenced code block?) before re-prompting the planner — that error almost always
+    means the fence wasn't stripped, which the planner cannot fix.
+  - **Under `--dry-run`, validation is advisory:** if plan-kit can't be resolved, or the
+    plan still fails after the retries, note what was skipped/failed and **continue to the
+    preview** — a dry run changes nothing on disk.
+  - **Otherwise it is a hard gate:** an unresolvable plan-kit (tell the user to install the
+    `plan-kit` plugin or set `PLAN_KIT_DIR`) or a plan that still fails after the retries
+    (tell the user planning failed, quoting the last error) **stops** the command — never
+    present or act on an unvalidated plan.
+  Validation happens inside step 3, strictly before step 4 reads `plan.questions` or step 5
+  presents anything — and **re-validate the same way any plan the planner regenerates in
+  step 4.**
 
 ## 4. Resolve unknowns — ask, don't guess
 
 - If the plan has `questions`, ask them (`AskUserQuestion` for discrete choices) and
-  re-run the planner with the answers if they change the plan.
+  re-run the planner with the answers if they change the plan. **A regenerated plan is not
+  yet gated** — put it back through step 3's plan-kit validation before continuing.
 
 ## 5. Confirm the plan — do NOT edit yet
 

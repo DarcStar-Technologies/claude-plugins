@@ -38,7 +38,10 @@ Declared in [`template.json`](./template.json) (the template manifest's cross-ki
   `guided-change.md` step 3 resolves plan-kit (`scripts/plan-kit-path.sh`) and runs its
   `validate-plan.sh` on the planner's JSON — before step 4 (unknowns) or step 5 (confirm)
   ever runs — retrying at most 3 times, sending a malformed or ill-shaped plan back to the
-  planner instead of presenting or acting on it. The check is **not** vendored here (it
+  planner instead of presenting or acting on it. A plan the planner regenerates in step 4
+  is re-validated, not trusted from step 3; and under `--dry-run` validation is advisory
+  (an unresolvable plan-kit or a failing plan still shows the preview). The check is
+  **not** vendored here (it
   used to be; it was extracted so a fix propagates to every consumer). It checks only the
   archetype-shared shape (`summary` / `actions[]` / `questions[]`) against a `--actions`
   vocabulary that defaults to `create,modify,delete`; a consumer whose planner uses a

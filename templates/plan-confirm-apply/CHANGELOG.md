@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- guided-change.md's plan-kit gate is hardened: it now re-validates a plan the planner regenerates in step 4 (not just the initial one), treats validation as advisory under --dry-run (an unresolvable plan-kit or a failing plan still shows the preview), strips the planner's fenced code block before validating, and distinguishes a malformed-JSON error (re-extract locally) from a shape violation (re-prompt the planner).
 - guided-change.md now validates the planner's plan via the shared plan-kit provider — it resolves plan-kit with scripts/plan-kit-path.sh and runs its validate-plan.sh (default vocabulary create,modify,delete; pass --actions for a different set) — instead of a template-local script.
 
 ### Added
