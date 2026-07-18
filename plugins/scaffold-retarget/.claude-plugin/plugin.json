@@ -1,6 +1,6 @@
 {
   "name": "scaffold-retarget",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Upgrade or downgrade an already-scaffolded plugin to a different version of the reference template it was created from, via a plan-confirm-apply flow.",
   "license": "MIT",
   "keywords": [
