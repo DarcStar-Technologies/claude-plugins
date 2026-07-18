@@ -5,6 +5,13 @@ All notable changes to the `scaffold-retarget` plugin are documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/DarcStar-Technologies/claude-plugins/compare/scaffold-retarget--v0.2.0...scaffold-retarget--v0.2.1) (2026-07-18)
+
+
+### Bug Fixes
+
+* **plan-confirm-apply:** backport the hardened plan-kit gate to earlier consumers ([#105](https://github.com/DarcStar-Technologies/claude-plugins/issues/105)) ([53aa0d0](https://github.com/DarcStar-Technologies/claude-plugins/commit/53aa0d025c61f08cd0b66c96aa62d2dfa2c28d85))
+
 ## [0.2.0](https://github.com/DarcStar-Technologies/claude-plugins/compare/scaffold-retarget--v0.1.0...scaffold-retarget--v0.2.0) (2026-07-18)
 
 
