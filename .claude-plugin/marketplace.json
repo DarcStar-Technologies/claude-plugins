@@ -53,6 +53,11 @@
       "name": "scaffold-retarget",
       "source": "./plugins/scaffold-retarget",
       "description": "Upgrade or downgrade an already-scaffolded plugin to a different version of the reference template it was created from, via a plan-confirm-apply flow."
+    },
+    {
+      "name": "plan-kit",
+      "source": "./plugins/plan-kit",
+      "description": "Shared deterministic plan-flow scripts for the plan-confirm-apply archetype (plan-shape validation), resolved at run time by plan-confirm-apply plugins; a provider plugin with no command of its own."
     }
   ]
 }

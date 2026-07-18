@@ -163,6 +163,18 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "plugins/plan-kit": {
+      "release-type": "simple",
+      "component": "plan-kit",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }
