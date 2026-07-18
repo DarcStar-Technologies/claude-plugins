@@ -8,7 +8,7 @@
   "plugins/template-forge": "0.2.0",
   "templates/plan-confirm-apply": "0.4.0",
   "plugins/edit-kit": "0.3.0",
-  "plugins/template-editor": "0.5.0",
+  "plugins/template-editor": "0.6.0",
   "plugins/dep-doctor": "0.2.0",
   "plugins/scaffold-retarget": "0.2.0",
   "plugins/plan-kit": "0.2.0"
