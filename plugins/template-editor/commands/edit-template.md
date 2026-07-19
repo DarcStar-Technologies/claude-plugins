@@ -76,7 +76,7 @@ plan (`summary`, `changeType`, `files[]`, `changelog`, `bumpLevel`, `risks[]`,
 **`plan-kit`** provider. First **extract the plan as raw JSON**: take the JSON object the
 planner returned and **strip any surrounding fenced code block** (the planner wraps it in
 one) — pass exactly that object, never the fence, to the validator. Resolve plan-kit once
-(recompute in each fresh shell): `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/plan-kit-path.sh")"`,
+(recompute in each fresh shell): `PK="$("${CLAUDE_PLUGIN_ROOT}/scripts/provider-path.sh" plan-kit validate-plan.sh)"`,
 then run `"$PK/validate-plan.sh" --field files --actions create,modify,delete` on the
 extracted JSON (this planner names its change array `files[]`, whose actions are
 `create`/`modify`/`delete`).
@@ -132,8 +132,8 @@ anything that didn't land; if you can't, stop and say what's missing.
 
 edit-kit provides the deterministic edit-flow scripts. Resolve its dir **once** and reuse
 it (recompute in each fresh shell):
-`EK="$("${CLAUDE_PLUGIN_ROOT}/scripts/edit-kit-path.sh" "<template-dir>")"`. If that
-fails, tell the user to install the `edit-kit` plugin (or set `EDIT_KIT_DIR`). Then run,
+`EK="$("${CLAUDE_PLUGIN_ROOT}/scripts/provider-path.sh" edit-kit check-structure.sh update-changelog.sh sync-version.sh scaffold-test.sh verify-repo.sh lib/plan-paths.sh --from "<template-dir>")"`.
+If that fails, tell the user to install the `edit-kit` plugin (or set `EDIT_KIT_DIR`). Then run,
 relaying each script's output:
 
 1. `"$EK/check-structure.sh" <template-dir>` — structural validation. Fix what it reports

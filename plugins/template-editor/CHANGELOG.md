@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the two vendored resolvers (edit-kit-path.sh, plan-kit-path.sh) with a single generic provider-path.sh <name> <required-files...> [--from] — one implementation for both edit-kit and plan-kit. Behavior unchanged (env-override → marketplace-ancestor → PATH; env var derived from the provider name).
 - Retargeted provenance to plan-confirm-apply template v0.4.0 — the version that moved plan-shape validation into the shared plan-kit provider.
 - `/edit-template` and the `template-edit-planner` agent now treat `template.json` as a
   first-class manifest: they read it during intake/planning and keep it consistent when an
@@ -61,10 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The plan step now validates the planner's JSON plan via the shared plan-kit provider — scripts/plan-kit-path.sh resolves plan-kit and the command runs validate-plan.sh --field files --actions create,modify,delete before the confirm gate (this planner's change array is files[], not the archetype's actions[]). Adds a plan-kit >=0.2.0 dependency; under --dry-run validation is advisory (an unresolvable plan-kit or a failing plan still shows the preview), and a plan regenerated in step 4 is re-validated.
+- The plan step now validates the planner's JSON plan via the shared plan-kit provider — scripts/provider-path.sh resolves plan-kit and the command runs validate-plan.sh --field files --actions create,modify,delete before the confirm gate (this planner's change array is files[], not the archetype's actions[]). Adds a plan-kit >=0.2.0 dependency; under --dry-run validation is advisory (an unresolvable plan-kit or a failing plan still shows the preview), and a plan regenerated in step 4 is re-validated.
 - Initial `template-editor` plugin: the template analogue of `plugin-editor`. A
   `/edit-template` command and read-only `template-edit-planner` agent that modify a
   reference template under `templates/` via a plan→confirm→apply flow, plus
-  `discover-templates.sh` (picker) and `edit-kit-path.sh` (resolves the shared `edit-kit`
+  `discover-templates.sh` (picker) and `provider-path.sh` (resolves the shared `edit-kit`
   toolkit at run time). Reuses edit-kit's edit-flow scripts rather than vendoring them;
   built on the `plan-confirm-apply` template.

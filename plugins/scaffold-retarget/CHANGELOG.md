@@ -30,12 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the vendored plan-kit-path.sh resolver with the generic provider-path.sh (`provider-path.sh plan-kit validate-plan.sh`). Behavior unchanged.
 - The plan-kit validation gate is hardened: validation is advisory under --dry-run (an unresolvable plan-kit or a failing plan still shows the preview, since a dry run mutates nothing), and a malformed-JSON error (the command failing to strip the planner's code fence) is re-extracted locally rather than blamed on the planner and burning retries.
 - Retargeted provenance to plan-confirm-apply template v0.4.0 — the version that moved plan-shape validation into the shared plan-kit provider — so scaffold-retarget adopts that shared validator instead of relying on a vendored check.
 
 ### Added
 
-- The plan step now validates the planner's JSON plan via the shared plan-kit provider — scripts/plan-kit-path.sh resolves plan-kit and the command runs validate-plan.sh --actions add,keep,update,delete before the confirm gate. Adds a plan-kit >=0.1.0 dependency in plugin.json (Claude Code auto-installs it).
+- The plan step now validates the planner's JSON plan via the shared plan-kit provider — scripts/provider-path.sh resolves plan-kit and the command runs validate-plan.sh --actions add,keep,update,delete before the confirm gate. Adds a plan-kit >=0.1.0 dependency in plugin.json (Claude Code auto-installs it).
 - Initial `scaffold-retarget` plugin: a `/scaffold-retarget` command and read-only
   `scaffold-retarget-planner` agent that **upgrade or downgrade** an already-scaffolded
   plugin to a different version of its source template, via a plan→confirm→apply flow —

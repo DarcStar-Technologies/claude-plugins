@@ -40,7 +40,7 @@ Resolve the script at run time in this precedence (mirroring `$EDIT_KIT_DIR` /
 3. `<script>` on `PATH`.
 
 A plugin that depends on plan-kit declares it in `plugin.json` `dependencies` (so Claude
-Code auto-installs it) and bundles a small `plan-kit-path.sh` locator implementing the
+Code auto-installs it) and bundles a small `provider-path.sh` locator implementing the
 precedence above.
 
 ## Development

@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 #
 # Tests for plugin-editor/scripts/check-template.sh. Structure is delegated to
-# edit-kit's check-structure.sh (resolved via the sibling edit-kit-path.sh, which
+# edit-kit's check-structure.sh (resolved via the sibling provider-path.sh, which
 # finds the real edit-kit by walking up from the script's own location); the
 # template-drift half is exercised with a stub check-upgrade, without the network.
 
@@ -67,7 +67,7 @@ teardown() { [[ -n "${FIX:-}" ]] && rm -rf "$FIX"; }
   # Isolated copies of check-template.sh + its sibling resolver, so neither the target
   # nor the script's own location has an edit-kit ancestor.
   cp "$CT" "$iso/check-template.sh"
-  cp "$(repo_root_dir)/plugins/plugin-editor/scripts/edit-kit-path.sh" "$iso/edit-kit-path.sh"
+  cp "$(repo_root_dir)/plugins/plugin-editor/scripts/provider-path.sh" "$iso/provider-path.sh"
   mkdir -p "$iso/p/.claude-plugin"
   printf '{"name":"p","version":"0.1.0","description":"t"}\n' >"$iso/p/.claude-plugin/plugin.json"
   : >"$iso/p/CONTEXT.md"

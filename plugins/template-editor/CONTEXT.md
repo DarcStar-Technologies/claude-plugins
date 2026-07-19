@@ -27,11 +27,11 @@ only what is *template-specific*.
    │                                        under templates/ (never plugins/)
    ├─ guided intake (change-type + suggestions grounded in the template)
    ├─ template-edit-planner (agent, read-only) → a concrete plan + questions
-   ├─ validate plan shape → plan-kit's validate-plan.sh --field files (via plan-kit-path.sh)
+   ├─ validate plan shape → plan-kit's validate-plan.sh --field files (via provider-path.sh)
    ├─ confirm with the user              → NOTHING is edited before this
    ├─ apply (only inside templates/<name>/, preserving {{NAME}}/{{DESC}})
    ├─ verify the edits landed
-   └─ housekeeping via edit-kit          → EK="$(edit-kit-path.sh <dir>)"; then
+   └─ housekeeping via edit-kit          → EK="$(provider-path.sh edit-kit … <dir>)"; then
         check-structure.sh · update-changelog.sh · sync-version.sh ·
         scaffold-test.sh (new scripts) · verify-repo.sh
 ```
@@ -43,8 +43,7 @@ only what is *template-specific*.
 | `commands/edit-template.md` | Slash command (`sonnet`) | Orchestrates the flow; applies edits; resolves and runs the edit-kit scripts. |
 | `agents/template-edit-planner.md` | Subagent (`sonnet`, read-only) | Interprets the request; returns the edit plan; preserves placeholders. |
 | `scripts/discover-templates.sh` | Shell | Discover the marketplace's templates for the picker (wraps `list-templates.sh --json`, absolute paths). |
-| `scripts/edit-kit-path.sh` | Shell | Resolve the `edit-kit` scripts dir at run time (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`). |
-| `scripts/plan-kit-path.sh` | Shell | Resolve the `plan-kit` scripts dir at run time (`$PLAN_KIT_DIR` → marketplace ancestor → `PATH`) for the shared plan-shape validator. |
+| `scripts/provider-path.sh` | Shell | Resolve a provider plugin's scripts dir at run time (`$<PROVIDER>_DIR` → marketplace ancestor → `PATH`), given the provider name + required files — used for both `edit-kit` (housekeeping) and `plan-kit` (the plan-shape validator). |
 
 The edit-flow scripts (`check-structure.sh`, `update-changelog.sh`, `sync-version.sh`,
 `scaffold-test.sh`, `verify-repo.sh`) live in **`edit-kit`**, not here; the plan-shape
@@ -66,16 +65,17 @@ needed. All mechanical work is in shell scripts (this plugin's two, plus edit-ki
   the identity a future scaffolded plugin inherits. Edits keep them; the planner flags a
   hard-coded-identity leak in `risks[]`. Never substitute a concrete name into a
   component.
-- **edit-kit is resolved, not vendored.** `edit-kit-path.sh` finds edit-kit's scripts
-  (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`); if edit-kit isn't installed the
+- **edit-kit is resolved, not vendored.** `provider-path.sh edit-kit …` finds edit-kit's
+  scripts (`$EDIT_KIT_DIR` → marketplace ancestor → `PATH`); if edit-kit isn't installed the
   command says so. This is the same run-time-reuse pattern `sync-version.sh` uses for
   `semver`. A copy here would be drift waiting to happen. edit-kit is also a versioned
   **`dependencies` entry in `plugin.json`** (`edit-kit >=0.1.0`) so Claude Code auto-installs
   it (and transitively `semver`) when template-editor is installed, resolving the range
   against the marketplace's `edit-kit--v*` tags — and disables template-editor if it can't;
-  `edit-kit-path.sh` then just *locates* the installed toolkit at run time (and finds the
+  `provider-path.sh` then just *locates* the installed toolkit at run time (and finds the
   sibling `plugins/edit-kit` in the repo checkout).
-- **plan-kit gates the plan.** Step 3 resolves plan-kit (`plan-kit-path.sh`) and runs its
+- **plan-kit gates the plan.** Step 3 resolves plan-kit (`provider-path.sh plan-kit
+  validate-plan.sh`) and runs its
   `validate-plan.sh --field files --actions create,modify,delete` on the planner's JSON
   before the confirm gate. This planner's change array is `files[]` (not the archetype's
   `actions[]`), which the shared validator's `--field` option accommodates — one validator,
